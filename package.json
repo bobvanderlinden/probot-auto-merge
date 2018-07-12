@@ -1,0 +1,41 @@
+{
+  "name": "probot-auto-merge",
+  "version": "1.0.0",
+  "description": "A Probot app that automatically merges PRs",
+  "author": "Bob van der Linden <bobvanderlinden@gmail.com> (https://github.com/bobvanderlinden/probot-auto-merge)",
+  "license": "ISC",
+  "repository": "https://github.com/bobvanderlinden/probot-auto-merge.git",
+  "homepage": "https://github.com/bobvanderlinden/probot-auto-merge",
+  "bugs": "https://github.com/bobvanderlinden/probot-auto-merge/issues",
+  "keywords": [
+    "probot",
+    "github",
+    "probot-app"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "nodemon --exec \"npm start\"",
+    "start": "probot run ./lib/index.js",
+    "lint": "standard --fix",
+    "test": "jest && standard",
+    "test:watch": "jest --watch --notify --notifyMode=change --coverage"
+  },
+  "dependencies": {
+    "probot": "^7.0.0"
+  },
+  "devDependencies": {
+    "jest": "^22.4.3",
+    "nodemon": "^1.17.2",
+    "smee-client": "^1.0.2",
+    "standard": "^10.0.3",
+    "typescript": "^2.9.2"
+  },
+  "engines": {
+    "node": ">= 8.3.0"
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ]
+  }
+}
