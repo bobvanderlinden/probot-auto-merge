@@ -1,14 +1,11 @@
-import { Context } from 'probot'
-import { Config } from './config'
-import { handlePullRequest } from './pull-request-handler'
+import { handlePullRequest, HandlerContext } from './pull-request-handler'
+import { CheckPullRequest } from './models'
 
-export async function handleCheckPullRequests(context: Context, pullRequests: CheckPullRequest[], config: Config) {
+export async function handleCheckPullRequests(context: HandlerContext, owner: string, repo: string, pullRequests: CheckPullRequest[]) {
   for(const checkPullRequest of pullRequests) {
-    const owner = context.payload.repository.owner.login
-    const repo = context.payload.repository.name
     const number = checkPullRequest.number
     const pullRequestResponse = await context.github.pullRequests.get({owner, repo, number})
     const pullRequest = pullRequestResponse.data
-    await handlePullRequest(context, pullRequest, config)
+    await handlePullRequest(context, pullRequest)
   }
 }

@@ -1,15 +1,8 @@
-declare function setTimeout(fn: Function, millis: number): number
-
-declare module "probot-config" {
-  export function getConfig<TContext, TConfig>(context: TContext, fileName: String, defaultConfig: TConfig): TConfig
-}
-
-
-interface CheckPullRequest {
+export interface CheckPullRequest {
   number: number;
 }
 
-interface PullRequest {
+export interface PullRequest {
   base: {
     repo: {
       name: string
@@ -27,9 +20,9 @@ interface PullRequest {
   mergeable: boolean
 }
 
-type ReviewState = 'APPROVED' | 'CHANGES_REQUESTED'
+export type ReviewState = 'APPROVED' | 'CHANGES_REQUESTED'
 
-interface Review {
+export interface Review {
   submitted_at: string
   state: ReviewState
   user: {
@@ -37,7 +30,7 @@ interface Review {
   }
 }
 
-interface CheckRun {
+export interface CheckRun {
   name: string
   head_sha: string
   external_id: string

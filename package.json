@@ -25,10 +25,12 @@
     "probot-config": "^0.1.0"
   },
   "devDependencies": {
+    "@types/jest": "^23.1.5",
     "jest": "^22.4.3",
     "nodemon": "^1.17.2",
     "smee-client": "^1.0.2",
     "standard": "^10.0.3",
+    "ts-jest": "^23.0.0",
     "typescript": "^2.9.2"
   },
   "engines": {
@@ -37,6 +39,20 @@
   "standard": {
     "env": [
       "jest"
+    ]
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
     ]
   }
 }
