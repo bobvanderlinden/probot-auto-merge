@@ -105,6 +105,9 @@ export async function handlePullRequestStatus(
         merge_method: config["merge-method"]
       });
       return;
+    case "out_of_date_branch":
+      await github.repos.merge(pullRequestStatus.merge)
+      return;
     case "pending_checks":
       // Some checks (like Travis) seem to not always send
       // their status updates. Making this process being stalled.
@@ -126,6 +129,17 @@ export async function handlePullRequestStatus(
   }
 }
 
+interface OutOfDateBranchPullRequestStatus {
+  code: "out_of_date_branch",
+  message: string
+  merge: {
+    owner: string
+    repo: string
+    base: string
+    head: string
+  }
+}
+
 type PullRequestStatus = {
   code:
     | "merged"
@@ -139,7 +153,7 @@ type PullRequestStatus = {
     | "blocking_check"
     | "ready_for_merge";
   message: string;
-};
+} | OutOfDateBranchPullRequestStatus;
 
 type PullRequestStatusCode = PullRequestStatus["code"];
 
@@ -307,17 +321,16 @@ export async function getPullRequestStatus(
       repo: pullRequest.base.repo.name,
       branch: pullRequest.base.ref
     })
-    log(`compare: ${pullRequest.base.sha} ? ${branchResponse.data.commit.sha}`)
     if (pullRequest.base.sha !== branchResponse.data.commit.sha) {
-      await github.repos.merge({
-        owner: pullRequest.head.user.login,
-        repo: pullRequest.head.repo.name,
-        base: pullRequest.head.ref,
-        head: pullRequest.base.ref
-      })
       return {
-        code: 'blocking_check',
-        message: `Pull request is based on a strict protected branch (${pullRequest.base.ref}) and base sha of pull request (${pullRequest.base.sha}) differs from sha of branch (${branchResponse.data.commit.sha})`
+        code: 'out_of_date_branch',
+        message: `Pull request is based on a strict protected branch (${pullRequest.base.ref}) and base sha of pull request (${pullRequest.base.sha}) differs from sha of branch (${branchResponse.data.commit.sha})`,
+        merge: {
+          owner: pullRequest.head.user.login,
+          repo: pullRequest.head.repo.name,
+          base: pullRequest.head.ref,
+          head: pullRequest.base.ref
+        }
       }
     }
   }
