@@ -1,4 +1,10 @@
-import { handlePullRequest, HandlerContext } from "../src/pull-request-handler";
+import {
+  schedulePullRequestTrigger,
+  HandlerContext,
+  getPullRequestStatus,
+  handlePullRequestStatus,
+  PullRequestStatusCodes
+} from "../src/pull-request-handler";
 import { PullRequest, CheckRun, Review, ReviewState } from "../src/models";
 
 const unused: any = undefined;
@@ -23,12 +29,37 @@ function mockPullRequestContext(options?: {
   const log = jest.fn((...args) => {
     // console.log(...args)
   });
+
+  const pullRequest = {
+    base: {
+      repo: {
+        name: "test"
+      },
+      user: {
+        login: "henk"
+      }
+    },
+    head: {
+      sha: "12345"
+    },
+    mergeable: options.mergeable === undefined ? true : options.mergeable,
+    merged: options.merged === undefined ? false : options.merged,
+    number: 1,
+    state: options.state || "open"
+  };
+
   return {
+    pullRequestInfo: {
+      owner: "henk",
+      repo: "test",
+      number: 1
+    },
     merge: merge,
     context: {
       log,
       github: {
         pullRequests: {
+          get: githubCallMock(pullRequest),
           getReviews: githubCallMock(options.reviews || []),
           merge
         },
@@ -42,24 +73,7 @@ function mockPullRequestContext(options?: {
         "max-requested-changes": options.maxRequestedChanged || 0,
         "min-approvals": options.minApprovals || 1
       }
-    } as any,
-    pullRequest: {
-      base: {
-        repo: {
-          name: "test"
-        },
-        user: {
-          login: "henk"
-        }
-      },
-      head: {
-        sha: "12345"
-      },
-      mergeable: options.mergeable == undefined ? true : options.mergeable,
-      merged: options.merged === undefined ? false : options.merged,
-      number: 1,
-      state: options.state || "open"
-    }
+    } as any
   };
 }
 
@@ -104,106 +118,166 @@ const neutralCheckRun: CheckRun = {
   external_id: "1"
 };
 
-describe("handlePullRequest", () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
+describe("getPullRequestStatus", () => {
+  it("returns not_open when pull request state is a value that is undocumented", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [approvedReview()],
+      state: "this_value_is_undocumented" as any
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("not_open");
   });
 
-  it("does not merge when one check run failed", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns blocking_check when one check run failed", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
       checkRuns: [successCheckRun, failedCheckRun]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("blocking_check");
   });
 
-  it("does not merge when one reviewer requested changes", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns changes_requested when one reviewer requested changes", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview("henk"), changesRequestedReview("sjaak")],
       checkRuns: [successCheckRun]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("changes_requested");
   });
 
-  it("does not merge when same reviewer approved and requested changes", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns changes_requested when same reviewer approved and requested changes", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview("henk"), changesRequestedReview("henk")],
       checkRuns: [successCheckRun]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("changes_requested");
   });
 
-  it("does not merge when check run is still queued", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns pending_checks when check run is still queued", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
       checkRuns: [queuedCheckRun]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("pending_checks");
   });
 
-  it("does merge when reviewer requested changes and approved", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
-      reviews: [approvedReview("henk"), changesRequestedReview("henk")]
+  it("returns ready_for_merge when reviewer requested changes and approved", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [changesRequestedReview("henk"), approvedReview("henk")]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
   });
 
-  it("merges when pull request is approved and check run succeeded", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns ready_for_merge when pull request is approved and check run succeeded", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
       checkRuns: [successCheckRun]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(merge).toHaveBeenCalledTimes(1);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
   });
 
-  it("merges when pull request is approved", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns ready_for_merge when pull request is approved", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()]
     });
-    await handlePullRequest(context, pullRequest);
-    expect(merge).toHaveBeenCalledTimes(1);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
   });
 
-  it("does not merge when pull request is closed", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns closed when pull request is closed", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
       state: "closed"
     });
-    await handlePullRequest(context, pullRequest);
-    expect(setTimeout).toHaveBeenCalledTimes(0);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("closed");
   });
 
-  it("does not merge when pull request is not mergeable", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns conflicts when pull request is not mergeable", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
       mergeable: false
     });
-    await handlePullRequest(context, pullRequest);
-    expect(setTimeout).toHaveBeenCalledTimes(0);
-    expect(merge).toHaveBeenCalledTimes(0);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("conflicts");
   });
 
-  it("does not merge when pull request is already merged", async () => {
-    const { merge, context, pullRequest } = mockPullRequestContext({
+  it("returns pending_mergeable when pull request is not mergeable", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [approvedReview()],
+      mergeable: null
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("pending_mergeable");
+  });
+
+  it("returns merged when pull request is already merged", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
       merged: true
     });
-    await handlePullRequest(context, pullRequest);
-    expect(setTimeout).toHaveBeenCalledTimes(0);
-    expect(merge).toHaveBeenCalledTimes(0);
+    await schedulePullRequestTrigger(context, pullRequestInfo);
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("merged");
+  });
+
+  it("returns need_approvals when pull request is not reviewed", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext();
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("need_approvals");
   });
 });
 
-it("does not merge when pull request is not reviewed", async () => {
-  const { merge, context, pullRequest } = mockPullRequestContext();
-  await handlePullRequest(context, pullRequest);
-  expect(merge).toHaveBeenCalledTimes(0);
+describe("handlePullRequestStatus", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+  it("merges when status is ready_for_merge", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext();
+    await handlePullRequestStatus(context, pullRequestInfo, {
+      code: "ready_for_merge",
+      message: "bogus"
+    });
+    expect(merge).toHaveBeenCalledTimes(1);
+  });
+  it("does not merge on status other than ready_for_merge", async () => {
+    const { merge, context, pullRequestInfo } = mockPullRequestContext();
+    for (let code of PullRequestStatusCodes.filter(
+      code => code !== "ready_for_merge"
+    )) {
+      await handlePullRequestStatus(context, pullRequestInfo, {
+        code,
+        message: "bogus"
+      });
+    }
+    expect(merge).toHaveBeenCalledTimes(0);
+  });
+  it("schedules next run when status is pending_checks", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext();
+    await handlePullRequestStatus(context, pullRequestInfo, {
+      code: "pending_checks",
+      message: "bogus"
+    });
+    expect(setTimeout).toHaveBeenCalledTimes(1);
+  });
+  it("does not merge on status other than pending_checks", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext();
+    for (let code of PullRequestStatusCodes.filter(
+      code => code !== "pending_checks"
+    )) {
+      await handlePullRequestStatus(context, pullRequestInfo, {
+        code,
+        message: "bogus"
+      });
+    }
+    expect(setTimeout).toHaveBeenCalledTimes(0);
+  });
 });

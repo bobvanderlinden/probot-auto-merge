@@ -1,97 +1,300 @@
-import { Application, Context } from 'probot'
-import { Config } from './config'
-import { PullRequest, Review, ReviewState, CheckRun } from './models'
-
+import { Context } from "probot";
+import { Config } from "./config";
+import { TaskScheduler } from "./task-scheduler";
+import { PullRequest, Review, CheckRun } from "./models";
 import { groupBy, groupByMap } from "./utils";
+const debug = require('debug')('pull-request-handler')
 
 export interface HandlerContext {
-  log: Application['log']
-  github: Context['github']
-  config: Config
+  log: (msg: string) => void;
+  github: Context["github"];
+  config: Config;
 }
 
-export async function handlePullRequest(context: HandlerContext, pullRequest: PullRequest) {
-  const { log: appLog, github, config } = context
+interface PullRequestInfo {
+  owner: string;
+  repo: string;
+  number: number;
+}
 
-  const repo = pullRequest.base.repo.name
-  const owner = pullRequest.base.user.login
-  const number = pullRequest.number
+interface PullRequestTask {
+  context: HandlerContext;
+  pullRequestInfo: PullRequestInfo;
+}
+
+const taskScheduler = new TaskScheduler<PullRequestTask>({
+  worker: pullRequestWorker,
+  concurrency: 8
+});
+const pullRequestTimeouts: {
+  [key: string]: NodeJS.Timer;
+} = {};
+
+export function schedulePullRequestTrigger(
+  context: HandlerContext,
+  pullRequestInfo: PullRequestInfo
+) {
+  const queueName = getPullRequestKey(pullRequestInfo);
+  if (!taskScheduler.hasQueued(queueName)) {
+    taskScheduler.queue(queueName, { context, pullRequestInfo });
+  }
+}
+
+function getPullRequestKey({ owner, repo, number }: PullRequestInfo) {
+  return `${owner}/${repo}#${number}`;
+}
+
+async function pullRequestWorker({
+  context,
+  pullRequestInfo
+}: PullRequestTask) {
+  await handlePullRequestTrigger(context, pullRequestInfo);
+}
+
+async function handlePullRequestTrigger(
+  context: HandlerContext,
+  pullRequestInfo: PullRequestInfo
+) {
+  const { log: appLog } = context;
+  const pullRequestKey = getPullRequestKey(pullRequestInfo);
 
   function log(msg: string) {
-    appLog(`${repo}/${owner} #${number}: ${msg}`)
+    appLog(`${pullRequestKey}: ${msg}`);
   }
+
+  // Cancel any running scheduled timer for this pull request,
+  // since we're now handling it right now.
+  clearTimeout(pullRequestTimeouts[pullRequestKey]);
+
+  const pullRequestContext = {
+    ...context,
+    log
+  };
+  await doPullRequestWork(pullRequestContext, pullRequestInfo);
+
+  // For all other cases, we will be triggered by GitHub again.
+}
+
+async function doPullRequestWork(
+  context: HandlerContext,
+  pullRequestInfo: PullRequestInfo
+) {
+  const { log } = context;
+  const pullRequestStatus = await getPullRequestStatus(
+    context,
+    pullRequestInfo
+  );
+  log(`result: ${pullRequestStatus.code}: ${pullRequestStatus.message}`);
+  await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus);
+}
+
+export async function handlePullRequestStatus(
+  context: HandlerContext,
+  pullRequestInfo: PullRequestInfo,
+  pullRequestStatus: PullRequestStatus
+) {
+  const { log, github, config } = context;
+  const { owner, repo, number } = pullRequestInfo;
+
+  switch (pullRequestStatus.code) {
+    case "ready_for_merge":
+      await github.pullRequests.merge({
+        owner,
+        repo,
+        number,
+        merge_method: config["merge-method"]
+      });
+      return;
+    case "pending_checks":
+      // Some checks (like Travis) seem to not always send
+      // their status updates. Making this process being stalled.
+      // We work around this issue by scheduling a recheck after
+      // 5 minutes. The recheck is cancelled once another pull
+      // request event comes by.
+      log("Scheduling pull request trigger after 5 minutes");
+      const pullRequestKey = getPullRequestKey(pullRequestInfo);
+      debug(`Setting timeout for ${pullRequestKey}`)
+      pullRequestTimeouts[pullRequestKey] = setTimeout(() => {
+        /* istanbul ignore next */
+        debug(`Timeout triggered for ${pullRequestKey}`)
+        /* istanbul ignore next */
+        schedulePullRequestTrigger(context, pullRequestInfo);
+      }, 5 * 60 * 1000);
+      return;
+    default:
+    // We will just wait for a next event from GitHub.
+  }
+}
+
+type PullRequestStatus = {
+  code:
+    | "merged"
+    | "closed"
+    | "not_open"
+    | "pending_mergeable"
+    | "conflicts"
+    | "changes_requested"
+    | "need_approvals"
+    | "pending_checks"
+    | "blocking_check"
+    | "ready_for_merge";
+  message: string;
+};
+
+type PullRequestStatusCode = PullRequestStatus["code"];
+
+export const PullRequestStatusCodes: PullRequestStatusCode[] = [
+  "merged",
+  "closed",
+  "not_open",
+  "pending_mergeable",
+  "conflicts",
+  "changes_requested",
+  "need_approvals",
+  "pending_checks",
+  "blocking_check",
+  "ready_for_merge"
+];
+
+export async function getPullRequestStatus(
+  context: HandlerContext,
+  { owner, repo, number }: PullRequestInfo
+): Promise<PullRequestStatus> {
+  const { log, github, config } = context;
+
+  const pullRequestResponse = await context.github.pullRequests.get({
+    owner,
+    repo,
+    number
+  });
+  const pullRequest = pullRequestResponse.data as PullRequest;
 
   if (pullRequest.merged) {
-    log('Pull request was already merged')
-    return
+    return {
+      code: "merged",
+      message: "Pull request was already merged"
+    };
   }
 
-  if (pullRequest.state !== 'open') {
-    log('Pull request not open')
-    return
+  if (pullRequest.state === "closed") {
+    return {
+      code: "closed",
+      message: "Pull request is closed"
+    };
   }
 
-  if (!pullRequest.mergeable) {
-    log('Pull request is not mergeable: ' + pullRequest.mergeable)
-    return
+  if (pullRequest.state !== "open") {
+    return {
+      code: "not_open",
+      message: "Pull request is not open"
+    };
   }
 
-  const reviewsResponse = await github.pullRequests.getReviews({owner, repo, number})
-  const reviews: Review[] = reviewsResponse.data
-  const sortedReviews = reviews
-    .sort((a, b) => new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime())
+  if (pullRequest.mergeable === null) {
+    return {
+      code: "pending_mergeable",
+      message: "Mergeablity of pull request could not yet be determined"
+    };
+  }
+
+  if (pullRequest.mergeable === false) {
+    return {
+      code: "conflicts",
+      message: "Could not merge pull request due to conflicts"
+    };
+  }
+
+  const reviewsResponse = await github.pullRequests.getReviews({
+    owner,
+    repo,
+    number
+  });
+  const reviews: Review[] = reviewsResponse.data;
+  const sortedReviews = reviews.sort(
+    (a, b) =>
+      new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
+  );
   const latestReviewsByUser = groupBy(
     review => review.user.login,
     sortedReviews
-  )
+  );
 
   const reviewSummary = Object.entries(latestReviewsByUser)
     .map(([user, state]) => `${user}: ${state}`)
-    .join('\n')
+    .join("\n");
 
-  log(`\nReviews:\n${reviewSummary}\n\n`)
+  log(`\nReviews:\n${reviewSummary}\n\n`);
 
-  const latestReviews = Object.values(latestReviewsByUser)
-  const changesRequestedCount = latestReviews.filter(review => review.state === 'CHANGES_REQUESTED').length
+  const latestReviews = Object.values(latestReviewsByUser);
+  const changesRequestedCount = latestReviews.filter(
+    review => review.state === "CHANGES_REQUESTED"
+  ).length;
   if (changesRequestedCount > config["max-requested-changes"]) {
-    log(`There are changes requested by a reviewer (${changesRequestedCount} / ${config["max-requested-changes"]})`)
-    return
+    return {
+      code: "changes_requested",
+      message: `There are changes requested by a reviewer (${changesRequestedCount} / ${
+        config["max-requested-changes"]
+      })`
+    };
   }
 
-  const approvalCount = latestReviews.filter(review => review.state === 'APPROVED').length
+  const approvalCount = latestReviews.filter(
+    review => review.state === "APPROVED"
+  ).length;
   if (approvalCount < config["min-approvals"]) {
-    log(`There are not enough approvals by reviewers (${approvalCount} / ${config["min-approvals"]})`)
-    return
+    return {
+      code: "need_approvals",
+      message: `There are not enough approvals by reviewers (${approvalCount} / ${
+        config["min-approvals"]
+      })`
+    };
   }
 
-  const checksResponse = await github.checks.listForRef({owner, repo, ref: pullRequest.head.sha, filter: 'latest' })
-  const checkRuns: CheckRun[] = checksResponse.data.check_runs
+  const checksResponse = await github.checks.listForRef({
+    owner,
+    repo,
+    ref: pullRequest.head.sha,
+    filter: "latest"
+  });
+  const checkRuns: CheckRun[] = checksResponse.data.check_runs;
   // log('checks: ' + JSON.stringify(checks))
-  const checksSummary = checkRuns.map(checkRun => `${checkRun.name}: ${checkRun.status}: ${checkRun.conclusion}`).join('\n')
+  const checksSummary = checkRuns
+    .map(
+      checkRun => `${checkRun.name}: ${checkRun.status}: ${checkRun.conclusion}`
+    )
+    .join("\n");
 
-  log(`\nChecks:\n${checksSummary}\n\n`)
+  log(`\nChecks:\n${checksSummary}\n\n`);
 
-  const allChecksCompleted = checkRuns.every(checkRun => checkRun.status === 'completed')
+  const allChecksCompleted = checkRuns.every(
+    checkRun => checkRun.status === "completed"
+  );
   if (!allChecksCompleted) {
-    log(`There are still pending checks. Scheduling recheck.`)
-    setTimeout(async () => {
-      await handlePullRequest(context, pullRequest)
-    }, 60000)
-    return
+    return {
+      code: "pending_checks",
+      message: "There are still pending checks"
+    };
   }
   const checkConclusions = groupByMap(
     checkRun => checkRun.conclusion,
     _ => true,
     checkRuns
-  )
-  log('conclusions: ' + JSON.stringify(checkConclusions))
-  const checksBlocking = checkConclusions.failure || checkConclusions.cancelled || checkConclusions.timed_out || checkConclusions.action_required
+  );
+  log("conclusions: " + JSON.stringify(checkConclusions));
+  const checksBlocking =
+    checkConclusions.failure ||
+    checkConclusions.cancelled ||
+    checkConclusions.timed_out ||
+    checkConclusions.action_required;
   if (checksBlocking) {
-    log(`There are blocking checks`)
-    return
+    return {
+      code: "blocking_check",
+      message: "There are blocking checks"
+    };
   }
 
-  await github.pullRequests.merge({owner, repo, number, merge_method: config["merge-method"]})
-  // await github.issues.createComment({owner, repo, number, body: 'I want to merge this right now'})
-  log('Merge pull request')
+  return {
+    code: "ready_for_merge",
+    message: "Pull request successfully merged"
+  };
 }

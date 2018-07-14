@@ -1,7 +1,6 @@
 import { Application, Context } from 'probot'
 import { loadConfig } from './config'
-import { handlePullRequest, HandlerContext } from './pull-request-handler'
-import { handleCheckPullRequests } from './check-handler'
+import { schedulePullRequestTrigger, HandlerContext } from './pull-request-handler'
 
 async function getHandlerContext(options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
@@ -21,7 +20,11 @@ export = (app: Application) => {
     'pull_request.synchronize'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
-    await handlePullRequest(handlerContext, context.payload.pull_request as any)
+    await schedulePullRequestTrigger(handlerContext, {
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      number: context.payload.pull_request.number
+    })
   })
 
   app.on([
@@ -30,7 +33,13 @@ export = (app: Application) => {
     'check_run.requested_action'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
-    await handleCheckPullRequests(handlerContext, context.payload.repository.owner.login, context.payload.repository.name, context.payload.check_run.pull_requests)
+    for(const pullRequest of context.payload.check_run.pull_requests) {
+      await schedulePullRequestTrigger(handlerContext, {
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        number: pullRequest.number
+      })
+    }
   })
 
   app.on([
@@ -39,6 +48,12 @@ export = (app: Application) => {
     'check_suite.rerequested'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
-    await handleCheckPullRequests(handlerContext, context.payload.repository.owner.login, context.payload.repository.name, context.payload.check_suite.pull_requests)
+    for(const pullRequest of context.payload.check_suite.pull_requests) {
+      await schedulePullRequestTrigger(handlerContext, {
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        number: pullRequest.number
+      })
+    }
   })
 }
