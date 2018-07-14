@@ -1,5 +1,4 @@
 import PQueue from 'p-queue'
-import { EventEmitter } from 'events';
 const debug = require('debug')('task-scheduler')
 
 type TaskWorker<TTask> = (task: TTask) => Promise<void>
