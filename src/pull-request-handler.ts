@@ -2,6 +2,26 @@ import { Application, Context } from 'probot'
 import { Config } from './config'
 import { PullRequest, Review, ReviewState, CheckRun } from './models'
 
+export function identity<T>(v: T): T { return v; }
+
+export function groupBy<TItem>(
+  keyFn: (item: TItem) => string,
+  list: TItem[]
+): { [key: string]: TItem } {
+  return groupByMap(keyFn, identity, list)
+}
+
+export function groupByMap<TItem, TValue>(
+  keyFn: (item: TItem) => string,
+  valueFn: (item: TItem) => TValue,
+  list: TItem[]
+): { [key: string]: TValue } {
+  return list.reduce((result, item) => ({
+    ...result,
+    [keyFn(item)]: valueFn(item)
+  }), {})
+}
+
 export interface HandlerContext {
   log: Application['log']
   github: Context['github']
@@ -19,13 +39,13 @@ export async function handlePullRequest(context: HandlerContext, pullRequest: Pu
     appLog(`${repo}/${owner} #${number}: ${msg}`)
   }
 
-  if (pullRequest.state !== 'open') {
-    log('Pull request not open')
+  if (pullRequest.merged) {
+    log('Pull request was already merged')
     return
   }
 
-  if (pullRequest.merged) {
-    log('Pull request was already merged')
+  if (pullRequest.state !== 'open') {
+    log('Pull request not open')
     return
   }
 
@@ -36,33 +56,32 @@ export async function handlePullRequest(context: HandlerContext, pullRequest: Pu
 
   const reviewsResponse = await github.pullRequests.getReviews({owner, repo, number})
   const reviews: Review[] = reviewsResponse.data
-  const latestReviews: {
-    [key: string]: ReviewState
-  } = reviews
+  const sortedReviews = reviews
     .sort((a, b) => new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime())
-    .reduce((state, review) => ({
-      ...state,
-      [review.user.login]: review.state
-    }), {})
+  const latestReviewsByUser = groupBy(
+    review => review.user.login,
+    sortedReviews
+  )
 
-  const reviewSummary = Object.entries(latestReviews)
+  const reviewSummary = Object.entries(latestReviewsByUser)
     .map(([user, state]) => `${user}: ${state}`)
     .join('\n')
 
   log(`\nReviews:\n${reviewSummary}\n\n`)
 
-  const reviewStates = Object.values(latestReviews)
-  const changesRequestedCount = reviewStates.filter(reviewState => reviewState === 'CHANGES_REQUESTED').length
+  const latestReviews = Object.values(latestReviewsByUser)
+  const changesRequestedCount = latestReviews.filter(review => review.state === 'CHANGES_REQUESTED').length
   if (changesRequestedCount > config["max-requested-changes"]) {
     log(`There are changes requested by a reviewer (${changesRequestedCount} / ${config["max-requested-changes"]})`)
     return
   }
 
-  const approvalCount = reviewStates.filter(reviewState => reviewState === 'APPROVED').length
+  const approvalCount = latestReviews.filter(review => review.state === 'APPROVED').length
   if (approvalCount < config["min-approvals"]) {
     log(`There are not enough approvals by reviewers (${approvalCount} / ${config["min-approvals"]})`)
     return
   }
+
   const checksResponse = await github.checks.listForRef({owner, repo, ref: pullRequest.head.sha, filter: 'latest' })
   const checkRuns: CheckRun[] = checksResponse.data.check_runs
   // log('checks: ' + JSON.stringify(checks))
@@ -78,9 +97,11 @@ export async function handlePullRequest(context: HandlerContext, pullRequest: Pu
     }, 60000)
     return
   }
-  const checkConclusions: {
-    [conclusion: string]: boolean
-  } = checkRuns.reduce((result, checkRun) => ({ ...result, [checkRun.conclusion]: true }), {})
+  const checkConclusions = groupByMap(
+    checkRun => checkRun.conclusion,
+    _ => true,
+    checkRuns
+  )
   log('conclusions: ' + JSON.stringify(checkConclusions))
   const checksBlocking = checkConclusions.failure || checkConclusions.cancelled || checkConclusions.timed_out || checkConclusions.action_required
   if (checksBlocking) {
