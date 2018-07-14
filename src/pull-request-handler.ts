@@ -113,7 +113,24 @@ export async function handlePullRequestStatus(
         repo,
         number,
         merge_method: config["merge-method"]
-      });
+      }));
+      if (config["delete-branch-after-merge"]) {
+        const pullRequest = result<PullRequest>(await github.pullRequests.get({
+          owner,
+          repo,
+          number
+        }));
+
+        // Check whether the pull request's branch was actually part of the same repo, as
+        // we do not want to (or rather do not have permission to) alter forks of this repo.
+        if (pullRequest.head.user.login === owner && pullRequest.head.repo.name === repo) {
+          result(await github.gitdata.deleteReference({
+            owner,
+            repo,
+            ref: `heads/${pullRequest.head.ref}`
+          }))
+        }
+      }
       return;
     case "out_of_date_branch":
       if (config["update-branch"]) {

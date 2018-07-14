@@ -5,6 +5,7 @@ export type Config = {
   'min-approvals': number,
   'max-requested-changes': number,
   'update-branch': boolean,
+  'delete-branch-after-merge': boolean,
   'merge-method': 'merge' | 'rebase' | 'squash'
 }
 
@@ -12,6 +13,7 @@ const defaultConfig: Config = {
   'min-approvals': 1,
   'max-requested-changes': 0,
   'update-branch': true,
+  'delete-branch-after-merge': true,
   'merge-method': 'merge'
 }
 
