@@ -72,8 +72,6 @@ async function handlePullRequestTrigger(
     log
   };
   await doPullRequestWork(pullRequestContext, pullRequestInfo);
-
-  // For all other cases, we will be triggered by GitHub again.
 }
 
 async function doPullRequestWork(
