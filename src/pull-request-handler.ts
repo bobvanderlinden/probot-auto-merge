@@ -214,21 +214,7 @@ export const PullRequestStatusCodes: PullRequestStatusCode[] = [
   "ready_for_merge"
 ];
 
-export async function getPullRequestStatus(
-  context: HandlerContext,
-  { owner, repo, number }: PullRequestInfo
-): Promise<PullRequestStatus> {
-  const { log, github, config } = context;
-
-  const pullRequest = result<PullRequest>(
-    await github.pullRequests.get({
-      owner,
-      repo,
-      number
-    })
-  );
-
-  // Check the status from basic pull request properties.
+function getPullRequestStatusFromPullRequest(pullRequest: PullRequest): PullRequestStatus | null {
   if (pullRequest.merged) {
     return {
       code: "merged",
@@ -264,13 +250,13 @@ export async function getPullRequestStatus(
     };
   }
 
-  // Check the status from the pull request reviews.
+  return null
+}
+
+async function getPullRequestStatusFromReviews(context: HandlerContext, pullRequestInfo: PullRequestInfo): Promise<PullRequestStatus | null> {
+  const { github, config, log } = context
   const reviews = result<Review[]>(
-    await github.pullRequests.getReviews({
-      owner,
-      repo,
-      number
-    })
+    await github.pullRequests.getReviews(pullRequestInfo)
   );
   const sortedReviews = reviews.sort(
     (a, b) =>
@@ -312,12 +298,17 @@ export async function getPullRequestStatus(
     };
   }
 
-  // Check the status from the pull request checks.
+  return null
+}
+
+async function getPullRequestStatusFromChecks(context: HandlerContext, pullRequestInfo: PullRequestInfo, headSha: string): Promise<PullRequestStatus | null> {
+  const { github, log } = context
+  const { owner, repo } = pullRequestInfo
   const checks = result<{ check_runs: CheckRun[] }>(
     await github.checks.listForRef({
       owner,
       repo,
-      ref: pullRequest.head.sha,
+      ref: headSha,
       filter: "latest"
     })
   );
@@ -358,7 +349,11 @@ export async function getPullRequestStatus(
     };
   }
 
-  // Check the status from the pull request's base protected branch.
+  return null
+}
+
+async function getPullRequestStatusFromProtectedBranch(context: HandlerContext, pullRequest: PullRequest): Promise<PullRequestStatus | null> {
+  const { github, log } = context
   const branchProtection = result<BranchProtection>(
     await github.repos.getBranchProtection({
       owner: pullRequest.base.user.login,
@@ -393,8 +388,25 @@ export async function getPullRequestStatus(
     }
   }
 
-  return {
-    code: "ready_for_merge",
-    message: "Pull request successfully merged"
-  };
+  return null
+}
+
+export async function getPullRequestStatus(
+  context: HandlerContext,
+  pullRequestInfo: PullRequestInfo
+): Promise<PullRequestStatus> {
+  const { github } = context;
+
+  const pullRequest = result<PullRequest>(
+    await github.pullRequests.get(pullRequestInfo)
+  );
+
+  return getPullRequestStatusFromPullRequest(pullRequest)
+    || await getPullRequestStatusFromReviews(context, pullRequestInfo)
+    || await getPullRequestStatusFromChecks(context, pullRequestInfo, pullRequest.head.sha)
+    || await getPullRequestStatusFromProtectedBranch(context, pullRequest)
+    || {
+      code: "ready_for_merge",
+      message: "Pull request successfully merged"
+    }
 }
