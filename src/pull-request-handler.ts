@@ -98,6 +98,8 @@ export async function handlePullRequestStatus(
 
   switch (pullRequestStatus.code) {
     case "ready_for_merge":
+      // We're ready for merging!
+      // This presses the merge button.
       await github.pullRequests.merge({
         owner,
         repo,
@@ -107,6 +109,7 @@ export async function handlePullRequestStatus(
       return;
     case "out_of_date_branch":
       if (config["update-branch"]) {
+        // This merges the baseRef on top of headRef of the PR.
         await github.repos.merge(pullRequestStatus.merge)
       }
       return;
