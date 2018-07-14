@@ -261,12 +261,12 @@ describe("handlePullRequestStatus", () => {
   it("does not merge on status other than ready_for_merge", async () => {
     const { merge, context, pullRequestInfo } = mockPullRequestContext();
     for (let code of PullRequestStatusCodes.filter(
-      code => code !== "ready_for_merge"
+      code => code !== "ready_for_merge" && code !== "out_of_date_branch"
     )) {
       await handlePullRequestStatus(context, pullRequestInfo, {
         code,
         message: "bogus"
-      });
+      } as any);
     }
     expect(merge).toHaveBeenCalledTimes(0);
   });
@@ -281,12 +281,12 @@ describe("handlePullRequestStatus", () => {
   it("does not merge on status other than pending_checks", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext();
     for (let code of PullRequestStatusCodes.filter(
-      code => code !== "pending_checks"
+      code => code !== "pending_checks" && code !== "out_of_date_branch"
     )) {
       await handlePullRequestStatus(context, pullRequestInfo, {
         code,
         message: "bogus"
-      });
+      } as any);
     }
     expect(setTimeout).toHaveBeenCalledTimes(0);
   });

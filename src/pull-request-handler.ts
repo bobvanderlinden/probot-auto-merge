@@ -211,6 +211,7 @@ export const PullRequestStatusCodes: PullRequestStatusCode[] = [
   "need_approvals",
   "pending_checks",
   "blocking_check",
+  "out_of_date_branch",
   "ready_for_merge"
 ];
 
