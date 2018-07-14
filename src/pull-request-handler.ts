@@ -87,7 +87,8 @@ export async function handlePullRequest(context: HandlerContext, pullRequest: Pu
     log(`There are blocking checks`)
     return
   }
-  await github.pullRequests.merge({owner, repo, number, merge_method: 'merge'})
+
+  await github.pullRequests.merge({owner, repo, number, merge_method: config["merge-method"]})
   // await github.issues.createComment({owner, repo, number, body: 'I want to merge this right now'})
   log('Merge pull request')
 }

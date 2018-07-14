@@ -1,16 +1,16 @@
 import { Context } from 'probot'
 import { getConfig } from 'probot-config'
 
-const defaultConfig = {
-  'min-approvals': 1,
-  'max-requested-changes': 0
+export type Config = {
+  'min-approvals': number,
+  'max-requested-changes': number,
+  'merge-method': 'merge' | 'rebase' | 'squash'
 }
 
-export type Config = typeof defaultConfig
-
-export async function loadConfig(context: Context): Promise<Config> {
-  return await getConfig(context, 'auto-merge.yml', defaultConfig)
-} 'merge-method': 'merge'
+const defaultConfig: Config = {
+  'min-approvals': 1,
+  'max-requested-changes': 0,
+  'merge-method': 'merge'
 }
 
 export async function loadConfig(context: Context): Promise<Config> {
