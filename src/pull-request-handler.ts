@@ -220,7 +220,7 @@ export async function getPullRequestStatus(
   );
 
   const reviewSummary = Object.entries(latestReviewsByUser)
-    .map(([user, state]) => `${user}: ${state}`)
+    .map(([user, review]) => `${user}: ${review.state}`)
     .join("\n");
 
   log(`\nReviews:\n${reviewSummary}\n\n`);
