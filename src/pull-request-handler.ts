@@ -1,7 +1,7 @@
 import { Context } from "probot";
 import { Config } from "./config";
 import { TaskScheduler } from "./task-scheduler";
-import { PullRequest, Review, CheckRun } from "./models";
+import { PullRequest, Review, CheckRun, BranchProtection } from "./models";
 import { groupBy, groupByMap } from "./utils";
 const debug = require('debug')('pull-request-handler')
 
@@ -291,6 +291,35 @@ export async function getPullRequestStatus(
       code: "blocking_check",
       message: "There are blocking checks"
     };
+  }
+
+
+  const branchProtectionResponse = await github.repos.getBranchProtection({
+    owner: pullRequest.base.user.login,
+    repo: pullRequest.base.repo.name,
+    branch: pullRequest.base.ref
+  })
+  const branchProtection: BranchProtection = branchProtectionResponse.data as any
+  if (branchProtection.required_status_checks.strict) {
+    log(`baseRef: ${pullRequest.base.ref}`)
+    const branchResponse = await github.repos.getBranch({
+      owner: pullRequest.base.user.login,
+      repo: pullRequest.base.repo.name,
+      branch: pullRequest.base.ref
+    })
+    log(`compare: ${pullRequest.base.sha} ? ${branchResponse.data.commit.sha}`)
+    if (pullRequest.base.sha !== branchResponse.data.commit.sha) {
+      await github.repos.merge({
+        owner: pullRequest.head.user.login,
+        repo: pullRequest.head.repo.name,
+        base: pullRequest.head.ref,
+        head: pullRequest.base.ref
+      })
+      return {
+        code: 'blocking_check',
+        message: `Pull request is based on a strict protected branch (${pullRequest.base.ref}) and base sha of pull request (${pullRequest.base.sha}) differs from sha of branch (${branchResponse.data.commit.sha})`
+      }
+    }
   }
 
   return {

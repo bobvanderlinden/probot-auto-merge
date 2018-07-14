@@ -4,6 +4,8 @@ export interface CheckPullRequest {
 
 export interface PullRequest {
   base: {
+    ref: string
+    sha: string
     repo: {
       name: string
     }
@@ -12,7 +14,14 @@ export interface PullRequest {
     }
   }
   head: {
+    ref: string
     sha: string
+    repo: {
+      name: string
+    }
+    user: {
+      login: string
+    }
   }
   number: number
   state: 'open' | 'closed'
@@ -36,4 +45,19 @@ export interface CheckRun {
   external_id: string
   status: 'queued' | 'in_progress' | 'completed'
   conclusion: 'success' | 'failure' | 'neutral' | 'cancelled' | 'timed_out' | 'action_required'
+}
+
+export interface BranchProtection {
+  required_status_checks: {
+    strict: boolean
+  }
+  enforce_admins: {
+    enabled: boolean
+  }
+  required_pull_request_reviews: {
+    dismiss_stale_reviews: boolean
+    require_code_owner_reviews: boolean
+    required_approving_review_count: number
+  }
+  restrictions: {}
 }
