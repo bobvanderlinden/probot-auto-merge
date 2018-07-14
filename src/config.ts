@@ -10,4 +10,9 @@ export type Config = typeof defaultConfig
 
 export async function loadConfig(context: Context): Promise<Config> {
   return await getConfig(context, 'auto-merge.yml', defaultConfig)
+} 'merge-method': 'merge'
+}
+
+export async function loadConfig(context: Context): Promise<Config> {
+  return await getConfig(context, 'auto-merge.yml', defaultConfig)
 }
