@@ -1,6 +1,6 @@
 # probot-auto-merge
 
-> A GitHub App built with [Probot](https://github.com/probot/probot) that A Probot app that automatically merges PRs
+> A GitHub App built with [Probot](https://github.com/probot/probot) that automatically merges PRs
 
 ## Setup
 
