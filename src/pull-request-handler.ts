@@ -114,9 +114,9 @@ export async function handlePullRequestStatus(
       // Some checks (like Travis) seem to not always send
       // their status updates. Making this process being stalled.
       // We work around this issue by scheduling a recheck after
-      // 5 minutes. The recheck is cancelled once another pull
+      // 1 minutes. The recheck is cancelled once another pull
       // request event comes by.
-      log("Scheduling pull request trigger after 5 minutes");
+      log("Scheduling pull request trigger after 1 minutes");
       const pullRequestKey = getPullRequestKey(pullRequestInfo);
       debug(`Setting timeout for ${pullRequestKey}`)
       pullRequestTimeouts[pullRequestKey] = setTimeout(() => {
@@ -124,7 +124,7 @@ export async function handlePullRequestStatus(
         debug(`Timeout triggered for ${pullRequestKey}`)
         /* istanbul ignore next */
         schedulePullRequestTrigger(context, pullRequestInfo);
-      }, 5 * 60 * 1000);
+      }, 1 * 60 * 1000);
       return;
     default:
     // We will just wait for a next event from GitHub.
