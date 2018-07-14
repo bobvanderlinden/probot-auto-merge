@@ -106,7 +106,9 @@ export async function handlePullRequestStatus(
       });
       return;
     case "out_of_date_branch":
-      await github.repos.merge(pullRequestStatus.merge)
+      if (config["update-branch"]) {
+        await github.repos.merge(pullRequestStatus.merge)
+      }
       return;
     case "pending_checks":
       // Some checks (like Travis) seem to not always send
