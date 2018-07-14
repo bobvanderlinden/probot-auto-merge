@@ -3,6 +3,7 @@ import { Config } from "./config";
 import { TaskScheduler } from "./task-scheduler";
 import { PullRequest, Review, CheckRun, BranchProtection } from "./models";
 import { groupBy, groupByMap } from "./utils";
+import { AnyResponse } from "../node_modules/@octokit/rest";
 const debug = require('debug')('pull-request-handler')
 
 export interface HandlerContext {
@@ -88,6 +89,13 @@ async function doPullRequestWork(
   await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus);
 }
 
+function result<TResult = void>(response: AnyResponse): TResult {
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`Response status was ${response.status}`)
+  }
+  return response.data
+}
+
 export async function handlePullRequestStatus(
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo,
@@ -100,7 +108,7 @@ export async function handlePullRequestStatus(
     case "ready_for_merge":
       // We're ready for merging!
       // This presses the merge button.
-      await github.pullRequests.merge({
+      result(await github.pullRequests.merge({
         owner,
         repo,
         number,
@@ -110,7 +118,7 @@ export async function handlePullRequestStatus(
     case "out_of_date_branch":
       if (config["update-branch"]) {
         // This merges the baseRef on top of headRef of the PR.
-        await github.repos.merge(pullRequestStatus.merge)
+        result(await github.repos.merge(pullRequestStatus.merge))
       }
       return;
     case "pending_checks":
@@ -181,12 +189,11 @@ export async function getPullRequestStatus(
 ): Promise<PullRequestStatus> {
   const { log, github, config } = context;
 
-  const pullRequestResponse = await context.github.pullRequests.get({
+  const pullRequest = result<PullRequest>(await github.pullRequests.get({
     owner,
     repo,
     number
-  });
-  const pullRequest = pullRequestResponse.data as PullRequest;
+  }));
 
   if (pullRequest.merged) {
     return {
@@ -223,12 +230,11 @@ export async function getPullRequestStatus(
     };
   }
 
-  const reviewsResponse = await github.pullRequests.getReviews({
+  const reviews = result<Review[]>(await github.pullRequests.getReviews({
     owner,
     repo,
     number
-  });
-  const reviews: Review[] = reviewsResponse.data;
+  }));
   const sortedReviews = reviews.sort(
     (a, b) =>
       new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
@@ -269,13 +275,13 @@ export async function getPullRequestStatus(
     };
   }
 
-  const checksResponse = await github.checks.listForRef({
+  const checks = result<{ check_runs: CheckRun[] }>(await github.checks.listForRef({
     owner,
     repo,
     ref: pullRequest.head.sha,
     filter: "latest"
-  });
-  const checkRuns: CheckRun[] = checksResponse.data.check_runs;
+  }));
+  const checkRuns = checks.check_runs
   // log('checks: ' + JSON.stringify(checks))
   const checksSummary = checkRuns
     .map(
@@ -313,23 +319,22 @@ export async function getPullRequestStatus(
   }
 
 
-  const branchProtectionResponse = await github.repos.getBranchProtection({
+  const branchProtection = result<BranchProtection>(await github.repos.getBranchProtection({
     owner: pullRequest.base.user.login,
     repo: pullRequest.base.repo.name,
     branch: pullRequest.base.ref
-  })
-  const branchProtection: BranchProtection = branchProtectionResponse.data as any
+  }))
   if (branchProtection.required_status_checks.strict) {
     log(`baseRef: ${pullRequest.base.ref}`)
-    const branchResponse = await github.repos.getBranch({
+    const branch = result<any>(await github.repos.getBranch({
       owner: pullRequest.base.user.login,
       repo: pullRequest.base.repo.name,
       branch: pullRequest.base.ref
-    })
-    if (pullRequest.base.sha !== branchResponse.data.commit.sha) {
+    }))
+    if (pullRequest.base.sha !== branch.commit.sha) {
       return {
         code: 'out_of_date_branch',
-        message: `Pull request is based on a strict protected branch (${pullRequest.base.ref}) and base sha of pull request (${pullRequest.base.sha}) differs from sha of branch (${branchResponse.data.commit.sha})`,
+        message: `Pull request is based on a strict protected branch (${pullRequest.base.ref}) and base sha of pull request (${pullRequest.base.sha}) differs from sha of branch (${branch.commit.sha})`,
         merge: {
           owner: pullRequest.head.user.login,
           repo: pullRequest.head.repo.name,
