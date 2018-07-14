@@ -87,6 +87,11 @@ async function doPullRequestWork(
   await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus);
 }
 
+/**
+ * Checks the supplied response for errors and casts response data to
+ * supplied type.
+ * @param response The response from a GitHub API
+ */
 function result<TResult = void>(response: AnyResponse): TResult {
   if (response.status < 200 || response.status >= 300) {
     throw new Error(`Response status was ${response.status}`)
@@ -210,6 +215,7 @@ export async function getPullRequestStatus(
     number
   }));
 
+  // Check the status from basic pull request properties.
   if (pullRequest.merged) {
     return {
       code: "merged",
@@ -245,6 +251,7 @@ export async function getPullRequestStatus(
     };
   }
 
+  // Check the status from the pull request reviews.
   const reviews = result<Review[]>(await github.pullRequests.getReviews({
     owner,
     repo,
@@ -290,6 +297,7 @@ export async function getPullRequestStatus(
     };
   }
 
+  // Check the status from the pull request checks.
   const checks = result<{ check_runs: CheckRun[] }>(await github.checks.listForRef({
     owner,
     repo,
@@ -334,6 +342,7 @@ export async function getPullRequestStatus(
   }
 
 
+  // Check the status from the pull request's base protected branch.
   const branchProtection = result<BranchProtection>(await github.repos.getBranchProtection({
     owner: pullRequest.base.user.login,
     repo: pullRequest.base.repo.name,
