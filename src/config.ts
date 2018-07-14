@@ -1,5 +1,5 @@
 import { Context } from 'probot'
-import { getConfig } from 'probot-config'
+import getConfig from 'probot-config'
 
 export type Config = {
   'min-approvals': number,
@@ -14,5 +14,6 @@ const defaultConfig: Config = {
 }
 
 export async function loadConfig(context: Context): Promise<Config> {
-  return await getConfig(context, 'auto-merge.yml', defaultConfig)
+  const config = await getConfig(context, 'auto-merge.yml', defaultConfig)
+  return config || defaultConfig
 }
