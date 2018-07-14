@@ -5,7 +5,7 @@ import {
   handlePullRequestStatus,
   PullRequestStatusCodes
 } from "../src/pull-request-handler";
-import { PullRequest, CheckRun, Review, ReviewState } from "../src/models";
+import { PullRequest, CheckRun, Review, ReviewState, BranchProtection } from "../src/models";
 
 const unused: any = undefined;
 
@@ -18,6 +18,8 @@ function githubCallMock(data: any) {
 function mockPullRequestContext(options?: {
   reviews?: Review[];
   checkRuns?: CheckRun[];
+  branch?: any,
+  branchProtection?: BranchProtection,
   maxRequestedChanged?: number;
   minApprovals?: number;
   mergeable?: boolean;
@@ -67,6 +69,14 @@ function mockPullRequestContext(options?: {
           listForRef: githubCallMock({
             check_runs: options.checkRuns || []
           })
+        },
+        repos: {
+          getBranchProtection: githubCallMock(options.branchProtection || {
+            required_status_checks: {
+              strict: false
+            }
+          }),
+          getBranch: githubCallMock(options.branch)
         }
       },
       config: {
