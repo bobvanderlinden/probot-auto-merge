@@ -232,7 +232,7 @@ export async function getPullRequestStatus(
   if (changesRequestedCount > config["max-requested-changes"]) {
     return {
       code: "changes_requested",
-      message: `There are changes requested by a reviewer (${changesRequestedCount} / ${
+      message: `There are changes requested by a reviewer (${changesRequestedCount} > ${
         config["max-requested-changes"]
       })`
     };
