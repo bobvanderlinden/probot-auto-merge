@@ -105,7 +105,7 @@ function getPullRequestStatusFromLabels(
     return pullRequest.labels.some(label => label.name === labelName);
   }
 
-  const missingRequiredLabels = config["required-labels"].filter(
+  const missingRequiredLabels = config.requiredLabels.filter(
     requiredLabel => !hasLabel(requiredLabel)
   );
   if (missingRequiredLabels.length > 0) {
@@ -117,7 +117,7 @@ function getPullRequestStatusFromLabels(
     };
   }
 
-  const matchingBlockingLabels = config["blocking-labels"].filter(
+  const matchingBlockingLabels = config.blockingLabels.filter(
     blockingLabel => hasLabel(blockingLabel)
   );
   if (matchingBlockingLabels.length > 0) {
@@ -159,11 +159,11 @@ async function getPullRequestStatusFromReviews(
   const changesRequestedCount = latestReviews.filter(
     review => review.state === "CHANGES_REQUESTED"
   ).length;
-  if (changesRequestedCount > config["max-requested-changes"]) {
+  if (changesRequestedCount > config.maxRequestedChanges) {
     return {
       code: "changes_requested",
       message: `There are changes requested by a reviewer (${changesRequestedCount} > ${
-        config["max-requested-changes"]
+        config.maxRequestedChanges
       })`
     };
   }
@@ -171,11 +171,11 @@ async function getPullRequestStatusFromReviews(
   const approvalCount = latestReviews.filter(
     review => review.state === "APPROVED"
   ).length;
-  if (approvalCount < config["min-approvals"]) {
+  if (approvalCount < config.minApprovals) {
     return {
       code: "need_approvals",
       message: `There are not enough approvals by reviewers (${approvalCount} / ${
-        config["min-approvals"]
+        config.minApprovals
       })`
     };
   }

@@ -90,10 +90,10 @@ export async function handlePullRequestStatus(
           owner,
           repo,
           number,
-          merge_method: config["merge-method"]
+          merge_method: config.mergeMethod
         })
       );
-      if (config["delete-branch-after-merge"]) {
+      if (config.deleteBranchAfterMerge) {
         const pullRequest = result<PullRequest>(
           await github.pullRequests.get({
             owner,
@@ -119,7 +119,7 @@ export async function handlePullRequestStatus(
       }
       return;
     case "out_of_date_branch":
-      if (config["update-branch"]) {
+      if (config.updateBranch) {
         // This merges the baseRef on top of headRef of the PR.
         result(await github.repos.merge(pullRequestStatus.merge));
       }

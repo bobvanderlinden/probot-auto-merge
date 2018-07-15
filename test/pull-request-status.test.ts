@@ -144,7 +144,7 @@ describe("getPullRequestStatus", () => {
   it("returns requires_label when a required label is configured, but not set on pull request", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "required-labels": [
+        requiredLabels: [
           'mylabel'
         ]
       },
@@ -157,7 +157,7 @@ describe("getPullRequestStatus", () => {
   it("returns ready_for_merge when a required label is configured and it is set on pull request", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "required-labels": [
+        requiredLabels: [
           'mylabel'
         ]
       },

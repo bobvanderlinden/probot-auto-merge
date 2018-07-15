@@ -53,7 +53,7 @@ describe("handlePullRequestStatus", () => {
     const merge = githubCallMock(null);
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "update-branch": true
+        updateBranch: true
       },
       githubRepoMerge: merge
     });
@@ -87,7 +87,7 @@ describe("handlePullRequestStatus", () => {
     const merge = githubCallMock(null);
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "update-branch": true
+        updateBranch: true
       },
       githubRepoMerge: merge
     });
@@ -109,7 +109,7 @@ describe("handlePullRequestStatus", () => {
     const merge = githubCallMock(null);
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "update-branch": false
+        updateBranch: false
       },
       githubRepoMerge: merge
     });
@@ -124,7 +124,7 @@ describe("handlePullRequestStatus", () => {
     const githubGitdataDeleteReference = githubCallMock(null);
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "delete-branch-after-merge": true
+        deleteBranchAfterMerge: true
       },
       pullRequest: {
         base: {
@@ -167,7 +167,7 @@ describe("handlePullRequestStatus", () => {
     const githubGitdataDeleteReference = githubCallMock(null);
     const { context, pullRequestInfo } = mockPullRequestContext({
       config: {
-        "delete-branch-after-merge": true
+        deleteBranchAfterMerge: true
       },
       pullRequest: {
         base: {
