@@ -7,7 +7,7 @@ import {
   Branch,
   PullRequestInfo
 } from "../src/models";
-import { Config } from "../src/config";
+import { Config, defaultConfig } from "../src/config";
 
 export function githubCallMock<T>(data: T) {
   return jest.fn(async params => ({
@@ -20,8 +20,6 @@ export function mockPullRequestContext(options?: {
   checkRuns?: CheckRun[];
   branch?: Branch;
   branchProtection?: BranchProtection;
-  maxRequestedChanged?: number;
-  minApprovals?: number;
   mergeable?: boolean;
   merged?: boolean;
   githubRepoMerge?: Function;
@@ -62,6 +60,7 @@ export function mockPullRequestContext(options?: {
     merged: options.merged === undefined ? false : options.merged,
     number: 1,
     state: options.state || "open",
+    labels: [],
     ...options.pullRequest
   };
 
@@ -110,8 +109,7 @@ export function mockPullRequestContext(options?: {
         }
       },
       config: {
-        "max-requested-changes": options.maxRequestedChanged || 0,
-        "min-approvals": options.minApprovals || 1,
+        ...defaultConfig,
         ...options.config
       }
     } as any
