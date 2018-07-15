@@ -2,7 +2,7 @@
   "name": "probot-auto-merge",
   "version": "1.0.0",
   "description": "A Probot app that automatically merges PRs",
-  "author": "Bob van der Linden <bobvanderlinden@gmail.com> (https://github.com/bobvanderlinden/probot-auto-merge)",
+  "author": "Bob van der Linden <bobvanderlinden@gmail.com> (https://github.com/bobvanderlinden)",
   "license": "ISC",
   "repository": "https://github.com/bobvanderlinden/probot-auto-merge.git",
   "homepage": "https://github.com/bobvanderlinden/probot-auto-merge",
