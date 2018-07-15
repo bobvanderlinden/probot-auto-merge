@@ -1,3 +1,18 @@
+import { Context } from "probot";
+import { Config } from "./config";
+
+export interface HandlerContext {
+  log: (msg: string) => void;
+  github: Context["github"];
+  config: Config;
+}
+
+export interface PullRequestInfo {
+  owner: string;
+  repo: string;
+  number: number;
+}
+
 export interface CheckPullRequest {
   number: number;
 }
@@ -60,4 +75,12 @@ export interface BranchProtection {
     required_approving_review_count: number
   }
   restrictions: {}
+}
+
+export interface Branch {
+  name: string;
+  commit: {
+    sha: string
+  }
+  protected: boolean
 }

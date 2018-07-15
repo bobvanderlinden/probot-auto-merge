@@ -1,3 +1,5 @@
+import { AnyResponse } from "@octokit/rest";
+
 export function identity<T>(v: T): T { return v; }
 
 export function groupBy<TItem>(
@@ -16,4 +18,16 @@ export function groupByMap<TItem, TValue>(
     ...result,
     [keyFn(item)]: valueFn(item)
   }), {})
+}
+
+/**
+ * Checks the supplied response for errors and casts response data to
+ * supplied type.
+ * @param response The response from a GitHub API
+ */
+export function result<TResult = void>(response: AnyResponse): TResult {
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`Response status was ${response.status}`);
+  }
+  return response.data;
 }

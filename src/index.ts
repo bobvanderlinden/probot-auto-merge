@@ -1,6 +1,7 @@
 import { Application, Context } from 'probot'
 import { loadConfig } from './config'
-import { schedulePullRequestTrigger, HandlerContext } from './pull-request-handler'
+import { schedulePullRequestTrigger } from './pull-request-handler'
+import { HandlerContext } from './models';
 
 async function getHandlerContext(options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
