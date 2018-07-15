@@ -39,6 +39,14 @@ deleteBranchAfterMerge: true
 # * squash: combines all changes from the pull request into a single commit and places the commit on top of the base of the pull request
 # For more information see https://help.github.com/articles/about-pull-request-merges/
 mergeMethod: merge
+
+# Blocking labels are the labels that can be attached to a pull request to make sure the pull request is not being automatically merged.
+blockingLabels:
+- blocked
+
+# Whenever required labels are configured, pull requests will only be automatically merged whenever all of these labels are attached to a pull request.
+requiredLabels:
+- merge
 ```
 
 ## Development
