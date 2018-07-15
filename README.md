@@ -1,5 +1,7 @@
 # probot-auto-merge
 
+[![Travis CI](https://travis-ci.org/bobvanderlinden/probot-auto-merge.svg?branch=master)](https://travis-ci.org/bobvanderlinden/probot-auto-merge)
+
 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically merges PRs
 
 ## Usage
