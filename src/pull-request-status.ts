@@ -7,7 +7,8 @@ import {
   PullRequest,
   Branch
 } from "./models";
-import { result, groupBy, groupByMap } from "./utils";
+import { result, groupByLast, groupByLastMap } from "./utils";
+import { associations, getAssociationPriority } from "./association";
 
 export interface OutOfDateBranchPullRequestStatus {
   code: "out_of_date_branch";
@@ -144,7 +145,7 @@ async function getPullRequestStatusFromReviews(
     (a, b) =>
       new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
   );
-  const latestReviewsByUser = groupBy(
+  const latestReviewsByUser = groupByLast(
     review => review.user.login,
     sortedReviews
   );
@@ -156,31 +157,35 @@ async function getPullRequestStatusFromReviews(
   log(`\nReviews:\n${reviewSummary}\n\n`);
 
   const latestReviews = Object.values(latestReviewsByUser);
-  const changesRequestedCount = latestReviews.filter(
-    review => review.state === "CHANGES_REQUESTED"
-  ).length;
-  if (changesRequestedCount > config.maxRequestedChanges) {
-    return {
-      code: "changes_requested",
-      message: `There are changes requested by a reviewer (${changesRequestedCount} > ${
-        config.maxRequestedChanges
-      })`
-    };
+
+  let approvedByOneAssociation = false
+  for (let association of associations) {
+    const associationReviews = latestReviews.filter(review => getAssociationPriority(review.author_association) >= getAssociationPriority(association))
+
+    const changesRequestedCount = associationReviews.filter(review => review.state === 'CHANGES_REQUESTED').length
+    const maxRequestedChanges = config.maxRequestedChanges[association]
+    if (maxRequestedChanges !== undefined && changesRequestedCount > maxRequestedChanges) {
+      return {
+        code: "changes_requested",
+        message: `There are changes requested by a reviewer.`
+      };
+    }
+
+    const approvalCount = associationReviews.filter(review => review.state === 'APPROVED').length
+    const minApprovals = config.minApprovals[association]
+    if (minApprovals !== undefined && approvalCount >= minApprovals) {
+      approvedByOneAssociation = true;
+    }
   }
 
-  const approvalCount = latestReviews.filter(
-    review => review.state === "APPROVED"
-  ).length;
-  if (approvalCount < config.minApprovals) {
+  if (approvedByOneAssociation) {
+    return null;
+  } else {
     return {
       code: "need_approvals",
-      message: `There are not enough approvals by reviewers (${approvalCount} / ${
-        config.minApprovals
-      })`
+      message: `There are not enough approvals by reviewers`
     };
   }
-
-  return null;
 }
 
 async function getPullRequestStatusFromChecks(
@@ -217,7 +222,7 @@ async function getPullRequestStatusFromChecks(
       message: "There are still pending checks"
     };
   }
-  const checkConclusions = groupByMap(
+  const checkConclusions = groupByLastMap(
     checkRun => checkRun.conclusion,
     _ => true,
     checkRuns

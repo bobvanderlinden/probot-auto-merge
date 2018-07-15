@@ -2,8 +2,24 @@ import { Context } from 'probot'
 import getConfig from 'probot-config'
 
 export type Config = {
-  minApprovals: number,
-  maxRequestedChanges: number,
+  minApprovals: {
+    COLLABORATOR?: number,
+    CONTRIBUTOR?: number,
+    FIRST_TIMER?: number,
+    FIRST_TIME_CONTRIBUTOR?: number,
+    MEMBER?: number,
+    NONE?: number,
+    OWNER?: number
+  },
+  maxRequestedChanges: {
+    COLLABORATOR?: number,
+    CONTRIBUTOR?: number,
+    FIRST_TIMER?: number,
+    FIRST_TIME_CONTRIBUTOR?: number,
+    MEMBER?: number,
+    NONE?: number,
+    OWNER?: number
+  }
   updateBranch: boolean,
   deleteBranchAfterMerge: boolean,
   mergeMethod: 'merge' | 'rebase' | 'squash',
@@ -12,10 +28,13 @@ export type Config = {
 }
 
 export const defaultConfig: Config = {
-  minApprovals: 1,
-  maxRequestedChanges: 0,
-  updateBranch: true,
-  deleteBranchAfterMerge: true,
+  minApprovals: {
+  },
+  maxRequestedChanges: {
+    NONE: 0
+  },
+  updateBranch: false,
+  deleteBranchAfterMerge: false,
   mergeMethod: 'merge',
   blockingLabels: [],
   requiredLabels: []

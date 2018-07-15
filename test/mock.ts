@@ -110,24 +110,39 @@ export function mockPullRequestContext(options?: {
       },
       config: {
         ...defaultConfig,
+        minApprovals: {
+          COLLABORATOR: 1
+        },
+        maxRequestedChanges: {
+          COLLABORATOR: 0
+        },
+        updateBranch: true,
+        deleteBranchAfterMerge: true,
         ...options.config
       }
     } as any
   };
 }
 
-export function review(options: { name?: string; state: ReviewState }): Review {
+export function review(options: Partial<Review> & { state: ReviewState }): Review {
   return {
-    state: options.state,
     submitted_at: "2018-01-01",
-    user: { login: options.name || "henk" }
+    user: { login: "henk" },
+    author_association: 'MEMBER',
+    ...options
   };
 }
 
-export const approvedReview = (name?: string) =>
-  review({ name, state: "APPROVED" });
-export const changesRequestedReview = (name?: string) =>
-  review({ name, state: "CHANGES_REQUESTED" });
+export const approvedReview = (options?: Partial<Review>) =>
+  review({
+    state: "APPROVED",
+    ...options
+  });
+export const changesRequestedReview = (options?: Partial<Review>) =>
+  review({
+    state: "CHANGES_REQUESTED",
+    ...options
+  });
 
 export const successCheckRun: CheckRun = {
   name: "checka",

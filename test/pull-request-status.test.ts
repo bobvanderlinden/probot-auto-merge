@@ -29,16 +29,83 @@ describe("getPullRequestStatus", () => {
 
   it("returns changes_requested when one reviewer requested changes", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
-      reviews: [approvedReview("henk"), changesRequestedReview("sjaak")],
-      checkRuns: [successCheckRun]
+      reviews: [approvedReview({user:{login:"henk"}, author_association: 'MEMBER'}), changesRequestedReview({user: {login:"sjaak"}, author_association: 'MEMBER'})],
+      checkRuns: [successCheckRun],
+      config: {
+        minApprovals: {
+          MEMBER: 1
+        },
+        maxRequestedChanges: {
+          MEMBER: 0
+        }
+      }
     });
     const status = await getPullRequestStatus(context, pullRequestInfo);
     expect(status.code).toBe("changes_requested");
   });
 
+  it("returns changes_requested when owner approved, but member requested changes", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [approvedReview({user:{login:"henk"}, author_association: 'OWNER'}), changesRequestedReview({user: {login:"sjaak"}, author_association: 'MEMBER'})],
+      checkRuns: [successCheckRun],
+      config: {
+        minApprovals: {
+          OWNER: 1,
+          MEMBER: 1
+        },
+        maxRequestedChanges: {
+          OWNER: 0,
+          MEMBER: 0
+        }
+      }
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("changes_requested");
+  });
+
+  it("returns ready_for_merge when owner approved, but user requested changes", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [approvedReview({user:{login:"henk"}, author_association: 'OWNER'}), changesRequestedReview({user: {login:"sjaak"}, author_association: 'NONE'})],
+      checkRuns: [successCheckRun],
+      config: {
+        minApprovals: {
+          OWNER: 1,
+          MEMBER: 1
+        },
+        maxRequestedChanges: {
+          OWNER: 0,
+          MEMBER: 0
+        }
+      }
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
+  });
+
+  it("returns ready_for_merge when two members approved, but user requested changes", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [
+        approvedReview({user:{login:"henk"}, author_association: 'OWNER'}),
+        approvedReview({user: {login:"sjaak"}, author_association: 'MEMBER'}),
+        changesRequestedReview({user: {login:"piet"}, author_association: 'NONE'})
+      ],
+      checkRuns: [successCheckRun],
+      config: {
+        minApprovals: {
+          MEMBER: 2
+        },
+        maxRequestedChanges: {
+          MEMBER: 0
+        }
+      }
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
+  });
+
   it("returns changes_requested when same reviewer approved and requested changes", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
-      reviews: [approvedReview("henk"), changesRequestedReview("henk")],
+      reviews: [approvedReview({user:{login:"henk"}}), changesRequestedReview({user:{login:"henk"}})],
       checkRuns: [successCheckRun]
     });
     const status = await getPullRequestStatus(context, pullRequestInfo);
@@ -56,7 +123,7 @@ describe("getPullRequestStatus", () => {
 
   it("returns ready_for_merge when reviewer requested changes and approved", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
-      reviews: [changesRequestedReview("henk"), approvedReview("henk")]
+      reviews: [changesRequestedReview({user:{login:"henk"}}), approvedReview({user:{login:"henk"}})]
     });
     const status = await getPullRequestStatus(context, pullRequestInfo);
     expect(status.code).toBe("ready_for_merge");
