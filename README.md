@@ -30,20 +30,22 @@ maxRequestedChanges: 0
 # This is the equivalent of clicking the 'Update branch' button.
 # This is useful for repositories where protected branches are used and the option
 # 'Require branches to be up to date before merging' is enabled.
-# Note: this only works when the branch of the pull request resides in the same repository as the pull request itself.
+# Note: this only works when the branch of the pull request resides in the same repository as
+#       the pull request itself.
 updateBranch: true
 
 # Whether the pull request branch is automatically deleted.
 # This is the equivalent of clicking the 'Delete branch' button shown on merged pull requests.
-# Note: this only works when the branch of the pull request resides in the same repository as the pull request itself.
+# Note: this only works when the branch of the pull request resides in the same repository as
+#       the pull request itself.
 deleteBranchAfterMerge: true
 
 # In what way a pull request needs to be merged. This can be:
 # * merge: creates a merge commit, combining the commits from the pull request on top of
 #   the base of the pull request (default)
 # * rebase: places the commits from the pull request individually on top of the base of the pull request
-# * squash: combines all changes from the pull request into a single commit and places the commit on top of
-#   the base of the pull request
+# * squash: combines all changes from the pull request into a single commit and places the commit on top
+#   of the base of the pull request
 # For more information see https://help.github.com/articles/about-pull-request-merges/
 mergeMethod: merge
 
