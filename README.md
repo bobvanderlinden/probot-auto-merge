@@ -8,11 +8,12 @@ A GitHub App built with [Probot](https://github.com/probot/probot) that automati
 ## Usage
 
 1. [Configure the GitHub App](https://github.com/apps/probot-auto-merge)
-2. Optionally use a custom configuration as shown below.
+2. Create `.github/auto-merge.yml` in your repository.
+3. Customize configuration to your needs. See below.
 
 ## Configuration
 
-Create a file called `.github/auto-merge.yml` with the following content:
+Use the configuration shown below for `.github/auto-merge.yml` in your repository:
 
 ```yaml
 # Configuration for probot-auto-merge - https://github.com/bobvanderlinden/probot-auto-merge

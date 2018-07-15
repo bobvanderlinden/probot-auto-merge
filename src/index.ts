@@ -3,9 +3,9 @@ import { loadConfig } from './config'
 import { schedulePullRequestTrigger } from './pull-request-handler'
 import { HandlerContext } from './models';
 
-async function getHandlerContext(options: {app: Application, context: Context}): Promise<HandlerContext> {
+async function getHandlerContext(options: {app: Application, context: Context}): Promise<HandlerContext | null> {
   const config = await loadConfig(options.context)
-  return {
+  return config && {
     config,
     github: options.context.github,
     log: options.app.log
@@ -21,6 +21,7 @@ export = (app: Application) => {
     'pull_request.synchronize'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
+    if (!handlerContext) { return }
     await schedulePullRequestTrigger(handlerContext, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
@@ -34,6 +35,7 @@ export = (app: Application) => {
     'check_run.requested_action'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
+    if (!handlerContext) { return }
     for(const pullRequest of context.payload.check_run.pull_requests) {
       await schedulePullRequestTrigger(handlerContext, {
         owner: context.payload.repository.owner.login,
@@ -49,6 +51,7 @@ export = (app: Application) => {
     'check_suite.rerequested'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
+    if (!handlerContext) { return }
     for(const pullRequest of context.payload.check_suite.pull_requests) {
       await schedulePullRequestTrigger(handlerContext, {
         owner: context.payload.repository.owner.login,
