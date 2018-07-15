@@ -41,7 +41,10 @@ export interface PullRequest {
   number: number
   state: 'open' | 'closed'
   merged: boolean
-  mergeable: boolean
+  mergeable: boolean,
+  labels: {
+    name: string
+  }[]
 }
 
 export type ReviewState = 'APPROVED' | 'CHANGES_REQUESTED'

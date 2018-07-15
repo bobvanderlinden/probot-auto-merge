@@ -140,4 +140,35 @@ describe("getPullRequestStatus", () => {
     const status = await getPullRequestStatus(context, pullRequestInfo);
     expect(status.code).toBe("out_of_date_branch");
   });
+
+  it("returns requires_label when a required label is configured, but not set on pull request", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext({
+      config: {
+        "required-labels": [
+          'mylabel'
+        ]
+      },
+      reviews: [approvedReview()]
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("requires_label");
+  });
+
+  it("returns ready_for_merge when a required label is configured and it is set on pull request", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext({
+      config: {
+        "required-labels": [
+          'mylabel'
+        ]
+      },
+      reviews: [approvedReview()],
+      pullRequest: {
+        labels: [{
+          name: 'mylabel'
+        }]
+      }
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
+  });
 });

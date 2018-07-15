@@ -6,18 +6,25 @@ export type Config = {
   'max-requested-changes': number,
   'update-branch': boolean,
   'delete-branch-after-merge': boolean,
-  'merge-method': 'merge' | 'rebase' | 'squash'
+  'merge-method': 'merge' | 'rebase' | 'squash',
+  'required-labels': string[],
+  'blocking-labels': string[]
 }
 
-const defaultConfig: Config = {
+export const defaultConfig: Config = {
   'min-approvals': 1,
   'max-requested-changes': 0,
   'update-branch': true,
   'delete-branch-after-merge': true,
-  'merge-method': 'merge'
+  'merge-method': 'merge',
+  "blocking-labels": [],
+  "required-labels": []
 }
 
-export async function loadConfig(context: Context): Promise<Config> {
+export async function loadConfig(context: Context): Promise<Config | null> {
   const config = await getConfig(context, 'auto-merge.yml', defaultConfig)
-  return config || defaultConfig
+  return {
+    ...defaultConfig,
+    ...config
+  }
 }

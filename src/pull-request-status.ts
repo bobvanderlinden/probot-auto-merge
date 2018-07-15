@@ -26,6 +26,8 @@ export type PullRequestStatus =
         | "merged"
         | "closed"
         | "not_open"
+        | "requires_label"
+        | "blocking_label"
         | "pending_mergeable"
         | "conflicts"
         | "changes_requested"
@@ -92,6 +94,42 @@ function getPullRequestStatusFromPullRequest(
   }
 
   return null;
+}
+
+function getPullRequestStatusFromLabels(
+  context: HandlerContext,
+  pullRequest: PullRequest
+): PullRequestStatus | null {
+  const { config } = context;
+  function hasLabel(labelName: string): boolean {
+    return pullRequest.labels.some(label => label.name === labelName);
+  }
+
+  const missingRequiredLabels = config["required-labels"].filter(
+    requiredLabel => !hasLabel(requiredLabel)
+  );
+  if (missingRequiredLabels.length > 0) {
+    return {
+      code: "requires_label",
+      message: `Required labels are missing (${missingRequiredLabels.join(
+        ", "
+      )})`
+    };
+  }
+
+  const matchingBlockingLabels = config["blocking-labels"].filter(
+    blockingLabel => hasLabel(blockingLabel)
+  );
+  if (matchingBlockingLabels.length > 0) {
+    return {
+      code: "blocking_label",
+      message: `Blocking labels were added to the pull request (${
+        matchingBlockingLabels.join(", ")
+      })`
+    };
+  }
+
+  return null
 }
 
 async function getPullRequestStatusFromReviews(
@@ -254,6 +292,7 @@ export async function getPullRequestStatus(
 
   return (
     getPullRequestStatusFromPullRequest(pullRequest) ||
+    getPullRequestStatusFromLabels(context, pullRequest) ||
     (await getPullRequestStatusFromReviews(context, pullRequestInfo)) ||
     (await getPullRequestStatusFromChecks(
       context,
