@@ -21,10 +21,14 @@ export function schedulePullRequestTrigger(
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo
 ) {
-  const queueName = getPullRequestKey(pullRequestInfo);
+  const queueName = getRepositoryKey(pullRequestInfo);
   if (!taskScheduler.hasQueued(queueName)) {
     taskScheduler.queue(queueName, { context, pullRequestInfo });
   }
+}
+
+function getRepositoryKey({ owner, repo }: { owner: string, repo: string }) {
+  return `${owner}/${repo}`
 }
 
 function getPullRequestKey({ owner, repo, number }: PullRequestInfo) {
