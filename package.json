@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@types/debug": "0.0.30",
-    "@types/jest": "^23.1.5",
+    "@types/jest": "^23.3.1",
     "@types/node": "^10.5.2",
     "@types/p-queue": "^2.3.1",
     "coveralls": "^3.0.2",
