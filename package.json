@@ -38,7 +38,7 @@
     "nodemon": "^1.17.2",
     "smee-client": "^1.0.2",
     "standard": "^10.0.3",
-    "ts-jest": "^23.0.0",
+    "ts-jest": "^23.0.1",
     "typescript": "^2.9.2"
   },
   "engines": {
