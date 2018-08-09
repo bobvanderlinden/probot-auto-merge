@@ -10,9 +10,14 @@ import {
 import { Config, defaultConfig } from "../src/config";
 
 export function githubCallMock<T>(data: T) {
-  return jest.fn(async params => ({
+  return githubResponseMock({
+    status: 200,
     data: data
-  }));
+  });
+}
+
+export function githubResponseMock<T>(response: { status: number, data: T }) {
+  return jest.fn(async _params => response);
 }
 
 export function mockPullRequestContext(options?: {
@@ -20,6 +25,7 @@ export function mockPullRequestContext(options?: {
   checkRuns?: CheckRun[];
   branch?: Branch;
   branchProtection?: BranchProtection;
+  hasBranchProtection?: boolean,
   mergeable?: boolean;
   merged?: boolean;
   githubRepoMerge?: Function;
@@ -34,6 +40,7 @@ export function mockPullRequestContext(options?: {
   const log = jest.fn((...args) => {
     // console.log(...args)
   });
+  const hasBranchProtection = options.hasBranchProtection === undefined ? false : options.hasBranchProtection;
 
   const pullRequest: PullRequest = {
     base: {
@@ -87,13 +94,15 @@ export function mockPullRequestContext(options?: {
         },
         repos: {
           merge: options.githubRepoMerge,
-          getBranchProtection: githubCallMock(
-            options.branchProtection || {
-              required_status_checks: {
-                strict: false
+          getBranchProtection: hasBranchProtection
+            ? githubCallMock(
+              options.branchProtection || {
+                required_status_checks: {
+                  strict: false
+                }
               }
-            }
-          ),
+            )
+            : githubResponseMock({ status: 404, data: {} }),
           getBranch: githubCallMock<Branch>(
             options.branch || {
               commit: {
