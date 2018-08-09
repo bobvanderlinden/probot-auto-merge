@@ -20,6 +20,14 @@ export function githubResponseMock<T>(response: { status: number, data: T }) {
   return jest.fn(async _params => response);
 }
 
+export function githubErrorResponseMock(errorParams: { code: number }) {
+  return jest.fn(async _params => {
+    const error: any = new Error();
+    error.code = errorParams.code;
+    throw error;
+  })
+}
+
 export function mockPullRequestContext(options?: {
   reviews?: Review[];
   checkRuns?: CheckRun[];
@@ -102,7 +110,7 @@ export function mockPullRequestContext(options?: {
                 }
               }
             )
-            : githubResponseMock({ status: 404, data: {} }),
+            : githubErrorResponseMock({ code: 404 }),
           getBranch: githubCallMock<Branch>(
             options.branch || {
               commit: {
