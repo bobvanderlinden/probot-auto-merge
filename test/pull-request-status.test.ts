@@ -103,6 +103,27 @@ describe("getPullRequestStatus", () => {
     expect(status.code).toBe("ready_for_merge");
   });
 
+  it("returns ready_for_merge when two members approved, but user requested changes", async () => {
+    const { context, pullRequestInfo } = mockPullRequestContext({
+      reviews: [
+        approvedReview({user:{login:"henk"}, author_association: 'OWNER'}),
+        approvedReview({user: {login:"sjaak"}, author_association: 'MEMBER'}),
+        changesRequestedReview({user: {login:"piet"}, author_association: 'NONE'})
+      ],
+      checkRuns: [successCheckRun],
+      config: {
+        minApprovals: {
+          MEMBER: 2
+        },
+        maxRequestedChanges: {
+          MEMBER: 0
+        }
+      }
+    });
+    const status = await getPullRequestStatus(context, pullRequestInfo);
+    expect(status.code).toBe("ready_for_merge");
+  });
+
   it("returns changes_requested when same reviewer approved and requested changes", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview({user:{login:"henk"}}), changesRequestedReview({user:{login:"henk"}})],
@@ -191,6 +212,7 @@ describe("getPullRequestStatus", () => {
   it("returns out_of_date_branch when pull request is based on strict protected branch", async () => {
     const { context, pullRequestInfo } = mockPullRequestContext({
       reviews: [approvedReview()],
+      hasBranchProtection: true,
       branchProtection: {
         required_status_checks: {
           strict: true

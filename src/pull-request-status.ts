@@ -243,19 +243,36 @@ async function getPullRequestStatusFromChecks(
   return null;
 }
 
+async function hasStrictBranchChecks(
+  context: HandlerContext,
+  { owner, repo, branch }: { owner: string, repo: string, branch: string }
+): Promise<boolean> {
+  const { github } = context
+  const branchProtectionResponse = await github.repos.getBranchProtection({
+    owner: owner,
+    repo: repo,
+    branch: branch
+  });
+  if (branchProtectionResponse.status === 404) {
+    return false;
+  } else {
+    const response = result<BranchProtection>(branchProtectionResponse);
+    return response.required_status_checks.strict;
+  }
+}
+
 async function getPullRequestStatusFromProtectedBranch(
   context: HandlerContext,
   pullRequest: PullRequest
 ): Promise<PullRequestStatus | null> {
   const { github, log } = context;
-  const branchProtection = result<BranchProtection>(
-    await github.repos.getBranchProtection({
-      owner: pullRequest.base.user.login,
-      repo: pullRequest.base.repo.name,
-      branch: pullRequest.base.ref
-    })
-  );
-  if (branchProtection.required_status_checks.strict) {
+
+  const strictBranchChecks = await hasStrictBranchChecks(context, {
+    owner: pullRequest.base.user.login,
+    repo: pullRequest.base.repo.name,
+    branch: pullRequest.base.ref
+  });
+  if (strictBranchChecks) {
     log(`baseRef: ${pullRequest.base.ref}`);
     const branch = result<Branch>(
       await github.repos.getBranch({
