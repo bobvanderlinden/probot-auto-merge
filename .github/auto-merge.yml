@@ -1,7 +1,7 @@
 # Configuration for probot-auto-merge - https://github.com/bobvanderlinden/probot-auto-merge
 
 minApprovals:
-  COLLABORATOR: 2
+  COLLABORATOR: 1
 maxRequestedChanges:
   NONE: 0
 updateBranch: true

@@ -15,10 +15,15 @@ async function getHandlerContext(options: {app: Application, context: Context}):
 export = (app: Application) => {
   app.on([
     'pull_request.opened',
+    'pull_request.edited',
+    'pull_request.reopened',
+    'pull_request.synchronize',
+    'pull_request.labeled',
+    'pull_request.unlabeled',
     'pull_request.reopened',
     'pull_request_review.submitted',
-    'pull_request_review.dismissed',
-    'pull_request.synchronize'
+    'pull_request_review.edited',
+    'pull_request_review.dismissed'
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
     if (!handlerContext) { return }
