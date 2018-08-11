@@ -1,5 +1,5 @@
 
-export interface PullRequestInfo {
+export interface PullRequestReference {
   owner: string;
   repo: string;
   number: number;

@@ -1,24 +1,11 @@
-import {
-  HandlerContext,
-  PullRequestInfo,
-  Review,
-  CheckRun,
-  BranchProtection,
-  PullRequest,
-  Branch
-} from "./models";
-import { result, groupByLast, groupByLastMap } from "./utils";
+import { PullRequestInfo } from './pull-request-query';
+import { HandlerContext } from "./models";
+import { groupByLast, groupByLastMap } from "./utils";
 import { associations, getAssociationPriority } from "./association";
 
 export interface OutOfDateBranchPullRequestStatus {
   code: "out_of_date_branch";
   message: string;
-  merge: {
-    owner: string;
-    repo: string;
-    base: string;
-    head: string;
-  };
 }
 
 export type PullRequestStatus =
@@ -57,53 +44,55 @@ export const PullRequestStatusCodes: PullRequestStatusCode[] = [
 ];
 
 function getPullRequestStatusFromPullRequest(
-  pullRequest: PullRequest
+  context: HandlerContext,
+  pullRequestInfo: PullRequestInfo
 ): PullRequestStatus | null {
-  if (pullRequest.merged) {
-    return {
-      code: "merged",
-      message: "Pull request was already merged"
-    };
+  switch (pullRequestInfo.state) {
+    case 'CLOSED':
+      return {
+        code: "closed",
+        message: "Pull request is closed"
+      };
+    case 'MERGED':
+      return {
+        code: "merged",
+        message: "Pull request was already merged"
+      };
+    default:
+      return {
+        code: "not_open",
+        message: "Pull request is not open"
+      };
+    case 'OPEN':
+      // Continue.
+      break;
   }
 
-  if (pullRequest.state === "closed") {
-    return {
-      code: "closed",
-      message: "Pull request is closed"
-    };
+  switch (pullRequestInfo.mergeable) {
+    case 'CONFLICTING':
+      return {
+        code: "conflicts",
+        message: "Could not merge pull request due to conflicts"
+      };
+    case 'UNKNOWN':
+      return {
+        code: "pending_mergeable",
+        message: "Mergeablity of pull request could not yet be determined"
+      };
+    case 'MERGEABLE':
+      // Continue.
+      break;
   }
-
-  if (pullRequest.state !== "open") {
-    return {
-      code: "not_open",
-      message: "Pull request is not open"
-    };
-  }
-
-  if (pullRequest.mergeable === null) {
-    return {
-      code: "pending_mergeable",
-      message: "Mergeablity of pull request could not yet be determined"
-    };
-  }
-
-  if (pullRequest.mergeable === false) {
-    return {
-      code: "conflicts",
-      message: "Could not merge pull request due to conflicts"
-    };
-  }
-
   return null;
 }
 
 function getPullRequestStatusFromLabels(
   context: HandlerContext,
-  pullRequest: PullRequest
+  pullRequestInfo: PullRequestInfo
 ): PullRequestStatus | null {
   const { config } = context;
   function hasLabel(labelName: string): boolean {
-    return pullRequest.labels.some(label => label.name === labelName);
+    return pullRequestInfo.labels.nodes.some(label => label.name === labelName);
   }
 
   const missingRequiredLabels = config.requiredLabels.filter(
@@ -133,20 +122,17 @@ function getPullRequestStatusFromLabels(
   return null
 }
 
-async function getPullRequestStatusFromReviews(
+function getPullRequestStatusFromReviews(
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo
-): Promise<PullRequestStatus | null> {
-  const { github, config, log } = context;
-  const reviews = result<Review[]>(
-    await github.pullRequests.getReviews(pullRequestInfo)
-  );
-  const sortedReviews = reviews.sort(
+): PullRequestStatus | null {
+  const { config, log } = context;
+  const sortedReviews = pullRequestInfo.reviews.nodes.sort(
     (a, b) =>
-      new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
+      new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
   );
   const latestReviewsByUser = groupByLast(
-    review => review.user.login,
+    review => review.author.login,
     sortedReviews
   );
 
@@ -160,7 +146,7 @@ async function getPullRequestStatusFromReviews(
 
   let approvedByOneAssociation = false
   for (let association of associations) {
-    const associationReviews = latestReviews.filter(review => getAssociationPriority(review.author_association) >= getAssociationPriority(association))
+    const associationReviews = latestReviews.filter(review => getAssociationPriority(review.authorAssociation) >= getAssociationPriority(association))
 
     const changesRequestedCount = associationReviews.filter(review => review.state === 'CHANGES_REQUESTED').length
     const maxRequestedChanges = config.maxRequestedChanges[association]
@@ -188,22 +174,12 @@ async function getPullRequestStatusFromReviews(
   }
 }
 
-async function getPullRequestStatusFromChecks(
+function getPullRequestStatusFromChecks(
   context: HandlerContext,
-  pullRequestInfo: PullRequestInfo,
-  headSha: string
-): Promise<PullRequestStatus | null> {
-  const { github, log } = context;
-  const { owner, repo } = pullRequestInfo;
-  const checks = result<{ check_runs: CheckRun[] }>(
-    await github.checks.listForRef({
-      owner,
-      repo,
-      ref: headSha,
-      filter: "latest"
-    })
-  );
-  const checkRuns = checks.check_runs;
+  pullRequestInfo: PullRequestInfo
+): PullRequestStatus | null {
+  const { log } = context;
+  const checkRuns = pullRequestInfo.checkRuns;
   // log('checks: ' + JSON.stringify(checks))
   const checksSummary = checkRuns
     .map(
@@ -243,64 +219,25 @@ async function getPullRequestStatusFromChecks(
   return null;
 }
 
-async function hasStrictBranchChecks(
+function getPullRequestStatusFromProtectedBranch(
   context: HandlerContext,
-  { owner, repo, branch }: { owner: string, repo: string, branch: string }
-): Promise<boolean> {
-  const { github } = context
+  pullRequestInfo: PullRequestInfo
+): PullRequestStatus | null {
+  const protectedBranch = pullRequestInfo.repository.protectedBranches.nodes
+    .filter(protectedBranch => protectedBranch.name === pullRequestInfo.baseRef.name)
+    [0]
 
-  try {
-    const branchProtection = result<BranchProtection>(await github.repos.getBranchProtection({
-      owner: owner,
-      repo: repo,
-      branch: branch
-    }));
-    return branchProtection.required_status_checks.strict;
-  } catch (err) {
-    if (err.code === 404) {
-      return false;
-    } else {
-      throw err;
-    }
-  }
-}
-
-async function getPullRequestStatusFromProtectedBranch(
-  context: HandlerContext,
-  pullRequest: PullRequest
-): Promise<PullRequestStatus | null> {
-  const { github, log } = context;
-
-  const strictBranchChecks = await hasStrictBranchChecks(context, {
-    owner: pullRequest.base.user.login,
-    repo: pullRequest.base.repo.name,
-    branch: pullRequest.base.ref
-  });
-  if (strictBranchChecks) {
-    log(`baseRef: ${pullRequest.base.ref}`);
-    const branch = result<Branch>(
-      await github.repos.getBranch({
-        owner: pullRequest.base.user.login,
-        repo: pullRequest.base.repo.name,
-        branch: pullRequest.base.ref
-      })
-    );
-    if (pullRequest.base.sha !== branch.commit.sha) {
-      return {
-        code: "out_of_date_branch",
-        message: `Pull request is based on a strict protected branch (${
-          pullRequest.base.ref
-        }) and base sha of pull request (${
-          pullRequest.base.sha
-        }) differs from sha of branch (${branch.commit.sha})`,
-        merge: {
-          owner: pullRequest.head.user.login,
-          repo: pullRequest.head.repo.name,
-          base: pullRequest.head.ref,
-          head: pullRequest.base.ref
-        }
-      };
-    }
+  if (protectedBranch !== undefined
+    && protectedBranch.hasStrictRequiredStatusChecks
+    && pullRequestInfo.baseRef.target.oid !== pullRequestInfo.baseRefOid) {
+    return {
+      code: "out_of_date_branch",
+      message: `Pull request is based on a strict protected branch (${
+        pullRequestInfo.baseRef.name
+      }) and base sha of pull request (${
+        pullRequestInfo.baseRefOid
+      }) differs from sha of branch (${pullRequestInfo.baseRef.target.oid})`
+    };
   }
 
   return null;
@@ -310,22 +247,12 @@ export async function getPullRequestStatus(
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo
 ): Promise<PullRequestStatus> {
-  const { github } = context;
-
-  const pullRequest = result<PullRequest>(
-    await github.pullRequests.get(pullRequestInfo)
-  );
-
   return (
-    getPullRequestStatusFromPullRequest(pullRequest) ||
-    getPullRequestStatusFromLabels(context, pullRequest) ||
-    (await getPullRequestStatusFromReviews(context, pullRequestInfo)) ||
-    (await getPullRequestStatusFromChecks(
-      context,
-      pullRequestInfo,
-      pullRequest.head.sha
-    )) ||
-    (await getPullRequestStatusFromProtectedBranch(context, pullRequest)) || {
+    getPullRequestStatusFromPullRequest(context, pullRequestInfo) ||
+    getPullRequestStatusFromLabels(context, pullRequestInfo) ||
+    getPullRequestStatusFromReviews(context, pullRequestInfo) ||
+    getPullRequestStatusFromChecks(context, pullRequestInfo) ||
+    getPullRequestStatusFromProtectedBranch(context, pullRequestInfo) || {
       code: "ready_for_merge",
       message: "Pull request successfully merged"
     }

@@ -1,13 +1,20 @@
+import { HandlerContext } from './../src/models';
 import {
-  Review,
-  CheckRun,
   BranchProtection,
   PullRequest,
-  ReviewState,
   Branch,
-  PullRequestInfo
+  PullRequestReference
 } from "../src/models";
 import { Config, defaultConfig } from "../src/config";
+import { PullRequestInfo } from "../src/pull-request-query";
+import { GitHubAPI } from "probot/lib/github";
+
+export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; };
+type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never;
+
+type Review = ElementOf<PullRequestInfo["reviews"]["nodes"]>
+type ReviewState = Review["state"]
+type CheckRun = ElementOf<PullRequestInfo["checkRuns"]>
 
 export function githubCallMock<T>(data: T) {
   return githubResponseMock({
@@ -28,6 +35,87 @@ export function githubErrorResponseMock(errorParams: { code: number }) {
   })
 }
 
+export const defaultPullRequestInfo: PullRequestInfo = {
+  number: 1,
+  state: "OPEN",
+  mergeable: "MERGEABLE",
+  potentialMergeCommit: {
+    oid: "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+  },
+  baseRef: {
+    name: 'master',
+    repository: {
+      name: "probot-auto-merge",
+      owner: {
+        login: "bobvanderlinden"
+      }
+    },
+    target: {
+      oid: "c00dbbc9dadfbe1e232e93a729dd4752fade0abf"
+    }
+  },
+  baseRefOid: "c00dbbc9dadfbe1e232e93a729dd4752fade0abf",
+  headRef: {
+    name: "pr-some-change",
+    repository: {
+      name: "probot-auto-merge",
+      owner: {
+        login: "bobvanderlinden"
+      }
+    },
+    target: {
+      oid: "c2a6b03f190dfb2b4aa91f8af8d477a9bc3401dc"
+    }
+  },
+  headRefOid: "c2a6b03f190dfb2b4aa91f8af8d477a9bc3401dc",
+  authorAssociation: "OWNER",
+  labels: {
+    nodes: []
+  },
+  reviews: {
+    nodes: []
+  },
+  repository: {
+    protectedBranches: {
+      nodes: []
+    }
+  },
+  checkRuns: []
+}
+
+
+export function createPullRequestInfo(pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {
+  return {
+    ...defaultPullRequestInfo,
+    ...pullRequestInfo
+  }
+}
+
+export function createGithubApi(options?: DeepPartial<GitHubAPI>): GitHubAPI {
+  return {
+    ...options
+   } as GitHubAPI
+}
+
+export function createConfig(options?: Partial<Config>): Config {
+  return {
+    ...defaultConfig,
+    minApprovals: {
+      MEMBER: 1
+    },
+    ...options,
+  }
+}
+
+export function createHandlerContext(options?: Partial<HandlerContext>): HandlerContext {
+  return {
+    log: () => {},
+    github: options && options.github || createGithubApi(),
+    config: options && options.config || createConfig(),
+    ...options
+  }
+}
+
 export function mockPullRequestContext(options?: {
   reviews?: Review[];
   checkRuns?: CheckRun[];
@@ -41,7 +129,7 @@ export function mockPullRequestContext(options?: {
   state?: PullRequest["state"];
   config?: Partial<Config>;
   pullRequest?: Partial<PullRequest>;
-  pullRequestInfo?: Partial<PullRequestInfo>;
+  PullRequestReference?: Partial<PullRequestReference>;
 }) {
   options = options || {};
   const merge = githubCallMock(null);
@@ -80,11 +168,11 @@ export function mockPullRequestContext(options?: {
   };
 
   return {
-    pullRequestInfo: {
+    PullRequestReference: {
       owner: "henk",
       repo: "test",
       number: 1,
-      ...options.pullRequestInfo
+      ...options.PullRequestReference
     },
     merge: merge,
     context: {
@@ -143,9 +231,11 @@ export function mockPullRequestContext(options?: {
 
 export function review(options: Partial<Review> & { state: ReviewState }): Review {
   return {
-    submitted_at: "2018-01-01",
-    user: { login: "henk" },
-    author_association: 'MEMBER',
+    submittedAt: "2018-07-15T20:53:17Z",
+    authorAssociation: 'MEMBER',
+    author: {
+      login: "henk"
+    },
     ...options
   };
 }
