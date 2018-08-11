@@ -1,3 +1,4 @@
+import Raven from 'raven'
 import { TaskScheduler } from './task-scheduler'
 import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
 import { result } from './utils'
@@ -12,7 +13,15 @@ interface PullRequestTask {
 
 const taskScheduler = new TaskScheduler<PullRequestTask>({
   worker: pullRequestWorker,
-  concurrency: 8
+  concurrency: 8,
+  errorHandler: (error, queueName) => {
+    debug(`Error during handling of pull request task on queue ${queueName}`, error)
+    Raven.captureException(error, {
+      tags: {
+        queue: queueName
+      }
+    }, undefined)
+  }
 })
 const pullRequestTimeouts: {
   [key: string]: NodeJS.Timer;
@@ -40,7 +49,15 @@ async function pullRequestWorker ({
   context,
   PullRequestReference
 }: PullRequestTask) {
-  await handlePullRequestTrigger(context, PullRequestReference)
+  await Raven.context({
+    tags: {
+      owner: PullRequestReference.owner,
+      repository: PullRequestReference.repo,
+      pullRequestNumber: PullRequestReference.number
+    }
+  }, async () => {
+    await handlePullRequestTrigger(context, PullRequestReference)
+  })
 }
 
 async function handlePullRequestTrigger (
@@ -79,6 +96,13 @@ async function doPullRequestWork (
     context,
     pullRequestInfo
   )
+
+  Raven.mergeContext({
+    tags: {
+      pullRequestStatus: pullRequestStatus.code
+    }
+  })
+
   log(`result: ${pullRequestStatus.code}: ${pullRequestStatus.message}`)
   await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus)
 }
