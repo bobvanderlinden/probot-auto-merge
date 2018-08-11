@@ -1,8 +1,8 @@
-import { PullRequestReference, CheckRun, PullRequestInfo, PullRequestQueryResult } from './github-models';
-import { Context } from "probot";
-import { result } from './utils';
+import { PullRequestReference, CheckRun, PullRequestInfo, PullRequestQueryResult } from './github-models'
+import { Context } from 'probot'
+import { result } from './utils'
 
-export async function queryPullRequest(github: Context['github'], { owner, repo, number }: PullRequestReference): Promise<PullRequestInfo> {
+export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
   const response = await github.query(`
     query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
       repository(owner: $owner, name: $repo) {
@@ -69,10 +69,10 @@ export async function queryPullRequest(github: Context['github'], { owner, repo,
   `, {
     'owner': owner,
     'repo': repo,
-    'pullRequestNumber': number
+    'pullRequestNumber': pullRequestNumber
   }) as any
   if (!response) {
-    throw new Error(`Could not query pull request ${owner}/${repo}#${number}`)
+    throw new Error(`Could not query pull request ${owner}/${repo}#${pullRequestNumber}`)
   }
   const queryResult = response as PullRequestQueryResult
 
@@ -80,7 +80,7 @@ export async function queryPullRequest(github: Context['github'], { owner, repo,
     owner: queryResult.repository.pullRequest.headRef.repository.owner.login,
     repo: queryResult.repository.pullRequest.headRef.repository.name,
     ref: queryResult.repository.pullRequest.headRef.name,
-    filter: "latest"
+    filter: 'latest'
   }))
 
   return {

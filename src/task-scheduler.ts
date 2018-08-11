@@ -15,7 +15,7 @@ export class TaskScheduler<TTask> {
   /**
    * Creates a TaskScheduler that handles tasks using the specified worker.
    */
-  constructor(opts: {
+  constructor (opts: {
     worker: TaskWorker<TTask>,
     concurrency?: number
   }) {
@@ -26,18 +26,18 @@ export class TaskScheduler<TTask> {
     })
   }
 
-  onIdle() {
+  onIdle () {
     return this.workerQueue.onIdle()
   }
 
-  stop() {
+  stop () {
     this.queues = {}
   }
 
   /**
    * Queue a task onto the queue with queueName
    */
-  queue(queueName: string, task: TTask) {
+  queue (queueName: string, task: TTask) {
     const queue = this.queues[queueName]
     if (queue) {
       queue.push(task)
@@ -47,12 +47,12 @@ export class TaskScheduler<TTask> {
     }
   }
 
-  hasQueued(queueName: string) {
+  hasQueued (queueName: string) {
     const queue = this.queues[queueName]
     return queue && queue.length > 0
   }
 
-  private async doWorkForKey(queueName: string) {
+  private async doWorkForKey (queueName: string) {
     debug(`doWorkForKey(${queueName})`)
     const queue = this.queues[queueName]
     if (!queue || queue.length === 0) {
@@ -82,7 +82,13 @@ export class TaskScheduler<TTask> {
     }
   }
 
-  private queueWorkForQueueName(queueName: string) {
+  private queueWorkForQueueName (queueName: string) {
     this.workerQueue.add(this.doWorkForKey.bind(this, queueName))
+      .then(() => {
+        // Task succeeded.
+        debug(`${queueName}: task succeeded`)
+      }, (err) => {
+        debug(`${queueName}: task failed`, err)
+      })
   }
 }

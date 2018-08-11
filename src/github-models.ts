@@ -1,13 +1,13 @@
-import { ElementOf } from './utils';
+import { ElementOf } from './utils'
 export type PullRequestState = 'OPEN' | 'CLOSED' | 'MERGED'
 export type MergeableState = 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
 export type CommentAuthorAssociation = 'MEMBER' | 'OWNER' | 'COLLABORATOR' | 'CONTRIBUTOR' | 'FIRST_TIME_CONTRIBUTOR' | 'FIRST_TIMER' | 'NONE'
 export type PullRequestReviewState = 'PENDING' | 'COMMENTED' | 'APPROVED' | 'CHANGES_REQUESTED' | 'DISMISSED'
 
 export interface PullRequestReference {
-  owner: string;
-  repo: string;
-  number: number;
+  owner: string
+  repo: string
+  number: number
 }
 
 export interface CheckRun {
@@ -86,4 +86,4 @@ export type PullRequestInfo = PullRequestQueryResult['repository']['pullRequest'
   checkRuns: CheckRun[]
 }
 
-export type Review = ElementOf<PullRequestInfo["reviews"]["nodes"]>
+export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>

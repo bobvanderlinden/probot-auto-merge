@@ -1,8 +1,8 @@
-import { queryPullRequest } from "../src/pull-request-query";
-import { createGithubApi, createPullRequestInfo } from "./mock";
+import { queryPullRequest } from '../src/pull-request-query'
+import { createGithubApi, createPullRequestInfo } from './mock'
 
-describe("queryPullRequest", () => {
-  it("should do a single graphql query", async () => {
+describe('queryPullRequest', () => {
+  it('should do a single graphql query', async () => {
     const pullRequestInfo = createPullRequestInfo()
     const query = jest.fn(() => ({
       repository: {
@@ -24,8 +24,8 @@ describe("queryPullRequest", () => {
           listForRef
         }
       }),
-      { owner: "bobvanderlinden", repo: "probot-auto-merge", number: 1 }
-    );
-    expect(query).toHaveBeenCalledTimes(1);
+      { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
+    )
+    expect(query).toHaveBeenCalledTimes(1)
   })
 })
