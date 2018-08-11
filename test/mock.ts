@@ -7,25 +7,6 @@ import {
 import { Config, defaultConfig } from "../src/config";
 import { GitHubAPI } from "probot/lib/github";
 
-export function githubCallMock<T>(data: T) {
-  return githubResponseMock({
-    status: 200,
-    data: data
-  });
-}
-
-export function githubResponseMock<T>(response: { status: number, data: T }) {
-  return jest.fn(async _params => response);
-}
-
-export function githubErrorResponseMock(errorParams: { code: number }) {
-  return jest.fn(async _params => {
-    const error: any = new Error();
-    error.code = errorParams.code;
-    throw error;
-  })
-}
-
 export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
   state: "OPEN",
