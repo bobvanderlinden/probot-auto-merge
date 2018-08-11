@@ -11,6 +11,9 @@ Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728', {
   },
   release: process.env.HEROKU_SLUG_COMMIT,
   environment: process.env.NODE_ENV || 'development',
+  autoBreadcrumbs: {
+    'console': true,
+    'http': true
   }
 }).install()
 
