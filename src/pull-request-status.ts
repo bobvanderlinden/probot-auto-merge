@@ -1,5 +1,4 @@
-import { PullRequestInfo } from './pull-request-query';
-import { HandlerContext } from "./models";
+import { HandlerContext, PullRequestInfo } from "./models";
 import { groupByLast, groupByLastMap } from "./utils";
 import { associations, getAssociationPriority } from "./association";
 

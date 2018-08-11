@@ -1,8 +1,8 @@
 import { TaskScheduler } from "./task-scheduler";
-import { HandlerContext, PullRequestReference } from "./models";
+import { HandlerContext, PullRequestReference, PullRequestInfo } from "./models";
 import { result } from "./utils";
 import { getPullRequestStatus, PullRequestStatus } from "./pull-request-status";
-import { queryPullRequest, PullRequestInfo } from "./pull-request-query";
+import { queryPullRequest } from "./pull-request-query";
 const debug = require("debug")("pull-request-handler");
 
 interface PullRequestTask {
