@@ -7,7 +7,7 @@ import Raven from 'raven'
 Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728', {
   captureUnhandledRejections: true,
   tags: {
-    version: process.env.HEROKU_RELEASE_VERSION || 'unknown'
+    version: process.env.HEROKU_RELEASE_VERSION as string
   },
   release: process.env.HEROKU_SLUG_COMMIT,
   environment: process.env.NODE_ENV || 'development',
