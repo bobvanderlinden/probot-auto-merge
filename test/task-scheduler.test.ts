@@ -1,5 +1,5 @@
 import { TaskScheduler } from '../src/task-scheduler'
-import PQueue from 'p-queue'
+
 describe('TaskScheduler', () => {
   it('executes a single task', () => {
     const worker = jest.fn()

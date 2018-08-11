@@ -1,7 +1,7 @@
 import PQueue from 'p-queue'
 const debug = require('debug')('task-scheduler')
 
-type TaskWorker<TTask> = (task: TTask) => Promise<void>
+export type TaskWorker<TTask> = (task: TTask) => Promise<void>
 
 /**
  * A task scheduler that holds multiple named queues. The tasks in each queue are handled

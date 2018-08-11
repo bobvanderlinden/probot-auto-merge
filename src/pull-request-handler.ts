@@ -1,12 +1,13 @@
 import { TaskScheduler } from "./task-scheduler";
-import { PullRequest, HandlerContext, PullRequestInfo } from "./models";
+import { HandlerContext, PullRequestReference, PullRequestInfo } from "./models";
 import { result } from "./utils";
 import { getPullRequestStatus, PullRequestStatus } from "./pull-request-status";
+import { queryPullRequest } from "./pull-request-query";
 const debug = require("debug")("pull-request-handler");
 
 interface PullRequestTask {
   context: HandlerContext;
-  pullRequestInfo: PullRequestInfo;
+  PullRequestReference: PullRequestReference;
 }
 
 const taskScheduler = new TaskScheduler<PullRequestTask>({
@@ -19,11 +20,11 @@ const pullRequestTimeouts: {
 
 export function schedulePullRequestTrigger(
   context: HandlerContext,
-  pullRequestInfo: PullRequestInfo
+  PullRequestReference: PullRequestReference
 ) {
-  const queueName = getRepositoryKey(pullRequestInfo);
+  const queueName = getRepositoryKey(PullRequestReference);
   if (!taskScheduler.hasQueued(queueName)) {
-    taskScheduler.queue(queueName, { context, pullRequestInfo });
+    taskScheduler.queue(queueName, { context, PullRequestReference });
   }
 }
 
@@ -31,23 +32,23 @@ function getRepositoryKey({ owner, repo }: { owner: string, repo: string }) {
   return `${owner}/${repo}`
 }
 
-function getPullRequestKey({ owner, repo, number }: PullRequestInfo) {
+function getPullRequestKey({ owner, repo, number }: PullRequestReference) {
   return `${owner}/${repo}#${number}`;
 }
 
 async function pullRequestWorker({
   context,
-  pullRequestInfo
+  PullRequestReference
 }: PullRequestTask) {
-  await handlePullRequestTrigger(context, pullRequestInfo);
+  await handlePullRequestTrigger(context, PullRequestReference);
 }
 
 async function handlePullRequestTrigger(
   context: HandlerContext,
-  pullRequestInfo: PullRequestInfo
+  PullRequestReference: PullRequestReference
 ) {
   const { log: appLog } = context;
-  const pullRequestKey = getPullRequestKey(pullRequestInfo);
+  const pullRequestKey = getPullRequestKey(PullRequestReference);
 
   function log(msg: string) {
     appLog(`${pullRequestKey}: ${msg}`);
@@ -61,14 +62,19 @@ async function handlePullRequestTrigger(
     ...context,
     log
   };
-  await doPullRequestWork(pullRequestContext, pullRequestInfo);
+  await doPullRequestWork(pullRequestContext, PullRequestReference);
 }
 
 async function doPullRequestWork(
   context: HandlerContext,
-  pullRequestInfo: PullRequestInfo
+  PullRequestReference: PullRequestReference
 ) {
   const { log } = context;
+  const pullRequestInfo = await queryPullRequest(
+    context.github,
+    PullRequestReference
+  );
+
   const pullRequestStatus = await getPullRequestStatus(
     context,
     pullRequestInfo
@@ -83,40 +89,33 @@ export async function handlePullRequestStatus(
   pullRequestStatus: PullRequestStatus
 ) {
   const { log, github, config } = context;
-  const { owner, repo, number } = pullRequestInfo;
-
+  const pullRequestReference: PullRequestReference = {
+    owner: pullRequestInfo.baseRef.repository.owner.login,
+    repo: pullRequestInfo.baseRef.repository.name,
+    number: pullRequestInfo.number
+  }
   switch (pullRequestStatus.code) {
     case "ready_for_merge":
       // We're ready for merging!
       // This presses the merge button.
       result(
         await github.pullRequests.merge({
-          owner,
-          repo,
-          number,
+          ...pullRequestReference,
           merge_method: config.mergeMethod
         })
       );
       if (config.deleteBranchAfterMerge) {
-        const pullRequest = result<PullRequest>(
-          await github.pullRequests.get({
-            owner,
-            repo,
-            number
-          })
-        );
-
         // Check whether the pull request's branch was actually part of the same repo, as
         // we do not want to (or rather do not have permission to) alter forks of this repo.
         if (
-          pullRequest.head.user.login === owner &&
-          pullRequest.head.repo.name === repo
+          pullRequestInfo.headRef.repository.owner.login === pullRequestInfo.baseRef.repository.owner.login &&
+          pullRequestInfo.headRef.repository.name === pullRequestInfo.baseRef.repository.name
         ) {
           result(
             await github.gitdata.deleteReference({
-              owner,
-              repo,
-              ref: `heads/${pullRequest.head.ref}`
+              owner: pullRequestInfo.headRef.repository.owner.login,
+              repo: pullRequestInfo.headRef.repository.name,
+              ref: `heads/${pullRequestInfo.headRef.name}`
             })
           );
         }
@@ -125,7 +124,12 @@ export async function handlePullRequestStatus(
     case "out_of_date_branch":
       if (config.updateBranch) {
         // This merges the baseRef on top of headRef of the PR.
-        result(await github.repos.merge(pullRequestStatus.merge));
+        result(await github.repos.merge({
+          owner: pullRequestInfo.headRef.repository.owner.login,
+          repo: pullRequestInfo.headRef.repository.name,
+          base: pullRequestInfo.headRef.name,
+          head: pullRequestInfo.baseRef.name
+        }));
       }
       return;
     case "pending_checks":
@@ -135,13 +139,13 @@ export async function handlePullRequestStatus(
       // 1 minutes. The recheck is cancelled once another pull
       // request event comes by.
       log("Scheduling pull request trigger after 1 minutes");
-      const pullRequestKey = getPullRequestKey(pullRequestInfo);
+      const pullRequestKey = getPullRequestKey(pullRequestReference);
       debug(`Setting timeout for ${pullRequestKey}`);
       pullRequestTimeouts[pullRequestKey] = setTimeout(() => {
         /* istanbul ignore next */
         debug(`Timeout triggered for ${pullRequestKey}`);
         /* istanbul ignore next */
-        schedulePullRequestTrigger(context, pullRequestInfo);
+        schedulePullRequestTrigger(context, pullRequestReference);
       }, 1 * 60 * 1000);
       return;
     default:
