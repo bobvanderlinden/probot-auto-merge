@@ -1,8 +1,7 @@
-import { PullRequestInfo } from './../src/pull-request-query';
+import { PullRequestInfo } from './../src/models';
 import { handlePullRequestStatus } from "../src/pull-request-handler";
 import { PullRequestStatusCodes } from "../src/pull-request-status";
-import { mockPullRequestContext, githubCallMock, createHandlerContext, createPullRequestInfo, createGithubApi, createConfig, defaultPullRequestInfo } from "./mock";
-import { create } from "domain";
+import { createHandlerContext, createPullRequestInfo, createGithubApi, createConfig, defaultPullRequestInfo } from "./mock";
 
 const defaultBaseRef: PullRequestInfo["baseRef"] = {
   repository: {

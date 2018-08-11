@@ -1,5 +1,8 @@
 import { AnyResponse } from "@octokit/rest";
 
+export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; };
+export type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never;
+
 export function identity<T>(v: T): T { return v; }
 
 export function groupBy<TItem>(

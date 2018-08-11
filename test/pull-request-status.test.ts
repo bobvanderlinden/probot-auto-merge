@@ -1,5 +1,5 @@
+import { PullRequestState } from './../src/models';
 import {
-  mockPullRequestContext,
   approvedReview,
   changesRequestedReview,
   successCheckRun,
@@ -11,7 +11,6 @@ import {
   defaultPullRequestInfo
 } from "./mock";
 import { getPullRequestStatus } from "../src/pull-request-status";
-import { PullRequestState } from "../src/pull-request-query";
 
 describe("getPullRequestStatus", () => {
   it("returns not_open when pull request state is a value that is undocumented", async () => {
