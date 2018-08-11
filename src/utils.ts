@@ -1,11 +1,11 @@
-import { AnyResponse } from "@octokit/rest";
+import { AnyResponse } from '@octokit/rest'
 
-export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; };
-export type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never;
+export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; }
+export type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never
 
-export function identity<T>(v: T): T { return v; }
+export function identity<T> (v: T): T { return v }
 
-export function groupBy<TItem>(
+export function groupBy<TItem> (
   keyFn: (item: TItem) => string,
   list: TItem[]
 ): { [key: string]: TItem[] } {
@@ -20,14 +20,14 @@ export function groupBy<TItem>(
   }, {})
 }
 
-export function groupByLast<TItem>(
+export function groupByLast<TItem> (
   keyFn: (item: TItem) => string,
   list: TItem[]
 ): { [key: string]: TItem } {
   return groupByLastMap(keyFn, identity, list)
 }
 
-export function groupByLastMap<TItem, TValue>(
+export function groupByLastMap<TItem, TValue> (
   keyFn: (item: TItem) => string,
   valueFn: (item: TItem) => TValue,
   list: TItem[]
@@ -43,9 +43,9 @@ export function groupByLastMap<TItem, TValue>(
  * supplied type.
  * @param response The response from a GitHub API
  */
-export function result<TResult = void>(response: AnyResponse): TResult {
+export function result<TResult = void> (response: AnyResponse): TResult {
   if (response.status < 200 || response.status >= 300) {
-    throw new Error(`Response status was ${response.status}`);
+    throw new Error(`Response status was ${response.status}`)
   }
-  return response.data;
+  return response.data
 }

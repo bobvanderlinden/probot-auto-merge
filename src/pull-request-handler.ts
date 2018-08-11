@@ -1,101 +1,101 @@
-import { TaskScheduler } from "./task-scheduler";
-import { HandlerContext, PullRequestReference, PullRequestInfo } from "./models";
-import { result } from "./utils";
-import { getPullRequestStatus, PullRequestStatus } from "./pull-request-status";
-import { queryPullRequest } from "./pull-request-query";
-const debug = require("debug")("pull-request-handler");
+import { TaskScheduler } from './task-scheduler'
+import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
+import { result } from './utils'
+import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
+import { queryPullRequest } from './pull-request-query'
+const debug = require('debug')('pull-request-handler')
 
 interface PullRequestTask {
-  context: HandlerContext;
-  PullRequestReference: PullRequestReference;
+  context: HandlerContext
+  PullRequestReference: PullRequestReference
 }
 
 const taskScheduler = new TaskScheduler<PullRequestTask>({
   worker: pullRequestWorker,
   concurrency: 8
-});
+})
 const pullRequestTimeouts: {
   [key: string]: NodeJS.Timer;
-} = {};
+} = {}
 
-export function schedulePullRequestTrigger(
+export function schedulePullRequestTrigger (
   context: HandlerContext,
   PullRequestReference: PullRequestReference
 ) {
-  const queueName = getRepositoryKey(PullRequestReference);
+  const queueName = getRepositoryKey(PullRequestReference)
   if (!taskScheduler.hasQueued(queueName)) {
-    taskScheduler.queue(queueName, { context, PullRequestReference });
+    taskScheduler.queue(queueName, { context, PullRequestReference })
   }
 }
 
-function getRepositoryKey({ owner, repo }: { owner: string, repo: string }) {
+function getRepositoryKey ({ owner, repo }: { owner: string, repo: string }) {
   return `${owner}/${repo}`
 }
 
-function getPullRequestKey({ owner, repo, number }: PullRequestReference) {
-  return `${owner}/${repo}#${number}`;
+function getPullRequestKey (pullRequestReference: PullRequestReference) {
+  return `${pullRequestReference.owner}/${pullRequestReference.repo}#${pullRequestReference.number}`
 }
 
-async function pullRequestWorker({
+async function pullRequestWorker ({
   context,
   PullRequestReference
 }: PullRequestTask) {
-  await handlePullRequestTrigger(context, PullRequestReference);
+  await handlePullRequestTrigger(context, PullRequestReference)
 }
 
-async function handlePullRequestTrigger(
+async function handlePullRequestTrigger (
   context: HandlerContext,
   PullRequestReference: PullRequestReference
 ) {
-  const { log: appLog } = context;
-  const pullRequestKey = getPullRequestKey(PullRequestReference);
+  const { log: appLog } = context
+  const pullRequestKey = getPullRequestKey(PullRequestReference)
 
-  function log(msg: string) {
-    appLog(`${pullRequestKey}: ${msg}`);
+  function log (msg: string) {
+    appLog(`${pullRequestKey}: ${msg}`)
   }
 
   // Cancel any running scheduled timer for this pull request,
   // since we're now handling it right now.
-  clearTimeout(pullRequestTimeouts[pullRequestKey]);
+  clearTimeout(pullRequestTimeouts[pullRequestKey])
 
   const pullRequestContext = {
     ...context,
     log
-  };
-  await doPullRequestWork(pullRequestContext, PullRequestReference);
+  }
+  await doPullRequestWork(pullRequestContext, PullRequestReference)
 }
 
-async function doPullRequestWork(
+async function doPullRequestWork (
   context: HandlerContext,
   PullRequestReference: PullRequestReference
 ) {
-  const { log } = context;
+  const { log } = context
   const pullRequestInfo = await queryPullRequest(
     context.github,
     PullRequestReference
-  );
+  )
 
   const pullRequestStatus = await getPullRequestStatus(
     context,
     pullRequestInfo
-  );
-  log(`result: ${pullRequestStatus.code}: ${pullRequestStatus.message}`);
-  await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus);
+  )
+  log(`result: ${pullRequestStatus.code}: ${pullRequestStatus.message}`)
+  await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus)
 }
 
-export async function handlePullRequestStatus(
+export async function handlePullRequestStatus (
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
 ) {
-  const { log, github, config } = context;
+  const { log, github, config } = context
   const pullRequestReference: PullRequestReference = {
     owner: pullRequestInfo.baseRef.repository.owner.login,
     repo: pullRequestInfo.baseRef.repository.name,
     number: pullRequestInfo.number
   }
   switch (pullRequestStatus.code) {
-    case "ready_for_merge":
+    case 'ready_for_merge':
       // We're ready for merging!
       // This presses the merge button.
       result(
@@ -103,7 +103,7 @@ export async function handlePullRequestStatus(
           ...pullRequestReference,
           merge_method: config.mergeMethod
         })
-      );
+      )
       if (config.deleteBranchAfterMerge) {
         // Check whether the pull request's branch was actually part of the same repo, as
         // we do not want to (or rather do not have permission to) alter forks of this repo.
@@ -117,11 +117,11 @@ export async function handlePullRequestStatus(
               repo: pullRequestInfo.headRef.repository.name,
               ref: `heads/${pullRequestInfo.headRef.name}`
             })
-          );
+          )
         }
       }
-      return;
-    case "out_of_date_branch":
+      return
+    case 'out_of_date_branch':
       if (config.updateBranch) {
         // This merges the baseRef on top of headRef of the PR.
         result(await github.repos.merge({
@@ -129,25 +129,25 @@ export async function handlePullRequestStatus(
           repo: pullRequestInfo.headRef.repository.name,
           base: pullRequestInfo.headRef.name,
           head: pullRequestInfo.baseRef.name
-        }));
+        }))
       }
-      return;
-    case "pending_checks":
+      return
+    case 'pending_checks':
       // Some checks (like Travis) seem to not always send
       // their status updates. Making this process being stalled.
       // We work around this issue by scheduling a recheck after
       // 1 minutes. The recheck is cancelled once another pull
       // request event comes by.
-      log("Scheduling pull request trigger after 1 minutes");
-      const pullRequestKey = getPullRequestKey(pullRequestReference);
-      debug(`Setting timeout for ${pullRequestKey}`);
+      log('Scheduling pull request trigger after 1 minutes')
+      const pullRequestKey = getPullRequestKey(pullRequestReference)
+      debug(`Setting timeout for ${pullRequestKey}`)
       pullRequestTimeouts[pullRequestKey] = setTimeout(() => {
         /* istanbul ignore next */
-        debug(`Timeout triggered for ${pullRequestKey}`);
+        debug(`Timeout triggered for ${pullRequestKey}`)
         /* istanbul ignore next */
-        schedulePullRequestTrigger(context, pullRequestReference);
-      }, 1 * 60 * 1000);
-      return;
+        schedulePullRequestTrigger(context, pullRequestReference)
+      }, 1 * 60 * 1000)
+      return
     default:
     // We will just wait for a next event from GitHub.
   }

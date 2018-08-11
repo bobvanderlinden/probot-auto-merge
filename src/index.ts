@@ -1,9 +1,9 @@
 import { Application, Context } from 'probot'
 import { loadConfig } from './config'
 import { schedulePullRequestTrigger } from './pull-request-handler'
-import { HandlerContext } from './models';
+import { HandlerContext } from './models'
 
-async function getHandlerContext(options: {app: Application, context: Context}): Promise<HandlerContext | null> {
+async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext | null> {
   const config = await loadConfig(options.context)
   return config && {
     config,
@@ -27,7 +27,7 @@ export = (app: Application) => {
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
     if (!handlerContext) { return }
-    await schedulePullRequestTrigger(handlerContext, {
+    schedulePullRequestTrigger(handlerContext, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
       number: context.payload.pull_request.number
@@ -41,8 +41,8 @@ export = (app: Application) => {
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
     if (!handlerContext) { return }
-    for(const pullRequest of context.payload.check_run.pull_requests) {
-      await schedulePullRequestTrigger(handlerContext, {
+    for (const pullRequest of context.payload.check_run.pull_requests) {
+      schedulePullRequestTrigger(handlerContext, {
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         number: pullRequest.number
@@ -57,8 +57,8 @@ export = (app: Application) => {
   ], async context => {
     const handlerContext = await getHandlerContext({ app, context })
     if (!handlerContext) { return }
-    for(const pullRequest of context.payload.check_suite.pull_requests) {
-      await schedulePullRequestTrigger(handlerContext, {
+    for (const pullRequest of context.payload.check_suite.pull_requests) {
+      schedulePullRequestTrigger(handlerContext, {
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         number: pullRequest.number

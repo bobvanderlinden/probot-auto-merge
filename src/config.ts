@@ -40,7 +40,7 @@ export const defaultConfig: Config = {
   requiredLabels: []
 }
 
-export async function loadConfig(context: Context): Promise<Config | null> {
+export async function loadConfig (context: Context): Promise<Config | null> {
   const config = await getConfig(context, 'auto-merge.yml', defaultConfig)
   return config && {
     ...defaultConfig,
