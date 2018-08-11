@@ -27,13 +27,15 @@
     "debug": "^3.1.0",
     "p-queue": "^2.4.2",
     "probot": "^7.0.0",
-    "probot-config": "^0.2.0"
+    "probot-config": "^0.2.0",
+    "raven": "^2.6.3"
   },
   "devDependencies": {
     "@types/debug": "0.0.30",
     "@types/jest": "^23.3.1",
     "@types/node": "^10.5.7",
     "@types/p-queue": "^2.3.1",
+    "@types/raven": "^2.5.1",
     "coveralls": "^3.0.2",
     "jest": "^23.4.2",
     "nodemon": "^1.18.3",
