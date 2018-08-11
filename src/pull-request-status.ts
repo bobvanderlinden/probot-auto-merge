@@ -2,11 +2,6 @@ import { HandlerContext, PullRequestInfo } from "./models";
 import { groupByLast, groupByLastMap } from "./utils";
 import { associations, getAssociationPriority } from "./association";
 
-export interface OutOfDateBranchPullRequestStatus {
-  code: "out_of_date_branch";
-  message: string;
-}
-
 export type PullRequestStatus =
   | {
       code:
@@ -21,10 +16,10 @@ export type PullRequestStatus =
         | "need_approvals"
         | "pending_checks"
         | "blocking_check"
+        | "out_of_date_branch"
         | "ready_for_merge";
       message: string;
     }
-  | OutOfDateBranchPullRequestStatus;
 
 export type PullRequestStatusCode = PullRequestStatus["code"];
 
