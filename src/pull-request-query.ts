@@ -67,14 +67,14 @@ export async function queryPullRequest(github: Context['github'], { owner, repo,
       }
     }
   `, {
-    '$owner': owner,
-    '$repo': repo,
-    '$pullRequestNumber': number
-  })
-  if (response.status !== 200) {
+    'owner': owner,
+    'repo': repo,
+    'pullRequestNumber': number
+  }) as any
+  if (!response) {
     throw new Error(`Could not query pull request ${owner}/${repo}#${number}`)
   }
-  const queryResult = response.data as PullRequestQueryResult
+  const queryResult = response as PullRequestQueryResult
 
   const checks = result<{ check_runs: CheckRun[] }>(await github.checks.listForRef({
     owner: queryResult.repository.pullRequest.headRef.repository.owner.login,
