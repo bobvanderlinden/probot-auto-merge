@@ -2,6 +2,9 @@ import { Application, Context } from 'probot'
 import { loadConfig } from './config'
 import { schedulePullRequestTrigger } from './pull-request-handler'
 import { HandlerContext } from './models'
+import Raven from 'raven'
+
+Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728').install();
 
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext | null> {
   const config = await loadConfig(options.context)
