@@ -156,6 +156,7 @@ export async function handlePullRequestStatus (
         }))
       }
       return
+    case 'pending_mergeable':
     case 'pending_checks':
       // Some checks (like Travis) seem to not always send
       // their status updates. Making this process being stalled.
