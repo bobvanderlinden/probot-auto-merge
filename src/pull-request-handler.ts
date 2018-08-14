@@ -27,12 +27,20 @@ const pullRequestTimeouts: {
   [key: string]: NodeJS.Timer;
 } = {}
 
+export function arePullRequestReferencesEqual (a: PullRequestReference, b: PullRequestReference) {
+  return a.number === b.number
+    && a.owner === b.owner
+    && a.repo === b.owner
+}
+
 export function schedulePullRequestTrigger (
   context: HandlerContext,
   PullRequestReference: PullRequestReference
 ) {
   const queueName = getRepositoryKey(PullRequestReference)
-  if (!taskScheduler.hasQueued(queueName)) {
+  const queueContainsTask = taskScheduler.getQueue(queueName)
+    .some(task => arePullRequestReferencesEqual(task.PullRequestReference, PullRequestReference))
+  if (!queueContainsTask) {
     taskScheduler.queue(queueName, { context, PullRequestReference })
   }
 }

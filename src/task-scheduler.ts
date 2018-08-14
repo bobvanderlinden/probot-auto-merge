@@ -61,6 +61,10 @@ export class TaskScheduler<TTask> {
     return queue && queue.length > 0
   }
 
+  getQueue (queueName: string): TTask[] {
+    return this.queues[queueName] || []
+  }
+
   private async doWorkForKey (queueName: string) {
     debug(`doWorkForKey(${queueName})`)
     const queue = this.queues[queueName]
