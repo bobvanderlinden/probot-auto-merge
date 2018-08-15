@@ -119,7 +119,7 @@ export const successCheckRun: CheckRun = {
 export const queuedCheckRun: CheckRun = {
   name: 'checka',
   status: 'queued',
-  conclusion: null,
+  conclusion: 'neutral',
   head_sha: '12345',
   external_id: '1'
 }
