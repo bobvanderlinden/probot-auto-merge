@@ -1,47 +1,37 @@
-import { PullRequestInfo } from './../src/models';
-import { handlePullRequestStatus } from "../src/pull-request-handler";
-import { PullRequestStatusCodes } from "../src/pull-request-status";
-import { createHandlerContext, createPullRequestInfo, createGithubApi, createConfig, defaultPullRequestInfo } from "./mock";
+import { PullRequestInfo } from './../src/models'
+import { handlePullRequestStatus } from '../src/pull-request-handler'
+import { PullRequestStatusCodes } from '../src/pull-request-status'
+import { createHandlerContext, createPullRequestInfo, createGithubApi, createConfig, defaultPullRequestInfo } from './mock'
 
-const defaultBaseRef: PullRequestInfo["baseRef"] = {
+const defaultBaseRef: PullRequestInfo['baseRef'] = {
   repository: {
     owner: {
-      login: "bobvanderlinden"
+      login: 'bobvanderlinden'
     },
-    name: "probot-auto-merge"
+    name: 'probot-auto-merge'
   },
-  name: "master",
+  name: 'master',
   target: {
-    oid: "0000000000000000000000000000000000000000"
+    oid: '0000000000000000000000000000000000000000'
   }
 }
 
-const headRefInSameRepository: PullRequestInfo["headRef"] = {
+const headRefInSameRepository: PullRequestInfo['headRef'] = {
   ...defaultBaseRef,
-  name: "pr-some-changes",
+  name: 'pr-some-changes',
   target: {
-    oid: "1111111111111111111111111111111111111111"
+    oid: '1111111111111111111111111111111111111111'
   }
 }
 
-const headRefInFork: PullRequestInfo["headRef"] = {
-  ...headRefInSameRepository,
-  repository: {
-    ...headRefInSameRepository.repository,
-    owner: {
-      login: "someone-else"
-    }
-  }
-}
-
-describe("handlePullRequestStatus", () => {
+describe('handlePullRequestStatus', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-  });
+    jest.useFakeTimers()
+  })
   afterEach(() => {
-    jest.clearAllTimers();
-  });
-  it("merges when status is ready_for_merge", async () => {
+    jest.clearAllTimers()
+  })
+  it('merges when status is ready_for_merge', async () => {
     const merge = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
@@ -52,16 +42,16 @@ describe("handlePullRequestStatus", () => {
         })
       }),
       createPullRequestInfo(), {
-        code: "ready_for_merge",
-        message: "bogus"
+        code: 'ready_for_merge',
+        message: 'bogus'
       }
-    );
-    expect(merge).toHaveBeenCalledTimes(1);
-  });
+    )
+    expect(merge).toHaveBeenCalledTimes(1)
+  })
 
   const pullRequestStatusCodesOtherThanReadyForMerge = PullRequestStatusCodes
-    .filter(code => code !== "ready_for_merge")
-  test.each(pullRequestStatusCodesOtherThanReadyForMerge)("does not merge on status %s", async (code) => {
+    .filter(code => code !== 'ready_for_merge')
+  test.each(pullRequestStatusCodesOtherThanReadyForMerge)('does not merge on status %s', async (code) => {
     const merge = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
@@ -73,24 +63,24 @@ describe("handlePullRequestStatus", () => {
       }),
       createPullRequestInfo(), {
         code,
-        message: "bogus"
+        message: 'bogus'
       } as any
-    );
-    expect(merge).toHaveBeenCalledTimes(0);
-  });
-  it("schedules next run when status is pending_checks", async () => {
+    )
+    expect(merge).toHaveBeenCalledTimes(0)
+  })
+  it('schedules next run when status is pending_checks', async () => {
     await handlePullRequestStatus(
       createHandlerContext(),
       createPullRequestInfo(), {
-      code: "pending_checks",
-      message: "bogus"
-    });
-    expect(setTimeout).toHaveBeenCalledTimes(1);
-  });
+        code: 'pending_checks',
+        message: 'bogus'
+      })
+    expect(setTimeout).toHaveBeenCalledTimes(1)
+  })
 
   const pullRequestStatusCodesOtherThanOutOfDateBranch = PullRequestStatusCodes
-    .filter(code => code !== "out_of_date_branch")
-  test.each(pullRequestStatusCodesOtherThanOutOfDateBranch)("does not update branch on status %s", async (code) => {
+    .filter(code => code !== 'out_of_date_branch')
+  test.each(pullRequestStatusCodesOtherThanOutOfDateBranch)('does not update branch on status %s', async (code) => {
     const merge = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
@@ -104,13 +94,13 @@ describe("handlePullRequestStatus", () => {
         })
       }),
       createPullRequestInfo(), {
-      code,
-      message: "bogus"
-    } as any);
-    expect(merge).toHaveBeenCalledTimes(0);
-  });
-  it("update branch when status is out_of_date_branch", async () => {
-    const merge = jest.fn(() => ({ status: 200 }));
+        code,
+        message: 'bogus'
+      } as any)
+    expect(merge).toHaveBeenCalledTimes(0)
+  })
+  it('update branch when status is out_of_date_branch', async () => {
+    const merge = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
         github: createGithubApi({
@@ -125,19 +115,19 @@ describe("handlePullRequestStatus", () => {
       createPullRequestInfo({
 
       }), {
-        code: "out_of_date_branch",
-        message: "bogus"
-      });
-    expect(merge).toHaveBeenCalledTimes(1);
+        code: 'out_of_date_branch',
+        message: 'bogus'
+      })
+    expect(merge).toHaveBeenCalledTimes(1)
     expect(merge.mock.calls[0]).toEqual([{
-      base: "pr-some-change",
-      head: "master",
-      owner: "bobvanderlinden",
-      repo: "probot-auto-merge"
-    }]);
-  });
-  it("update branch when status is out_of_date_branch and update-branch is enabled", async () => {
-    const merge = jest.fn(() => ({ status: 200 }));
+      base: 'pr-some-change',
+      head: 'master',
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge'
+    }])
+  })
+  it('update branch when status is out_of_date_branch and update-branch is enabled', async () => {
+    const merge = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
         github: createGithubApi({
@@ -153,19 +143,19 @@ describe("handlePullRequestStatus", () => {
         baseRef: defaultBaseRef,
         headRef: headRefInSameRepository
       }), {
-      code: "out_of_date_branch",
-      message: "bogus"
-    });
-    expect(merge).toHaveBeenCalledTimes(1);
+        code: 'out_of_date_branch',
+        message: 'bogus'
+      })
+    expect(merge).toHaveBeenCalledTimes(1)
     expect(merge.mock.calls[0]).toEqual([{
-      base: "pr-some-changes",
-      head: "master",
-      owner: "bobvanderlinden",
-      repo: "probot-auto-merge"
-    }]);
-  });
-  it("not update branch when status is out_of_date_branch and update-branch is disabled", async () => {
-    const merge = jest.fn(() => ({ status: 200 }));
+      base: 'pr-some-changes',
+      head: 'master',
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge'
+    }])
+  })
+  it('not update branch when status is out_of_date_branch and update-branch is disabled', async () => {
+    const merge = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
         github: createGithubApi({
@@ -181,14 +171,14 @@ describe("handlePullRequestStatus", () => {
         baseRef: defaultBaseRef,
         headRef: headRefInSameRepository
       }), {
-      code: "out_of_date_branch",
-      message: "bogus"
-    });
-    expect(merge).toHaveBeenCalledTimes(0);
-  });
-  it("delete branch when status is ready_for_merge and delete-branch-after-merge is enabled and branch resides in same repository", async () => {
-    const merge = jest.fn(() => ({ status: 200 }));
-    const deleteReference = jest.fn(() => ({ status: 200 }));
+        code: 'out_of_date_branch',
+        message: 'bogus'
+      })
+    expect(merge).toHaveBeenCalledTimes(0)
+  })
+  it('delete branch when status is ready_for_merge and delete-branch-after-merge is enabled and branch resides in same repository', async () => {
+    const merge = jest.fn(() => ({ status: 200 }))
+    const deleteReference = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
         github: createGithubApi({
@@ -207,18 +197,18 @@ describe("handlePullRequestStatus", () => {
         baseRef: defaultBaseRef,
         headRef: headRefInSameRepository
       }), {
-        code: "ready_for_merge",
-        message: "bogus"
+        code: 'ready_for_merge',
+        message: 'bogus'
       }
-    );
-    expect(deleteReference).toHaveBeenCalledTimes(1);
+    )
+    expect(deleteReference).toHaveBeenCalledTimes(1)
     expect(deleteReference.mock.calls[0]).toEqual([
-      { owner: "bobvanderlinden", ref: "heads/pr-some-changes", repo: "probot-auto-merge" }
-    ]);
-  });
-  it("do not delete branch when status is ready_for_merge and delete-branch-after-merge is enabled, but branch resides in another repository", async () => {
-    const merge = jest.fn(() => ({ status: 200 }));
-    const deleteReference = jest.fn(() => ({ status: 200 }));
+      { owner: 'bobvanderlinden', ref: 'heads/pr-some-changes', repo: 'probot-auto-merge' }
+    ])
+  })
+  it('do not delete branch when status is ready_for_merge and delete-branch-after-merge is enabled, but branch resides in another repository', async () => {
+    const merge = jest.fn(() => ({ status: 200 }))
+    const deleteReference = jest.fn(() => ({ status: 200 }))
     await handlePullRequestStatus(
       createHandlerContext({
         github: createGithubApi({
@@ -236,29 +226,29 @@ describe("handlePullRequestStatus", () => {
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,
-          name: "master",
+          name: 'master',
           repository: {
             owner: {
-              login: "bobvanderlinden"
+              login: 'bobvanderlinden'
             },
-            name: "probot-auto-merge"
+            name: 'probot-auto-merge'
           }
         },
         headRef: {
           ...defaultPullRequestInfo.headRef,
-          name: "pr",
+          name: 'pr',
           repository: {
             owner: {
-              login: "someone-else"
+              login: 'someone-else'
             },
-            name: "probot-auto-merge"
+            name: 'probot-auto-merge'
           }
         }
       }), {
-        code: "ready_for_merge",
-        message: "bogus"
+        code: 'ready_for_merge',
+        message: 'bogus'
       }
-    );
-    expect(deleteReference).toHaveBeenCalledTimes(0);
-  });
-});
+    )
+    expect(deleteReference).toHaveBeenCalledTimes(0)
+  })
+})
