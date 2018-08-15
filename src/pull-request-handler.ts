@@ -8,7 +8,7 @@ const debug = require('debug')('pull-request-handler')
 
 interface PullRequestTask {
   context: HandlerContext
-  PullRequestReference: PullRequestReference
+  pullRequestReference: PullRequestReference
 }
 
 const taskScheduler = new TaskScheduler<PullRequestTask>({
@@ -35,13 +35,13 @@ export function arePullRequestReferencesEqual (a: PullRequestReference, b: PullR
 
 export function schedulePullRequestTrigger (
   context: HandlerContext,
-  PullRequestReference: PullRequestReference
+  pullRequestReference: PullRequestReference
 ) {
-  const queueName = getRepositoryKey(PullRequestReference)
+  const queueName = getRepositoryKey(pullRequestReference)
   const queueContainsTask = taskScheduler.getQueue(queueName)
-    .some(task => arePullRequestReferencesEqual(task.PullRequestReference, PullRequestReference))
+    .some(task => arePullRequestReferencesEqual(task.pullRequestReference, pullRequestReference))
   if (!queueContainsTask) {
-    taskScheduler.queue(queueName, { context, PullRequestReference })
+    taskScheduler.queue(queueName, { context, pullRequestReference })
   }
 }
 
@@ -55,25 +55,25 @@ function getPullRequestKey (pullRequestReference: PullRequestReference) {
 
 async function pullRequestWorker ({
   context,
-  PullRequestReference
+  pullRequestReference
 }: PullRequestTask) {
   await Raven.context({
     tags: {
-      owner: PullRequestReference.owner,
-      repository: PullRequestReference.repo,
-      pullRequestNumber: PullRequestReference.number
+      owner: pullRequestReference.owner,
+      repository: pullRequestReference.repo,
+      pullRequestNumber: pullRequestReference.number
     }
   }, async () => {
-    await handlePullRequestTrigger(context, PullRequestReference)
+    await handlePullRequestTrigger(context, pullRequestReference)
   })
 }
 
 async function handlePullRequestTrigger (
   context: HandlerContext,
-  PullRequestReference: PullRequestReference
+  pullRequestReference: PullRequestReference
 ) {
   const { log: appLog } = context
-  const pullRequestKey = getPullRequestKey(PullRequestReference)
+  const pullRequestKey = getPullRequestKey(pullRequestReference)
 
   function log (msg: string) {
     appLog(`${pullRequestKey}: ${msg}`)
@@ -87,17 +87,17 @@ async function handlePullRequestTrigger (
     ...context,
     log
   }
-  await doPullRequestWork(pullRequestContext, PullRequestReference)
+  await doPullRequestWork(pullRequestContext, pullRequestReference)
 }
 
 async function doPullRequestWork (
   context: HandlerContext,
-  PullRequestReference: PullRequestReference
+  pullRequestReference: PullRequestReference
 ) {
   const { log } = context
   const pullRequestInfo = await queryPullRequest(
     context.github,
-    PullRequestReference
+    pullRequestReference
   )
 
   const pullRequestStatus = await getPullRequestStatus(
