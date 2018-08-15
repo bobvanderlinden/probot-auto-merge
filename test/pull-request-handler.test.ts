@@ -58,25 +58,24 @@ describe("handlePullRequestStatus", () => {
     );
     expect(merge).toHaveBeenCalledTimes(1);
   });
-  it("does not merge on status other than ready_for_merge", async () => {
+
+  const pullRequestStatusCodesOtherThanReadyForMerge = PullRequestStatusCodes
+    .filter(code => code !== "ready_for_merge")
+  test.each(pullRequestStatusCodesOtherThanReadyForMerge)("does not merge on status %s", async (code) => {
     const merge = jest.fn(() => ({ status: 200 }))
-    for (let code of PullRequestStatusCodes.filter(
-      code => code !== "ready_for_merge" && code !== "out_of_date_branch"
-    )) {
-      await handlePullRequestStatus(
-        createHandlerContext({
-          github: createGithubApi({
-            pullRequests: {
-              merge
-            }
-          })
-        }),
-        createPullRequestInfo(), {
-          code,
-          message: "bogus"
-        } as any
-      );
-    }
+    await handlePullRequestStatus(
+      createHandlerContext({
+        github: createGithubApi({
+          pullRequests: {
+            merge
+          }
+        })
+      }),
+      createPullRequestInfo(), {
+        code,
+        message: "bogus"
+      } as any
+    );
     expect(merge).toHaveBeenCalledTimes(0);
   });
   it("schedules next run when status is pending_checks", async () => {
@@ -88,25 +87,27 @@ describe("handlePullRequestStatus", () => {
     });
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
-  it("does not merge on status other than pending_checks", async () => {
+
+  const pullRequestStatusCodesOtherThanOutOfDateBranch = PullRequestStatusCodes
+    .filter(code => code !== "out_of_date_branch")
+  test.each(pullRequestStatusCodesOtherThanOutOfDateBranch)("does not update branch on status %s", async (code) => {
     const merge = jest.fn(() => ({ status: 200 }))
-    for (let code of PullRequestStatusCodes.filter(
-      code => code !== "pending_checks" && code !== "out_of_date_branch"
-    )) {
-      await handlePullRequestStatus(
-        createHandlerContext({
-          github: createGithubApi({
-            pullRequests: {
-              merge
-            }
-          })
-        }),
-        createPullRequestInfo(), {
-        code,
-        message: "bogus"
-      } as any);
-    }
-    expect(setTimeout).toHaveBeenCalledTimes(0);
+    await handlePullRequestStatus(
+      createHandlerContext({
+        github: createGithubApi({
+          pullRequests: {
+            merge: jest.fn(() => ({ status: 200 }))
+          },
+          repos: {
+            merge
+          }
+        })
+      }),
+      createPullRequestInfo(), {
+      code,
+      message: "bogus"
+    } as any);
+    expect(merge).toHaveBeenCalledTimes(0);
   });
   it("update branch when status is out_of_date_branch", async () => {
     const merge = jest.fn(() => ({ status: 200 }));
