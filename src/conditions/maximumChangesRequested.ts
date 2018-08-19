@@ -1,11 +1,13 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import { getLatestReviews, arrayToMap, mapToArray, or, get } from '../utils'
 import { associations, getAssociationPriority } from '../association'
 
-export default function doesNotHaveMaximumChangesRequested (context: HandlerContext, pullRequestInfo: PullRequestInfo): ConditionResult {
-  const { config } = context
-
+export default function doesNotHaveMaximumChangesRequested (
+  config: ConditionConfig,
+  pullRequestInfo: PullRequestInfo
+): ConditionResult {
   const latestReviews = getLatestReviews(pullRequestInfo)
   const changesRequestedCountByAssociation =
     arrayToMap(associations,

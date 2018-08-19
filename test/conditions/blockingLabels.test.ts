@@ -1,12 +1,10 @@
 import blockingLabels from '../../src/conditions/blockingLabels'
-import { createHandlerContext, createPullRequestInfo, createConfig } from '../mock'
+import { createPullRequestInfo, createConfig } from '../mock'
 
 describe('blockingLabels', () => {
   it('returns success with no labels and no configuration', async () => {
     const result = blockingLabels(
-      createHandlerContext({
-        config: createConfig()
-      }),
+      createConfig(),
       createPullRequestInfo({
         labels: {
           nodes: []
@@ -18,10 +16,8 @@ describe('blockingLabels', () => {
 
   it('returns success with label not in configuration', async () => {
     const result = blockingLabels(
-      createHandlerContext({
-        config: createConfig({
-          blockingLabels: ['blocking label']
-        })
+      createConfig({
+        blockingLabels: ['blocking label']
       }),
       createPullRequestInfo({
         labels: {
@@ -36,10 +32,8 @@ describe('blockingLabels', () => {
 
   it('returns fail with label in configuration', async () => {
     const result = blockingLabels(
-      createHandlerContext({
-        config: createConfig({
-          blockingLabels: ['blocking label']
-        })
+      createConfig({
+        blockingLabels: ['blocking label']
       }),
       createPullRequestInfo({
         labels: {
@@ -54,10 +48,8 @@ describe('blockingLabels', () => {
 
   it('returns fail with label, among others, in configuration', async () => {
     const result = blockingLabels(
-      createHandlerContext({
-        config: createConfig({
-          blockingLabels: ['blocking label']
-        })
+      createConfig({
+        blockingLabels: ['blocking label']
       }),
       createPullRequestInfo({
         labels: {

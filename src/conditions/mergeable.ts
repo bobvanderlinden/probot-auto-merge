@@ -1,7 +1,11 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 
-export default function isMergeable (context: HandlerContext, pullRequestInfo: PullRequestInfo): ConditionResult {
+export default function isMergeable (
+  config: ConditionConfig,
+  pullRequestInfo: PullRequestInfo
+): ConditionResult {
   switch (pullRequestInfo.mergeable) {
     case 'MERGEABLE':
       return {

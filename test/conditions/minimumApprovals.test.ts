@@ -1,15 +1,13 @@
 import hasMinimumApprovals from '../../src/conditions/minimumApprovals'
-import { createHandlerContext, createConfig, createPullRequestInfo, approvedReview } from '../mock'
+import { createConfig, createPullRequestInfo, approvedReview } from '../mock'
 
 describe('minimumApprovals', () => {
   it('returns success when owner approved and owner was configured', async () => {
     const result = hasMinimumApprovals(
-      createHandlerContext({
-        config: createConfig({
-          minApprovals: {
-            OWNER: 1
-          }
-        })
+      createConfig({
+        minApprovals: {
+          OWNER: 1
+        }
       }),
       createPullRequestInfo({
         reviews: {
@@ -24,12 +22,10 @@ describe('minimumApprovals', () => {
 
   it('returns fail when member approved but owner was configured', async () => {
     const result = hasMinimumApprovals(
-      createHandlerContext({
-        config: createConfig({
-          minApprovals: {
-            OWNER: 1
-          }
-        })
+      createConfig({
+        minApprovals: {
+          OWNER: 1
+        }
       }),
       createPullRequestInfo({
         reviews: {
@@ -44,12 +40,10 @@ describe('minimumApprovals', () => {
 
   it('returns success when owner approved and member was configured', async () => {
     const result = hasMinimumApprovals(
-      createHandlerContext({
-        config: createConfig({
-          minApprovals: {
-            MEMBER: 1
-          }
-        })
+      createConfig({
+        minApprovals: {
+          MEMBER: 1
+        }
       }),
       createPullRequestInfo({
         reviews: {
@@ -64,9 +58,7 @@ describe('minimumApprovals', () => {
 
   it('returns success when owner approved but nothing was configured', async () => {
     const result = hasMinimumApprovals(
-      createHandlerContext({
-        config: createConfig()
-      }),
+      createConfig(),
       createPullRequestInfo({
         reviews: {
           nodes: [
@@ -80,12 +72,10 @@ describe('minimumApprovals', () => {
 
   it('returns fail when no-one approved but member was configured', async () => {
     const result = hasMinimumApprovals(
-      createHandlerContext({
-        config: createConfig({
-          minApprovals: {
-            MEMBER: 1
-          }
-        })
+      createConfig({
+        minApprovals: {
+          MEMBER: 1
+        }
       }),
       createPullRequestInfo({
         reviews: {

@@ -2,27 +2,35 @@ import { CommentAuthorAssociation } from './github-models'
 import { Context } from 'probot'
 import getConfig from 'probot-config'
 
-export type Config = {
+export type ConditionConfig = {
   minApprovals: { [key in CommentAuthorAssociation]?: number },
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
-  updateBranch: boolean,
-  deleteBranchAfterMerge: boolean,
-  mergeMethod: 'merge' | 'rebase' | 'squash',
   requiredLabels: string[],
   blockingLabels: string[]
 }
 
-export const defaultConfig: Config = {
+export type Config = {
+  updateBranch: boolean,
+  deleteBranchAfterMerge: boolean,
+  mergeMethod: 'merge' | 'rebase' | 'squash'
+} & ConditionConfig
+
+export const defaultRuleConfig: ConditionConfig = {
   minApprovals: {
   },
   maxRequestedChanges: {
     NONE: 0
   },
+  blockingLabels: [],
+  requiredLabels: []
+}
+
+export const defaultConfig: Config = {
+  rules: [],
   updateBranch: false,
   deleteBranchAfterMerge: false,
   mergeMethod: 'merge',
-  blockingLabels: [],
-  requiredLabels: []
+  ...defaultRuleConfig
 }
 
 export async function loadConfig (context: Context): Promise<Config | null> {
