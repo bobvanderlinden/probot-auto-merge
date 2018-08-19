@@ -19,7 +19,7 @@
     "start": "probot run ./lib/index.js",
     "lint": "tslint --project . --fix",
     "test": "jest && tslint --project .",
-    "test:travis": "jest --coverage --coverageReporters=text-lcov | coveralls && standard",
+    "test:travis": "jest --coverage --coverageReporters=text-lcov | coveralls && tslint --project .",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
     "heroku-postbuild": "npm run build"
   },
