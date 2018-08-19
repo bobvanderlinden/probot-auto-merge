@@ -5,7 +5,9 @@ export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; }
 export type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never
 
 export function identity<T> (v: T): T { return v }
-
+export function keysOf<TKey extends string> (obj: { [key in TKey]: any }): TKey[] {
+  return Object.keys(obj) as TKey[]
+}
 export function groupBy<TItem> (
   keyFn: (item: TItem) => string,
   list: TItem[]
@@ -105,4 +107,12 @@ export function getLatestReviews (pullRequestInfo: PullRequestInfo) {
 
   const latestReviews = Object.values(latestReviewsByUser)
   return latestReviews
+}
+
+export function mapObject<TKey extends string, TValue, TMappedValue> (obj: { [key in TKey]: TValue }, mapper: (value: TValue) => TMappedValue): { [key in TKey]: TMappedValue } {
+  const result: any = {}
+  for (let key in obj) {
+    result[key] = mapper(obj[key])
+  }
+  return result
 }
