@@ -1,8 +1,21 @@
 sudo: false
 language: node_js
 node_js:
-  - "8.3"
+- '8.3'
 notifications:
   email: false
+
+# Greenkeeper
+before_install:
+# package-lock.json was introduced in npm@5
+- '[[ $(node -v) =~ ^v9.*$ ]] || npm install -g npm@latest' # skipped when using node 9
+- npm install -g greenkeeper-lockfile
+install: npm install
+before_script: greenkeeper-lockfile-update
+after_script: greenkeeper-lockfile-upload
+
 script:
-  - npm run test:travis
+- npm run test:travis
+env:
+  global:
+    secure: NZYtTcjmGOaFwqaB238xZIqxiXxANh3CcO6DO4aGYcD8UPx2U06DQmVOS/wtSOB/u2GmyhUuL9hEpou6SjxrVFOQjE8LeUFPQOfF/p7TeaeSvEJw7Q94jYCCuxzQ3G51Z9r617HeuPJXwoOK3Gx/S32vdiJOIXA28HZIapqXnoacTAzZJjJ+Ga7sy7FtUQrk2VaT1VTiIH0hoo30OS3p1IlulsBuxrLiyuEyRiOwrrJn6Oyvgh7GwQ53XHPqrMi/Wh8pH6/RIVu5NAnScsJmTNBFeFicqADHsmwCTXYQF1ZGkrTCu/fs0VZ4LresOQeupGuwh2CYdeBG5+jS1CAp9gjCxasRZoXDZ2XbHghRLKmel2dilJ7VAQojzdb8fJmpgXX/ukdP9KEgOAU2L8OAY5ql9xdK8XzJEl36ye4N59SJO6oUgG2tvxFBEg+CcsUC/BtjRV5Pcm8bgUY4SCyDvOuCvlCgZf4/WAJ7STSbhzAtryNGFfQcBpmyA2eET1JO+i2r4L4z+Je/ni/i1Q3AGqm9BSiHQmrA/DUkJeJuTQaUGHa/m7kFaijOa7lPfwFTg3zak0UUqETLD6BF/4qE2nY5m8TC2bx7QdFzP86FiCC/W2qi9p25DBPkv1Kc9JjFo80JtZF4vL1HAYYWKvLMT3N3/hz0odH7i4ww4zvDBTM=
