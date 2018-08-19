@@ -100,7 +100,7 @@ async function doPullRequestWork (
     pullRequestReference
   )
 
-  const pullRequestStatus = await getPullRequestStatus(
+  const pullRequestStatus = getPullRequestStatus(
     context,
     pullRequestInfo
   )

@@ -16,9 +16,9 @@ export function getConditionResults (
   )
 }
 
-export async function getPullRequestStatus (
+export function getPullRequestStatus (
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo
-): Promise<PullRequestStatus> {
+): PullRequestStatus {
   return getConditionResults(context, pullRequestInfo)
 }
