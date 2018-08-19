@@ -1,4 +1,4 @@
-import { CommentAuthorAssociation } from './github-models';
+import { CommentAuthorAssociation } from './github-models'
 import { Context } from 'probot'
 import getConfig from 'probot-config'
 
