@@ -2,6 +2,7 @@
 
 [![Travis CI](https://travis-ci.org/bobvanderlinden/probot-auto-merge.svg?branch=master)](https://travis-ci.org/bobvanderlinden/probot-auto-merge)
 [![Coverage](https://img.shields.io/coveralls/github/bobvanderlinden/probot-auto-merge.svg)](https://coveralls.io/github/bobvanderlinden/probot-auto-merge)
+[![Greenkeeper badge](https://badges.greenkeeper.io/bobvanderlinden/probot-auto-merge.svg)](https://greenkeeper.io/)
 
 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically merges PRs
 
