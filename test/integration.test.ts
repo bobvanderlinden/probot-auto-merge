@@ -51,7 +51,7 @@ it('full happy path', async () => {
       getContent: jest.fn(() => ({
         status: 200,
         data: {
-          content: new Buffer(config).toString('base64')
+          content: Buffer.from(config).toString('base64')
         }
       }))
     },
