@@ -10,6 +10,7 @@ export type ConditionConfig = {
 }
 
 export type Config = {
+  rules?: ConditionConfig[],
   updateBranch: boolean,
   deleteBranchAfterMerge: boolean,
   mergeMethod: 'merge' | 'rebase' | 'squash'

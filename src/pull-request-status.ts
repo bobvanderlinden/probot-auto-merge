@@ -23,5 +23,23 @@ export function getPullRequestStatus (
   conditions: Conditions,
   pullRequestInfo: PullRequestInfo
 ): PullRequestStatus {
-  return getConditionResults(context.config, pullRequestInfo)
+  const globalConfig = context.config
+  const globalResults = getConditionResults(globalConfig, conditions, pullRequestInfo)
+  if (!getConclusion(globalResults)) {
+    return globalResults
+  }
+  return (globalConfig.rules || []).reduce<undefined | ConditionResults>((result, ruleConfig) => {
+    if (result !== undefined) {
+      return result
+    }
+    const ruleResult = getConditionResults(ruleConfig, conditions, pullRequestInfo)
+    if (getConclusion(ruleResult)) {
+      return ruleResult
+    }
+    return undefined
+  }, undefined) || globalResults
+}
+
+export function getConclusion (conditionResults: ConditionResults): boolean {
+  return Object.values(conditionResults).every(conditionResult => conditionResult.status === 'success')
 }
