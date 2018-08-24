@@ -51,7 +51,7 @@ it('full happy path', async () => {
       getContent: jest.fn(() => ({
         status: 200,
         data: {
-          content: new Buffer(config).toString('base64')
+          content: Buffer.from(config).toString('base64')
         }
       }))
     },
@@ -83,4 +83,46 @@ it('full happy path', async () => {
   } as any)
 
   expect(github.pullRequests.merge).toHaveBeenCalled()
+})
+
+it('no configuration should not schedule any pull request', async () => {
+  const app = new Application()
+
+  jest.mock('../src/pull-request-handler', () => {
+    return {
+      schedulePullRequestTrigger: jest.fn()
+    }
+  })
+
+  const github: any = {
+    repos: {
+      getContent: () => Promise.reject({ code: 404 })
+    }
+  } as DeepPartial<GitHubAPI>
+
+  app.auth = () => {
+    return Promise.resolve(github) as any
+  }
+
+  app.load(probotAutoMerge)
+
+  await app.receive({
+    event: 'pull_request',
+    payload: {
+      action: 'opened',
+      repository: {
+        owner: {
+          login: 'bobvanderlinden'
+        },
+        name: 'probot-auto-merge'
+      },
+      pull_request: {
+        number: 1
+      }
+    }
+  } as any)
+
+  const module: any = require('../src/pull-request-handler')
+
+  expect(module.schedulePullRequestTrigger).not.toHaveBeenCalled()
 })

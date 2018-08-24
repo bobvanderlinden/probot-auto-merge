@@ -1,25 +1,10 @@
+import { CommentAuthorAssociation } from './github-models'
 import { Context } from 'probot'
 import getConfig from 'probot-config'
 
 export type Config = {
-  minApprovals: {
-    COLLABORATOR?: number,
-    CONTRIBUTOR?: number,
-    FIRST_TIMER?: number,
-    FIRST_TIME_CONTRIBUTOR?: number,
-    MEMBER?: number,
-    NONE?: number,
-    OWNER?: number
-  },
-  maxRequestedChanges: {
-    COLLABORATOR?: number,
-    CONTRIBUTOR?: number,
-    FIRST_TIMER?: number,
-    FIRST_TIME_CONTRIBUTOR?: number,
-    MEMBER?: number,
-    NONE?: number,
-    OWNER?: number
-  }
+  minApprovals: { [key in CommentAuthorAssociation]?: number },
+  maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
   updateBranch: boolean,
   deleteBranchAfterMerge: boolean,
   mergeMethod: 'merge' | 'rebase' | 'squash',
