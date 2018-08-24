@@ -1,3 +1,4 @@
+import { conditions } from './conditions/index'
 import Raven from 'raven'
 import { TaskScheduler } from './task-scheduler'
 import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
@@ -102,6 +103,7 @@ async function doPullRequestWork (
 
   const pullRequestStatus = getPullRequestStatus(
     context,
+    conditions,
     pullRequestInfo
   )
 
