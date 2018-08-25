@@ -15,6 +15,7 @@ before_script: greenkeeper-lockfile-update
 after_script: greenkeeper-lockfile-upload
 
 script:
+- npm run build
 - npm run test:travis
 env:
   global:
