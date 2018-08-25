@@ -1,5 +1,5 @@
+import { PullRequestQueryResult } from './../src/github-models'
 import { DeepPartial } from './../src/utils'
-import { PullRequestQueryResult } from './../lib/src/github-models.d'
 import { GitHubAPI } from 'probot/lib/github'
 import { Application } from 'probot'
 import probotAutoMerge from '../src/index'
