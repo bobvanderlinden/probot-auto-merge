@@ -1,12 +1,10 @@
 import requiredLabels from '../../src/conditions/requiredLabels'
-import { createHandlerContext, createPullRequestInfo, createConfig } from '../mock'
+import { createPullRequestInfo, createConditionConfig } from '../mock'
 
 describe('open', () => {
   it('returns success with no labels and no configuration', async () => {
     const result = requiredLabels(
-      createHandlerContext({
-        config: createConfig()
-      }),
+      createConditionConfig(),
       createPullRequestInfo({
         labels: {
           nodes: []
@@ -18,10 +16,8 @@ describe('open', () => {
 
   it('returns fail with label not in configuration', async () => {
     const result = requiredLabels(
-      createHandlerContext({
-        config: createConfig({
-          requiredLabels: ['required label']
-        })
+      createConditionConfig({
+        requiredLabels: ['required label']
       }),
       createPullRequestInfo({
         labels: {
@@ -36,10 +32,8 @@ describe('open', () => {
 
   it('returns success with label in configuration', async () => {
     const result = requiredLabels(
-      createHandlerContext({
-        config: createConfig({
-          requiredLabels: ['required label']
-        })
+      createConditionConfig({
+        requiredLabels: ['required label']
       }),
       createPullRequestInfo({
         labels: {
@@ -54,10 +48,8 @@ describe('open', () => {
 
   it('returns success with multiple labels in pull request has required label in configuration', async () => {
     const result = requiredLabels(
-      createHandlerContext({
-        config: createConfig({
-          requiredLabels: ['required label']
-        })
+      createConditionConfig({
+        requiredLabels: ['required label']
       }),
       createPullRequestInfo({
         labels: {
@@ -74,10 +66,8 @@ describe('open', () => {
 
   it('returns success with labels in pull request also in configuration', async () => {
     const result = requiredLabels(
-      createHandlerContext({
-        config: createConfig({
-          requiredLabels: ['required label', 'required label 2']
-        })
+      createConditionConfig({
+        requiredLabels: ['required label', 'required label 2']
       }),
       createPullRequestInfo({
         labels: {
@@ -94,10 +84,8 @@ describe('open', () => {
 
   it('returns fail with labels in pull request also in configuration', async () => {
     const result = requiredLabels(
-      createHandlerContext({
-        config: createConfig({
-          requiredLabels: ['required label', 'required label 2']
-        })
+      createConditionConfig({
+        requiredLabels: ['required label', 'required label 2']
       }),
       createPullRequestInfo({
         labels: {

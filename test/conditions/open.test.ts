@@ -1,10 +1,10 @@
 import open from '../../src/conditions/open'
-import { createHandlerContext, createPullRequestInfo } from '../mock'
+import { createPullRequestInfo, createConditionConfig } from '../mock'
 
 describe('open', () => {
   it('returns success pull request state is open', async () => {
     const result = open(
-      createHandlerContext(),
+      createConditionConfig(),
       createPullRequestInfo({
         state: 'OPEN'
       })
@@ -17,7 +17,7 @@ describe('open', () => {
     'MERGED'
   ])('returns fail pull request state is not %s', async (state) => {
     const result = open(
-      createHandlerContext(),
+      createConditionConfig(),
       createPullRequestInfo({
         state
       })
