@@ -1,10 +1,10 @@
 import doesNotHaveMaximumChangesRequested from '../../src/conditions/maximumChangesRequested'
-import { createConfig, createPullRequestInfo, approvedReview, changesRequestedReview } from '../mock'
+import { createConditionConfig, createPullRequestInfo, approvedReview, changesRequestedReview } from '../mock'
 
 describe('maximumChangesRequested', () => {
   it('returns success when owner approved and nothing was configured', async () => {
     const result = doesNotHaveMaximumChangesRequested(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         reviews: {
           nodes: [
@@ -18,7 +18,7 @@ describe('maximumChangesRequested', () => {
 
   it('returns fail when owner requested changes and none role has 0 maximum requested changes', async () => {
     const result = doesNotHaveMaximumChangesRequested(
-      createConfig({
+      createConditionConfig({
         maxRequestedChanges: {
           NONE: 0
         }
@@ -36,7 +36,7 @@ describe('maximumChangesRequested', () => {
 
   it('returns fail when owner requested changes and owner role has 0 maximum requested changes', async () => {
     const result = doesNotHaveMaximumChangesRequested(
-      createConfig({
+      createConditionConfig({
         maxRequestedChanges: {
           OWNER: 0
         }
@@ -54,7 +54,7 @@ describe('maximumChangesRequested', () => {
 
   it('returns success when member requested changes but owner role has 0 maximum requested changes', async () => {
     const result = doesNotHaveMaximumChangesRequested(
-      createConfig({
+      createConditionConfig({
         maxRequestedChanges: {
           OWNER: 0
         }

@@ -89,6 +89,10 @@ export function createConfig (options?: PartialConfig): Config {
   }
 }
 
+export function createConditionConfig (options?: PartialConfig): ConditionConfig {
+  return createConfig(options)
+}
+
 export function createHandlerContext (options?: Partial<HandlerContext>): HandlerContext {
   return {
     log: () => undefined,

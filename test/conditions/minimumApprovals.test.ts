@@ -1,10 +1,10 @@
 import hasMinimumApprovals from '../../src/conditions/minimumApprovals'
-import { createConfig, createPullRequestInfo, approvedReview } from '../mock'
+import { createConditionConfig, createPullRequestInfo, approvedReview } from '../mock'
 
 describe('minimumApprovals', () => {
   it('returns success when owner approved and owner was configured', async () => {
     const result = hasMinimumApprovals(
-      createConfig({
+      createConditionConfig({
         minApprovals: {
           OWNER: 1
         }
@@ -22,7 +22,7 @@ describe('minimumApprovals', () => {
 
   it('returns fail when member approved but owner was configured', async () => {
     const result = hasMinimumApprovals(
-      createConfig({
+      createConditionConfig({
         minApprovals: {
           OWNER: 1
         }
@@ -40,7 +40,7 @@ describe('minimumApprovals', () => {
 
   it('returns success when owner approved and member was configured', async () => {
     const result = hasMinimumApprovals(
-      createConfig({
+      createConditionConfig({
         minApprovals: {
           MEMBER: 1
         }
@@ -58,7 +58,7 @@ describe('minimumApprovals', () => {
 
   it('returns success when owner approved but nothing was configured', async () => {
     const result = hasMinimumApprovals(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         reviews: {
           nodes: [
@@ -72,7 +72,7 @@ describe('minimumApprovals', () => {
 
   it('returns fail when no-one approved but member was configured', async () => {
     const result = hasMinimumApprovals(
-      createConfig({
+      createConditionConfig({
         minApprovals: {
           MEMBER: 1
         }

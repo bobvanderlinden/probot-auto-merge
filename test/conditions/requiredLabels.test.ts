@@ -1,10 +1,10 @@
 import requiredLabels from '../../src/conditions/requiredLabels'
-import { createPullRequestInfo, createConfig } from '../mock'
+import { createPullRequestInfo, createConditionConfig } from '../mock'
 
 describe('open', () => {
   it('returns success with no labels and no configuration', async () => {
     const result = requiredLabels(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         labels: {
           nodes: []
@@ -16,7 +16,7 @@ describe('open', () => {
 
   it('returns fail with label not in configuration', async () => {
     const result = requiredLabels(
-      createConfig({
+      createConditionConfig({
         requiredLabels: ['required label']
       }),
       createPullRequestInfo({
@@ -32,7 +32,7 @@ describe('open', () => {
 
   it('returns success with label in configuration', async () => {
     const result = requiredLabels(
-      createConfig({
+      createConditionConfig({
         requiredLabels: ['required label']
       }),
       createPullRequestInfo({
@@ -48,7 +48,7 @@ describe('open', () => {
 
   it('returns success with multiple labels in pull request has required label in configuration', async () => {
     const result = requiredLabels(
-      createConfig({
+      createConditionConfig({
         requiredLabels: ['required label']
       }),
       createPullRequestInfo({
@@ -66,7 +66,7 @@ describe('open', () => {
 
   it('returns success with labels in pull request also in configuration', async () => {
     const result = requiredLabels(
-      createConfig({
+      createConditionConfig({
         requiredLabels: ['required label', 'required label 2']
       }),
       createPullRequestInfo({
@@ -84,7 +84,7 @@ describe('open', () => {
 
   it('returns fail with labels in pull request also in configuration', async () => {
     const result = requiredLabels(
-      createConfig({
+      createConditionConfig({
         requiredLabels: ['required label', 'required label 2']
       }),
       createPullRequestInfo({

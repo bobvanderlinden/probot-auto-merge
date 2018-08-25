@@ -1,10 +1,10 @@
-import { defaultPullRequestInfo, createPullRequestInfo, createConfig } from './../mock'
+import { defaultPullRequestInfo, createPullRequestInfo, createConditionConfig } from './../mock'
 import upToDateBranch from '../../src/conditions/upToDateBranch'
 
 describe('upToDateBranch', () => {
   it('returns fail when pull request is based on strict protected branch and base of PR is not equals to baseRef', async () => {
     const status = upToDateBranch(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,
@@ -30,7 +30,7 @@ describe('upToDateBranch', () => {
 
   it('returns success when pull request is not based on strict protected branch but does have base of PR not equal to baseRef', async () => {
     const status = upToDateBranch(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,
@@ -56,7 +56,7 @@ describe('upToDateBranch', () => {
 
   it('returns success when pull request is based on strict protected branch and does have base of PR equal to baseRef', async () => {
     const status = upToDateBranch(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,

@@ -1,10 +1,10 @@
 import blockingLabels from '../../src/conditions/blockingLabels'
-import { createPullRequestInfo, createConfig } from '../mock'
+import { createPullRequestInfo, createConditionConfig } from '../mock'
 
 describe('blockingLabels', () => {
   it('returns success with no labels and no configuration', async () => {
     const result = blockingLabels(
-      createConfig(),
+      createConditionConfig(),
       createPullRequestInfo({
         labels: {
           nodes: []
@@ -16,7 +16,7 @@ describe('blockingLabels', () => {
 
   it('returns success with label not in configuration', async () => {
     const result = blockingLabels(
-      createConfig({
+      createConditionConfig({
         blockingLabels: ['blocking label']
       }),
       createPullRequestInfo({
@@ -32,7 +32,7 @@ describe('blockingLabels', () => {
 
   it('returns fail with label in configuration', async () => {
     const result = blockingLabels(
-      createConfig({
+      createConditionConfig({
         blockingLabels: ['blocking label']
       }),
       createPullRequestInfo({
@@ -48,7 +48,7 @@ describe('blockingLabels', () => {
 
   it('returns fail with label, among others, in configuration', async () => {
     const result = blockingLabels(
-      createConfig({
+      createConditionConfig({
         blockingLabels: ['blocking label']
       }),
       createPullRequestInfo({
