@@ -67,7 +67,7 @@ it('full happy path', async () => {
   app.load(probotAutoMerge)
 
   await app.receive({
-    event: 'pull_request',
+    name: 'pull_request',
     payload: {
       action: 'opened',
       repository: {
@@ -107,7 +107,7 @@ it('no configuration should not schedule any pull request', async () => {
   app.load(probotAutoMerge)
 
   await app.receive({
-    event: 'pull_request',
+    name: 'pull_request',
     payload: {
       action: 'opened',
       repository: {
