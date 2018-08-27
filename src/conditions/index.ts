@@ -19,6 +19,8 @@ export const conditions = {
   blockingChecks,
   upToDateBranch
 }
+
+export type Conditions = typeof conditions
 export const conditionNames: ConditionName[] = keysOf<ConditionName>(conditions)
 export type ConditionName = keyof (typeof conditions)
 export type ConditionResults = { [key in ConditionName]: ConditionResult }

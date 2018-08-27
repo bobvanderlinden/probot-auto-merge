@@ -1,3 +1,4 @@
+import { ConditionConfig, defaultRuleConfig } from './../src/config'
 import { Review, CheckRun, PullRequestReviewState } from './../src/github-models'
 import { DeepPartial } from './../src/utils'
 import { HandlerContext } from './../src/models'
@@ -68,14 +69,28 @@ export function createGithubApi (options?: DeepPartial<GitHubAPI>): GitHubAPI {
   } as GitHubAPI
 }
 
-export function createConfig (options?: Partial<Config>): Config {
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+export type PartialConfig = {
+  rules?: Partial<ConditionConfig>[]
+} & Partial<Omit<Config, 'rules'>>
+
+export function createConfig (options?: PartialConfig): Config {
+  const rules = ((options || {}).rules || []).map(rule => ({
+    ...defaultRuleConfig,
+    ...rule
+  }))
   return {
     ...defaultConfig,
     minApprovals: {
       MEMBER: 1
     },
-    ...options
+    ...options,
+    rules
   }
+}
+
+export function createConditionConfig (options?: PartialConfig): ConditionConfig {
+  return createConfig(options)
 }
 
 export function createHandlerContext (options?: Partial<HandlerContext>): HandlerContext {

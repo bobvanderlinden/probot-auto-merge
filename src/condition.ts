@@ -1,4 +1,5 @@
-import { HandlerContext, PullRequestInfo } from './models'
+import { ConditionConfig } from './config'
+import { PullRequestInfo } from './models'
 
-export type Condition = (context: HandlerContext, pullRequestInfo: PullRequestInfo) => ConditionResult
+export type Condition = (config: ConditionConfig, pullRequestInfo: PullRequestInfo) => ConditionResult
 export type ConditionResult = { status: 'success' } | { status: 'fail', message: string } | { status: 'pending', message?: string }

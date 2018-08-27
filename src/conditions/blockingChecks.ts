@@ -1,9 +1,10 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import { groupByLastMap } from '../utils'
 
 export default function doesNotHaveBlockingChecks (
-  context: HandlerContext,
+  config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
   const checkRuns = pullRequestInfo.checkRuns

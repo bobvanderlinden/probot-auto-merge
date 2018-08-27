@@ -1,11 +1,11 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 
 export default function hasRequiredLabels (
-  context: HandlerContext,
+  config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
-  const { config } = context
   const pullRequestLabels = new Set(pullRequestInfo.labels.nodes.map(label => label.name))
 
   const missingRequiredLabels = config.requiredLabels

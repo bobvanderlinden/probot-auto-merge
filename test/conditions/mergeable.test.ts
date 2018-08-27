@@ -1,10 +1,10 @@
 import mergeable from '../../src/conditions/mergeable'
-import { createHandlerContext, createPullRequestInfo } from '../mock'
+import { createConditionConfig, createPullRequestInfo } from '../mock'
 
 describe('mergeable', () => {
   it('returns success pull request state is MERGEABLE', async () => {
     const result = mergeable(
-      createHandlerContext(),
+      createConditionConfig(),
       createPullRequestInfo({
         mergeable: 'MERGEABLE'
       })
@@ -14,7 +14,7 @@ describe('mergeable', () => {
 
   it('returns fail pull request state is CONFLICTING', async () => {
     const result = mergeable(
-      createHandlerContext(),
+      createConditionConfig(),
       createPullRequestInfo({
         mergeable: 'CONFLICTING'
       })
@@ -24,7 +24,7 @@ describe('mergeable', () => {
 
   it('returns fail pull request state is UNKNOWN', async () => {
     const result = mergeable(
-      createHandlerContext(),
+      createConditionConfig(),
       createPullRequestInfo({
         mergeable: 'UNKNOWN'
       })
