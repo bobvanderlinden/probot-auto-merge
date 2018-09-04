@@ -1,13 +1,18 @@
-import { PullRequestQueryResult } from './../src/github-models'
-import { DeepPartial } from './../src/utils'
-import { GitHubAPI } from 'probot/lib/github'
-import { Application } from 'probot'
-import probotAutoMerge from '../src/index'
-import { createPullRequestInfo, approvedReview, successCheckRun } from './mock'
+import {
+  createPullRequestInfo,
+  approvedReview,
+  successCheckRun,
+  queuedCheckRun,
+  createGithubApi,
+  createEmptyLogger,
+  createLogger,
+  createGithubApiFromPullRequestInfo,
+  createApplication,
+  createPullRequestOpenedEvent,
+  createGetContent
+} from './mock'
 
 it('full happy path', async () => {
-  const app = new Application()
-
   const config = `
   minApprovals:
     OWNER: 1
@@ -25,104 +30,55 @@ it('full happy path', async () => {
       successCheckRun
     ]
   })
-  const pullRequestQueryResult: PullRequestQueryResult = {
-    repository: {
-      pullRequest: pullRequestInfo
-    }
-  }
 
-  const github: any = {
-    query: jest.fn(() => {
-      return pullRequestQueryResult
-    }),
-    checks: {
-      listForRef: jest.fn(() => ({
-        status: 200,
-        data: {
-          checkRuns: pullRequestInfo.checkRuns
-        }
-      }))
-    },
-    pullRequests: {
-      merge: jest.fn(() => ({ status: 200 }))
-    },
-    repos: {
-      merge: jest.fn(() => ({ status: 200 })),
-      getContent: jest.fn(() => ({
-        status: 200,
-        data: {
-          content: Buffer.from(config).toString('base64')
-        }
-      }))
-    },
-    gitdata: {
-      deleteReference: jest.fn(() => ({ status: 200 }))
-    }
-  } as DeepPartial<GitHubAPI>
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
 
-  app.auth = () => {
-    return Promise.resolve(github) as any
-  }
+  const app = createApplication({
+    appFn: require('../src/index'),
+    logger: createEmptyLogger(),
+    github
+  })
 
-  app.load(probotAutoMerge)
-
-  await app.receive({
-    name: 'pull_request',
-    payload: {
-      action: 'opened',
-      repository: {
-        owner: {
-          login: 'bobvanderlinden'
-        },
-        name: 'probot-auto-merge'
-      },
-      pull_request: {
-        number: 1
-      }
-    }
-  } as any)
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
 
   expect(github.pullRequests.merge).toHaveBeenCalled()
 })
 
 it('no configuration should not schedule any pull request', async () => {
-  const app = new Application()
-
   jest.mock('../src/pull-request-handler', () => {
     return {
       schedulePullRequestTrigger: jest.fn()
     }
   })
 
-  const github: any = {
+  const github = createGithubApi({
     repos: {
-      getContent: () => Promise.reject({ code: 404 })
+      getContent: createGetContent({})
     }
-  } as DeepPartial<GitHubAPI>
+  })
 
-  app.auth = () => {
-    return Promise.resolve(github) as any
-  }
+  const app = createApplication({
+    appFn: require('../src/index'),
+    logger: createEmptyLogger(),
+    github
+  })
 
-  app.load(probotAutoMerge)
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
 
-  await app.receive({
-    name: 'pull_request',
-    payload: {
-      action: 'opened',
-      repository: {
-        owner: {
-          login: 'bobvanderlinden'
-        },
-        name: 'probot-auto-merge'
-      },
-      pull_request: {
-        number: 1
-      }
-    }
-  } as any)
-
-  const module: any = require('../src/pull-request-handler')
-
-  expect(module.schedulePullRequestTrigger).not.toHaveBeenCalled()
+  expect(require('../src/pull-request-handler').schedulePullRequestTrigger).not.toBeCalled()
 })
