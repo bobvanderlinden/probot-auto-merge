@@ -73,12 +73,7 @@ async function handlePullRequestTrigger (
   context: HandlerContext,
   pullRequestReference: PullRequestReference
 ) {
-  const { log: appLog } = context
   const pullRequestKey = getPullRequestKey(pullRequestReference)
-
-  function log (msg: string) {
-    appLog(`${pullRequestKey}: ${msg}`)
-  }
 
   // Cancel any running scheduled timer for this pull request,
   // since we're now handling it right now.
@@ -86,7 +81,11 @@ async function handlePullRequestTrigger (
 
   const pullRequestContext = {
     ...context,
-    log
+    log: context.log.child({
+      options: {
+        pullRequest: pullRequestReference.number
+      }
+    })
   }
   await doPullRequestWork(pullRequestContext, pullRequestReference)
 }
