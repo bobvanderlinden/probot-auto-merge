@@ -118,6 +118,12 @@ async function doPullRequestWork (
 }
 
 export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'delete_branch'
+export type PullRequestActions
+  = []
+  | ['reschedule']
+  | ['update_branch']
+  | ['merge']
+  | ['merge', 'delete_branch']
 
 /**
  * Determines which actions to take based on the pull request and the condition results
@@ -126,7 +132,7 @@ export function getPullRequestActions (
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
-): PullRequestAction[] {
+): PullRequestActions {
   const { config } = context
   const pending = Object.values(pullRequestStatus)
     .some(conditionResult => conditionResult.status === 'pending')
@@ -154,14 +160,9 @@ export function getPullRequestActions (
     return []
   }
 
-  return [
-    'merge',
-    ...(
-      config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)
-      ? ['delete_branch'] as PullRequestAction[]
-      : []
-    )
-  ]
+  return config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)
+    ? ['merge', 'delete_branch']
+    : ['merge']
 }
 
 function isInFork (pullRequestInfo: PullRequestInfo): boolean {
