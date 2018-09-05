@@ -29,7 +29,8 @@ export class RepositoryWorker {
   constructor (
     public repository: RepositoryReference,
     context: HandlerContext,
-    private pullRequestHandler: (context: PullRequestContext, pullRequest: PullRequestReference) => Promise<void>
+    private pullRequestHandler: (context: PullRequestContext, pullRequest: PullRequestReference) => Promise<void>,
+    private onDrain: () => void
   ) {
     this.context = {
       ...context,
@@ -45,12 +46,12 @@ export class RepositoryWorker {
   async run (): Promise<void> {
     while (await this.runTask());
     this.runner = null
+    this.onDrain()
   }
 
   private async runTask (): Promise<boolean> {
     const task = this.taskQueue.shift()
     if (task === undefined) {
-      this.runner = null
       return false
     }
 
