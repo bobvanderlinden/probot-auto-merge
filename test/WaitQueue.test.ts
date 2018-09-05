@@ -59,6 +59,7 @@ describe('WaitQueue', () => {
     expect(worker).not.toBeCalled()
     waitQueue.queueLast('hello', 1000)
     expect(worker).not.toBeCalled()
+    waitQueue.stopWaitingFor('hello')
     waitQueue.queueLast('hello')
     await immediate()
     expect(worker).toBeCalled()
@@ -73,6 +74,7 @@ describe('WaitQueue', () => {
       drain
     )
     waitQueue.queueLast('hello', 1000)
+    waitQueue.stopWaitingFor('hello')
     waitQueue.queueLast('hello')
     await drain.promise
     expect(worker).toHaveBeenCalledTimes(1)

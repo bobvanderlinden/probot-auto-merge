@@ -78,13 +78,6 @@ export class WaitQueue<T> {
     const result: WaitQueueTask<T>[] = []
     const id = this.getId(work)
 
-    if (this.runningTask !== null &&
-      this.runningTask.task.type === 'wait' &&
-      this.runningTask.task.id === id &&
-      this.runningTask.promise.cancel) {
-      this.runningTask.promise.cancel()
-    }
-
     if (this.taskIds.has(id)) {
       return result
     } else {
@@ -103,5 +96,13 @@ export class WaitQueue<T> {
   }
   public queueLast (work: T, delay: number = 0) {
     this.queueTaskLast(this.createTasks(work, delay))
+  }
+  public stopWaitingFor (id: string) {
+    if (this.runningTask !== null &&
+      this.runningTask.task.type === 'wait' &&
+      this.runningTask.task.id === id &&
+      this.runningTask.promise.cancel) {
+      this.runningTask.promise.cancel()
+    }
   }
 }

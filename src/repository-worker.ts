@@ -49,6 +49,7 @@ export class RepositoryWorker {
   }
 
   public queue (pullRequestNumber: number) {
+    this.waitQueue.stopWaitingFor(`${pullRequestNumber}`)
     this.waitQueue.queueLast(pullRequestNumber)
   }
 }
