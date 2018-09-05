@@ -2,7 +2,7 @@ import { Application, Context } from 'probot'
 import { loadConfig } from './config'
 import { HandlerContext } from './models'
 import Raven from 'raven'
-import { queue } from './repository-workers'
+import { RepositoryWorkers } from './repository-workers'
 
 Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728', {
   captureUnhandledRejections: true,
@@ -46,6 +46,7 @@ async function useHandlerContext (options: {app: Application, context: Context},
 }
 
 export = (app: Application) => {
+  const repositoryWorkers = new RepositoryWorkers()
   app.on([
     'pull_request.opened',
     'pull_request.edited',
@@ -59,7 +60,7 @@ export = (app: Application) => {
     'pull_request_review.dismissed'
   ], async context => {
     await useHandlerContext({ app, context }, async (handlerContext) => {
-      queue(handlerContext, {
+      repositoryWorkers.queue(handlerContext, {
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         number: context.payload.pull_request.number
@@ -79,7 +80,7 @@ export = (app: Application) => {
     }, async () => {
       await useHandlerContext({ app, context }, async (handlerContext) => {
         for (const pullRequest of context.payload.check_run.pull_requests) {
-          queue(handlerContext, {
+          repositoryWorkers.queue(handlerContext, {
             owner: context.payload.repository.owner.login,
             repo: context.payload.repository.name,
             number: pullRequest.number
@@ -96,7 +97,7 @@ export = (app: Application) => {
   ], async context => {
     await useHandlerContext({ app, context }, async (handlerContext) => {
       for (const pullRequest of context.payload.check_suite.pull_requests) {
-        queue(handlerContext, {
+        repositoryWorkers.queue(handlerContext, {
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
           number: pullRequest.number
