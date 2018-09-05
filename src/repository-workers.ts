@@ -1,7 +1,6 @@
 import { HandlerContext } from './models'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import { RepositoryWorker } from './repository-worker'
-import { handlePullRequest } from './pull-request-handler'
 
 export class RepositoryWorkers {
   constructor (
@@ -19,7 +18,6 @@ export class RepositoryWorkers {
     return new RepositoryWorker(
       repositoryReference,
       context,
-      handlePullRequest,
       this.onRepositoryWorkerDrained.bind(this, repositoryReference)
     )
   }
@@ -33,10 +31,7 @@ export class RepositoryWorkers {
     const queueName = getRepositoryKey(pullRequestReference)
     const repositoryWorker = this.repositoryWorkerMap[queueName] = this.repositoryWorkerMap[queueName] || this.createRepositoryWorker(pullRequestReference, context)
     context.log.debug('repositoryWorker')
-    repositoryWorker.queue({
-      type: 'handle',
-      pullRequest: pullRequestReference.number
-    })
+    repositoryWorker.queue(pullRequestReference.number)
   }
 }
 

@@ -5,7 +5,6 @@ import {
   queuedCheckRun,
   createGithubApi,
   createEmptyLogger,
-  createLogger,
   createGithubApiFromPullRequestInfo,
   createApplication,
   createPullRequestOpenedEvent,

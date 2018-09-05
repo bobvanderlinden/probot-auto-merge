@@ -1,36 +1,16 @@
-import { PullRequestReference } from '../lib/github-models'
-import { PullRequestContext } from '../lib/pull-request-handler'
-import { CancelablePromise, delay } from './delay'
+import { WaitQueue } from './WaitQueue'
 import { RepositoryReference } from './github-models'
 import { HandlerContext } from './models'
-
-type HandleTask = {
-  type: 'handle',
-  pullRequest: number
-}
-
-type WaitTask = {
-  type: 'wait',
-  pullRequest: number
-}
-
-type RepositoryTask = HandleTask | WaitTask
-
-type RunningTask = RepositoryTask & {
-  promise: CancelablePromise<void>
-}
+import { handlePullRequest } from './pull-request-handler'
 
 export class RepositoryWorker {
-  taskQueue: RepositoryTask[] = []
-  runner: Promise<void> | null = null
-  runningTask: RunningTask | null = null
+  private waitQueue: WaitQueue<number>
   private context: HandlerContext
 
   constructor (
     public repository: RepositoryReference,
     context: HandlerContext,
-    private pullRequestHandler: (context: PullRequestContext, pullRequest: PullRequestReference) => Promise<void>,
-    private onDrain: () => void
+    onDrain: () => void
   ) {
     this.context = {
       ...context,
@@ -41,93 +21,34 @@ export class RepositoryWorker {
         }
       })
     }
+    this.waitQueue = new WaitQueue<number>(
+      (pullRequestNumber: number) => `${pullRequestNumber}`,
+      this.handlePullRequestNumber.bind(this),
+      onDrain
+    )
   }
 
-  async run (): Promise<void> {
-    while (await this.runTask());
-    this.runner = null
-    this.onDrain()
-  }
-
-  private async runTask (): Promise<boolean> {
-    const task = this.taskQueue.shift()
-    if (task === undefined) {
-      return false
-    }
-
-    this.runningTask = {
-      ...task,
-      promise: this.executeTask(task)
-    }
-    await this.runningTask.promise
-    this.runningTask = null
-
-    return true
-  }
-
-  private executeTask (task: RepositoryTask): CancelablePromise<void> {
+  private async handlePullRequestNumber (pullRequestNumber: number): Promise<void> {
     const log = this.context.log.child({
       options: {
-        pullRequest: task.pullRequest
+        pullRequest: pullRequestNumber
       }
     })
-    switch (task.type) {
-      case 'wait':
-        log.info(`Waiting for 1 minute`)
-        return delay(1 * 60 * 1000) // 1 minute
-      case 'handle':
-        log.debug('Handling pull request')
-        const pullRequestReference = {
-          ...this.repository,
-          number: task.pullRequest
-        }
-        const pullRequestContext = {
-          ...this.context,
-          log,
-          reschedulePullRequest: this.reschedulePullRequest.bind(this, task)
-        }
-        return this.pullRequestHandler(pullRequestContext, pullRequestReference)
-      default:
-        log.error(`Invalid task type (${(task as any).type})`)
-        throw new Error(`Invalid task type (${(task as any).type})`)
+    const pullRequestReference = {
+      ...this.repository,
+      number: pullRequestNumber
     }
+    const pullRequestContext = {
+      ...this.context,
+      log,
+      reschedulePullRequest: () => {
+        this.waitQueue.queueFirst(pullRequestNumber, 60 * 1000)
+      }
+    }
+    return handlePullRequest(pullRequestContext, pullRequestReference)
   }
 
-  private reschedulePullRequest (task: RepositoryTask) {
-    this.taskQueue.unshift(task)
-    this.taskQueue.unshift({
-      type: 'wait',
-      pullRequest: task.pullRequest
-    })
-  }
-
-  private startOrResume () {
-    if (this.runner) { return }
-    this.runner = this.run().then()
-  }
-
-  public queue (task: RepositoryTask) {
-    this.context.log.debug(`Handling queue request type ${task.type} for pull request #${task.pullRequest}`)
-    // If a pull request is attempted to be queued while we were currently waiting for that same pull request,
-    // stop waiting for the pull request.
-    if (this.runningTask
-      && this.runningTask.type === 'wait'
-      && this.runningTask.pullRequest === task.pullRequest
-      && this.runningTask.promise.cancel
-    ) {
-      this.context.log.debug(`Cancelling waiting for pull request #${task.pullRequest}`)
-      this.runningTask.promise.cancel()
-      return
-    }
-
-    // If the task was already in the queue, skip adding the task.
-    if (this.taskQueue.some(queuedTask =>
-      queuedTask.type === task.type && queuedTask.pullRequest === task.pullRequest
-    )) {
-      this.context.log.debug(`Pull request #${task.pullRequest} was already in queue. Skip adding it again.`)
-      return
-    }
-    this.taskQueue.push(task)
-    this.startOrResume()
+  public queue (pullRequestNumber: number) {
+    this.waitQueue.queueLast(pullRequestNumber)
   }
 }
