@@ -1,37 +1,153 @@
+import { CancelablePromise, delay } from './delay'
 import { conditions } from './conditions/index'
 import Raven from 'raven'
-import { TaskScheduler } from './task-scheduler'
 import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
 import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
-const debug = require('debug')('pull-request-handler')
+import { RepositoryReference } from './github-models'
 
-interface PullRequestTask {
-  context: HandlerContext
-  pullRequestReference: PullRequestReference
+type HandleTask = {
+  type: 'handle',
+  pullRequest: number
 }
 
-const taskScheduler = new TaskScheduler<PullRequestTask>({
-  worker: pullRequestWorker,
-  concurrency: 8,
-  errorHandler: (error, queueName) => {
-    debug(`Error during handling of pull request task on queue ${queueName}`, error)
-    Raven.captureException(error, {
-      tags: {
-        queue: queueName
-      }
-    }, undefined)
+type WaitTask = {
+  type: 'wait',
+  pullRequest: number
+}
+
+type RepositoryTask = HandleTask | WaitTask
+
+type RunningTask = RepositoryTask & {
+  promise: CancelablePromise<void>
+}
+
+class RepositoryWorker {
+  taskQueue: RepositoryTask[] = []
+  runner: Promise<void> | null = null
+  runningTask: RunningTask | null = null
+  private context: HandlerContext
+
+  constructor (
+    public repository: RepositoryReference,
+    context: HandlerContext,
+    private pullRequestHandler: (context: PullRequestContext, pullRequest: PullRequestReference) => Promise<void>
+  ) {
+    this.context = {
+      ...context,
+      log: context.log.child({
+        options: {
+          owner: repository.owner,
+          repo: repository.repo
+        }
+      })
+    }
   }
-})
-const pullRequestTimeouts: {
-  [key: string]: NodeJS.Timer;
+
+  async run (): Promise<void> {
+    while (await this.runTask());
+    this.runner = null
+  }
+
+  private async runTask (): Promise<boolean> {
+    const task = this.taskQueue.shift()
+    if (task === undefined) {
+      this.runner = null
+      return false
+    }
+
+    this.runningTask = {
+      ...task,
+      promise: this.executeTask(task)
+    }
+    await this.runningTask.promise
+    this.runningTask = null
+
+    return true
+  }
+
+  private executeTask (task: RepositoryTask): CancelablePromise<void> {
+    const log = this.context.log.child({
+      options: {
+        pullRequest: task.pullRequest
+      }
+    })
+    switch (task.type) {
+      case 'wait':
+        log.info(`Waiting for 1 minute`)
+        return delay(1 * 60 * 1000) // 1 minute
+      case 'handle':
+        log.debug('Handling pull request')
+        const pullRequestReference = {
+          ...this.repository,
+          number: task.pullRequest
+        }
+        const pullRequestContext = {
+          ...this.context,
+          log,
+          reschedulePullRequest: this.reschedulePullRequest.bind(this, task)
+        }
+        return this.pullRequestHandler(pullRequestContext, pullRequestReference)
+      default:
+        log.error(`Invalid task type (${(task as any).type})`)
+        throw new Error(`Invalid task type (${(task as any).type})`)
+    }
+  }
+
+  private reschedulePullRequest (task: RepositoryTask) {
+    this.taskQueue.unshift(task)
+    this.taskQueue.unshift({
+      type: 'wait',
+      pullRequest: task.pullRequest
+    })
+  }
+
+  private startOrResume () {
+    if (this.runner) { return }
+    this.runner = this.run().then()
+  }
+
+  public queue (task: RepositoryTask) {
+    this.context.log.debug(`Handling queue request type ${task.type} for pull request #${task.pullRequest}`)
+    // If a pull request is attempted to be queued while we were currently waiting for that same pull request,
+    // stop waiting for the pull request.
+    if (this.runningTask
+      && this.runningTask.type === 'wait'
+      && this.runningTask.pullRequest === task.pullRequest
+      && this.runningTask.promise.cancel
+    ) {
+      this.context.log.debug(`Cancelling waiting for pull request #${task.pullRequest}`)
+      this.runningTask.promise.cancel()
+      return
+    }
+
+    // If the task was already in the queue, skip adding the task.
+    if (this.taskQueue.some(queuedTask =>
+      queuedTask.type === task.type && queuedTask.pullRequest === task.pullRequest
+    )) {
+      this.context.log.debug(`Pull request #${task.pullRequest} was already in queue. Skip adding it again.`)
+      return
+    }
+    this.taskQueue.push(task)
+    this.startOrResume()
+  }
+}
+
+// TODO: Avoid creating a module-scoped / global variable
+// that indirectly influences tests. Use an instance / class
+// and instantiate it inside index.ts
+const repositoryWorkers: {
+  [key: string]: RepositoryWorker
 } = {}
 
-export function arePullRequestReferencesEqual (a: PullRequestReference, b: PullRequestReference) {
-  return a.number === b.number
-    && a.owner === b.owner
-    && a.repo === b.owner
+export function clearRepositoryWorkers () {
+  for (let key in repositoryWorkers) {
+    delete repositoryWorkers[key]
+  }
+}
+export interface PullRequestContext extends HandlerContext {
+  reschedulePullRequest: () => void
 }
 
 export function schedulePullRequestTrigger (
@@ -39,72 +155,39 @@ export function schedulePullRequestTrigger (
   pullRequestReference: PullRequestReference
 ) {
   const queueName = getRepositoryKey(pullRequestReference)
-  const queueContainsTask = taskScheduler.getQueue(queueName)
-    .some(task => arePullRequestReferencesEqual(task.pullRequestReference, pullRequestReference))
-  if (!queueContainsTask) {
-    taskScheduler.queue(queueName, { context, pullRequestReference })
-  }
-}
+  context.log.debug('schedulePullRequestTrigger', queueName)
 
-function getRepositoryKey ({ owner, repo }: { owner: string, repo: string }) {
-  return `${owner}/${repo}`
-}
-
-function getPullRequestKey (pullRequestReference: PullRequestReference) {
-  return `${pullRequestReference.owner}/${pullRequestReference.repo}#${pullRequestReference.number}`
-}
-
-async function pullRequestWorker ({
-  context,
-  pullRequestReference
-}: PullRequestTask) {
-  await Raven.context({
-    tags: {
-      owner: pullRequestReference.owner,
-      repository: pullRequestReference.repo,
-      pullRequestNumber: pullRequestReference.number
-    }
-  }, async () => {
-    await handlePullRequestTrigger(context, pullRequestReference)
+  const repositoryWorker = repositoryWorkers[queueName] = repositoryWorkers[queueName] || new RepositoryWorker(pullRequestReference, context, handlePullRequest)
+  context.log.debug('repositoryWorker')
+  repositoryWorker.queue({
+    type: 'handle',
+    pullRequest: pullRequestReference.number
   })
 }
 
-async function handlePullRequestTrigger (
-  context: HandlerContext,
-  pullRequestReference: PullRequestReference
-) {
-  const pullRequestKey = getPullRequestKey(pullRequestReference)
-
-  // Cancel any running scheduled timer for this pull request,
-  // since we're now handling it right now.
-  clearTimeout(pullRequestTimeouts[pullRequestKey])
-
-  const pullRequestContext = {
-    ...context,
-    log: context.log.child({
-      options: {
-        pullRequest: pullRequestReference.number
-      }
-    })
-  }
-  await doPullRequestWork(pullRequestContext, pullRequestReference)
+function getRepositoryKey ({ owner, repo }: RepositoryReference) {
+  return `${owner}/${repo}`
 }
 
-async function doPullRequestWork (
-  context: HandlerContext,
+async function handlePullRequest (
+  context: PullRequestContext,
   pullRequestReference: PullRequestReference
 ) {
   const { log } = context
+  context.log.debug('Querying', pullRequestReference)
   const pullRequestInfo = await queryPullRequest(
     context.github,
     pullRequestReference
   )
+  context.log.debug('pullRequestInfo:', pullRequestInfo)
 
   const pullRequestStatus = getPullRequestStatus(
     context,
     conditions,
     pullRequestInfo
   )
+
+  context.log.debug('pullRequestStatus:', pullRequestStatus)
 
   Raven.mergeContext({
     extra: {
@@ -113,7 +196,11 @@ async function doPullRequestWork (
   })
 
   log(`result:\n${JSON.stringify(pullRequestStatus, null, 2)}`)
-  await handlePullRequestStatus(context, pullRequestInfo, pullRequestStatus)
+  await handlePullRequestStatus(
+    context,
+    pullRequestInfo,
+    pullRequestStatus
+  )
 }
 
 export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'delete_branch'
@@ -188,7 +275,7 @@ async function deleteBranch (
 }
 
 export async function executeActions (
-  context: HandlerContext,
+  context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   actions: PullRequestAction[]
 ) {
@@ -198,15 +285,16 @@ export async function executeActions (
 }
 
 export async function executeAction (
-  context: HandlerContext,
+  context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   action: PullRequestAction
 ): Promise<void> {
+  context.log.debug('Executing action:', action)
   switch (action) {
     case 'update_branch':
       return updateBranch(context, pullRequestInfo)
     case 'reschedule':
-      return reschedulePullRequest(context, pullRequestInfo)
+      return context.reschedulePullRequest()
     case 'merge':
       return mergePullRequest(context, pullRequestInfo)
     case 'delete_branch':
@@ -221,7 +309,7 @@ export async function executeAction (
  * This is the equivalent of pushing the 'Update branch' button
  */
 async function updateBranch (
-  context: HandlerContext,
+  context: PullRequestContext,
   pullRequestInfo: PullRequestInfo
 ) {
   // This merges the baseRef on top of headRef of the PR.
@@ -239,28 +327,6 @@ function getPullRequestReference (pullRequestInfo: PullRequestInfo) {
     repo: pullRequestInfo.baseRef.repository.name,
     number: pullRequestInfo.number
   }
-}
-
-/**
- * Reschedules the pull request for later evaluation
- */
-async function reschedulePullRequest (
-  context: HandlerContext,
-  pullRequestInfo: PullRequestInfo
-) {
-  const pullRequestReference = getPullRequestReference(pullRequestInfo)
-  // Some checks (like Travis) seem to not always send
-  // their status updates. Making this process being stalled.
-  // We work around this issue by scheduling a recheck after
-  // 1 minutes. The recheck is cancelled once another pull
-  // request event comes by.
-  context.log('Scheduling pull request trigger after 1 minutes')
-  const pullRequestKey = getPullRequestKey(pullRequestReference)
-  debug(`Setting timeout for ${pullRequestKey}`)
-  pullRequestTimeouts[pullRequestKey] = setTimeout(() => {
-    debug(`Timeout triggered for ${pullRequestKey}`)
-    schedulePullRequestTrigger(context, pullRequestReference)
-  }, 1 * 60 * 1000)
 }
 
 /**
@@ -282,10 +348,11 @@ async function mergePullRequest (
 }
 
 export async function handlePullRequestStatus (
-  context: HandlerContext,
+  context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
 ) {
   const actions = getPullRequestActions(context, pullRequestInfo, pullRequestStatus)
+  context.log.debug('Actions:', actions)
   await executeActions(context, pullRequestInfo, actions)
 }
