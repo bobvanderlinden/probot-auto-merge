@@ -11,7 +11,7 @@ import {
   createPullRequestOpenedEvent,
   createGetContent
 } from './mock'
-import { clearRepositoryWorkers } from '../src/pull-request-handler'
+import { clearRepositoryWorkers } from '../src/repository-workers'
 import { immediate } from '../src/delay'
 
 beforeEach(() => {

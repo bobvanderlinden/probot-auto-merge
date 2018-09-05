@@ -1,8 +1,8 @@
 import { Application, Context } from 'probot'
 import { loadConfig } from './config'
-import { schedulePullRequestTrigger } from './pull-request-handler'
 import { HandlerContext } from './models'
 import Raven from 'raven'
+import { queue } from './repository-workers'
 
 Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728', {
   captureUnhandledRejections: true,
@@ -59,7 +59,7 @@ export = (app: Application) => {
     'pull_request_review.dismissed'
   ], async context => {
     await useHandlerContext({ app, context }, async (handlerContext) => {
-      schedulePullRequestTrigger(handlerContext, {
+      queue(handlerContext, {
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         number: context.payload.pull_request.number
@@ -79,7 +79,7 @@ export = (app: Application) => {
     }, async () => {
       await useHandlerContext({ app, context }, async (handlerContext) => {
         for (const pullRequest of context.payload.check_run.pull_requests) {
-          schedulePullRequestTrigger(handlerContext, {
+          queue(handlerContext, {
             owner: context.payload.repository.owner.login,
             repo: context.payload.repository.name,
             number: pullRequest.number
@@ -96,7 +96,7 @@ export = (app: Application) => {
   ], async context => {
     await useHandlerContext({ app, context }, async (handlerContext) => {
       for (const pullRequest of context.payload.check_suite.pull_requests) {
-        schedulePullRequestTrigger(handlerContext, {
+        queue(handlerContext, {
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
           number: pullRequest.number
