@@ -4,7 +4,7 @@ import { conditions, ConditionName } from './../src/conditions/'
 import { ConditionResult } from './../src/condition'
 import { PullRequestInfo } from './../src/models'
 import { getPullRequestActions, executeAction } from '../src/pull-request-handler'
-import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi } from './mock'
+import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext } from './mock'
 import { mapObject } from '../src/utils'
 
 const defaultBaseRef: PullRequestInfo['baseRef'] = {
@@ -183,7 +183,7 @@ describe('executeAction with action', () => {
   it('merge', async () => {
     const merge = jest.fn(() => ({ status: 200 }))
     await executeAction(
-      createHandlerContext({
+      createPullRequestContext({
         github: createGithubApi({
           pullRequests: {
             merge
@@ -220,7 +220,7 @@ describe('executeAction with action', () => {
   it('delete_branch', async () => {
     const deleteReference = jest.fn(() => ({ status: 200 }))
     await executeAction(
-      createHandlerContext({
+      createPullRequestContext({
         github: createGithubApi({
           gitdata: {
             deleteReference
@@ -255,7 +255,7 @@ describe('executeAction with action', () => {
   it('update_branch', async () => {
     const merge = jest.fn(() => ({ status: 200 }))
     await executeAction(
-      createHandlerContext({
+      createPullRequestContext({
         github: createGithubApi({
           repos: {
             merge
@@ -303,12 +303,14 @@ describe('executeAction with action', () => {
   })
 
   it('reschedule', async () => {
-    jest.useFakeTimers()
+    const reschedulePullRequest = jest.fn(() => undefined)
     await executeAction(
-      createHandlerContext(),
+      createPullRequestContext({
+        reschedulePullRequest
+      }),
       createPullRequestInfo(),
       'reschedule'
     )
-    expect(setTimeout).toHaveBeenCalledTimes(1)
+    expect(reschedulePullRequest).toHaveBeenCalledTimes(1)
   })
 })
