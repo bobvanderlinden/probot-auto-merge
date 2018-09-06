@@ -1,11 +1,13 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import { getLatestReviews, arrayToMap, or, get, mapToArray } from '../utils'
 import { associations, getAssociationPriority } from '../association'
 
-export default function hasMinimumApprovals (context: HandlerContext, pullRequestInfo: PullRequestInfo): ConditionResult {
-  const { config } = context
-
+export default function hasMinimumApprovals (
+  config: ConditionConfig,
+  pullRequestInfo: PullRequestInfo
+): ConditionResult {
   const latestReviews = getLatestReviews(pullRequestInfo)
   const approvalCountByAssociation =
     arrayToMap(associations,

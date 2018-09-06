@@ -1,8 +1,9 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 
 export default function hasUpToDateBranch (
-  context: HandlerContext,
+  config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
   const protectedBranch = pullRequestInfo.repository.protectedBranches.nodes

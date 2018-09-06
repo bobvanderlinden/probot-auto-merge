@@ -1,7 +1,11 @@
-import { HandlerContext, PullRequestInfo } from '../models'
+import { ConditionConfig } from './../config'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 
-export default function isOpen (context: HandlerContext, pullRequestInfo: PullRequestInfo): ConditionResult {
+export default function isOpen (
+  config: ConditionConfig,
+  pullRequestInfo: PullRequestInfo
+): ConditionResult {
   return pullRequestInfo.state === 'OPEN'
     ? {
       status: 'success'

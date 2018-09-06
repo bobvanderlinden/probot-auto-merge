@@ -4,9 +4,12 @@ export type MergeableState = 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
 export type CommentAuthorAssociation = 'MEMBER' | 'OWNER' | 'COLLABORATOR' | 'CONTRIBUTOR' | 'FIRST_TIME_CONTRIBUTOR' | 'FIRST_TIMER' | 'NONE'
 export type PullRequestReviewState = 'PENDING' | 'COMMENTED' | 'APPROVED' | 'CHANGES_REQUESTED' | 'DISMISSED'
 
-export interface PullRequestReference {
+export interface RepositoryReference {
   owner: string
   repo: string
+}
+
+export interface PullRequestReference extends RepositoryReference {
   number: number
 }
 
