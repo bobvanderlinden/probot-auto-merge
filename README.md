@@ -18,12 +18,20 @@ Configuration of probot-auto-merge is done through `.github/auto-merge.yml` in
 your repository. An example of this file can be found [here](auto-merge.example.yml).
 You can also see the configuration for this repository [here](.github/auto-merge.yml).
 
+The configuration has values that serve as conditions on whether or not a pull request
+should be automatically merged and also configuration about the merge itself. Values
+that serve as conditions are annotated as such below.
+
+All conditions must be met before a PR will be automatically merged. You can get more
+flexibility by defining multiple rules. Rules can have multiple conditions and if any
+of the conditions inside a rule are met, the PR is also merged. See [rules](#Rules).
+
 Note that the default configuration options are to do nothing. This is to prevent
 impicit and possibly unintended behavior.
 
 The configuration fields are as follows:
 
-### `minApprovals` (required)
+### `minApprovals` (required, condition)
 
 The minimum number of reviews from each association that approve the pull request before
 doing an automatic merge. For more information about associations see:
@@ -47,7 +55,7 @@ minApprovals:
   MEMBER: 2
 ```
 
-### `maxRequestedChanges`
+### `maxRequestedChanges` (condition, default: none)
 
 Similar to `minApprovals`, maxRequestedChanges determines the maximum number of
 requested changes before a pull request will be blocked from being automatically
@@ -80,6 +88,32 @@ The default for this value is:
 ```yaml
 maxRequestedChanges:
   NONE: 0
+```
+
+### `blockingLabels` (condition, default: none)
+
+Blocking labels are the labels that can be attached to a pull request to make
+sure the pull request is not being merged automatically.
+
+In the example below, pull requests that have the `blocked` label will not be
+merged automatically.
+
+```yaml
+blockingLabels:
+- blocked
+```
+
+### `requiredLabels` (condition, default: none)
+
+Whenever required labels are configured, pull requests will only be automatically
+merged whenever all of these labels are attached to a pull request.
+
+In the example below, pull requests need to have the label `merge` before they
+will be automatically merged.
+
+```yaml
+requiredLabels:
+- merge
 ```
 
 ### `updateBranch` (default: `false`)
@@ -131,30 +165,32 @@ For more information see https://help.github.com/articles/about-pull-request-mer
 mergeMethod: merge
 ```
 
-### `blockingLabels` (default: none)
+### `rules` (default: none)
 
-Blocking labels are the labels that can be attached to a pull request to make
-sure the pull request is not being merged automatically.
+Rules allow more flexiblity configuring conditions for automatically merging. Each rule is defined by
+multiple conditions. All conditions inside a rule must be met before a rule triggers a merge. Any of the
+defined rules can trigger a merge individually.
 
-In the example below, pull requests that have the `blocked` label will not be
-merged automatically.
+An example of a configuration with 2 rules that will trigger a merge upon 1 approval from an owner *or* a `merge` label:
+
+```yaml
+rules:
+- minApprovals:
+    OWNER: 1
+- requiredLabels:
+    - merge
+```
+
+This can be combined with conditions on global level, as the global conditions will take presedence. The following example will not trigger a merge when a PR has the `blocking` label, regardless what the rules say:
 
 ```yaml
 blockingLabels:
-- blocked
-```
-
-### `requiredLabels` (default: none)
-
-Whenever required labels are configured, pull requests will only be automatically
-merged whenever all of these labels are attached to a pull request.
-
-In the example below, pull requests need to have the label `merge` before they
-will be automatically merged.
-
-```yaml
-requiredLabels:
-- merge
+- blocking
+rules:
+- minApprovals:
+    OWNER: 1
+- requiredLabels:
+    - merge
 ```
 
 ## Development
