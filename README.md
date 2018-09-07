@@ -6,6 +6,8 @@
 
 A GitHub App built with [Probot](https://github.com/probot/probot) that automatically merges PRs
 
+> ![Probot Auto Merge in action](https://user-images.githubusercontent.com/6375609/45245043-d9c5ff00-b2fa-11e8-8745-2588323edda8.png)
+
 ## Usage
 
 1. [Configure the GitHub App](https://github.com/apps/probot-auto-merge)
