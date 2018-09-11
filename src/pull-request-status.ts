@@ -18,6 +18,16 @@ export function getConditionResults (
   )
 }
 
+export function getFirstSuccessfulResults (ruleConfigs: ConditionConfig[], conditions: Conditions, pullRequestInfo: PullRequestInfo): ConditionResults | undefined {
+  for (let ruleConfig of ruleConfigs) {
+    const ruleResult = getConditionResults(ruleConfig, conditions, pullRequestInfo)
+    if (areSuccessfulResults(ruleResult)) {
+      return ruleResult
+    }
+  }
+  return undefined
+}
+
 export function getPullRequestStatus (
   context: HandlerContext,
   conditions: Conditions,
@@ -25,21 +35,30 @@ export function getPullRequestStatus (
 ): PullRequestStatus {
   const globalConfig = context.config
   const globalResults = getConditionResults(globalConfig, conditions, pullRequestInfo)
-  if (!getConclusion(globalResults)) {
+
+  // If the global configuration returns failing conditions, then this overrules
+  // any of the results from rules. There is no need to evaluate rules, so
+  // return the global results here.
+  if (!areSuccessfulResults(globalResults)) {
     return globalResults
   }
-  return (globalConfig.rules || []).reduce<undefined | ConditionResults>((result, ruleConfig) => {
-    if (result !== undefined) {
-      return result
-    }
+
+  let fallbackNonSuccessfulResult = undefined
+  for (let ruleConfig of globalConfig.rules) {
     const ruleResult = getConditionResults(ruleConfig, conditions, pullRequestInfo)
-    if (getConclusion(ruleResult)) {
+    if (areSuccessfulResults(ruleResult)) {
       return ruleResult
     }
-    return undefined
-  }, undefined) || globalResults
+
+    // Store the first non-successful result for the return value when
+    // no rule has a successful result.
+    if (fallbackNonSuccessfulResult === undefined) {
+      fallbackNonSuccessfulResult = ruleResult
+    }
+  }
+  return fallbackNonSuccessfulResult || globalResults
 }
 
-export function getConclusion (conditionResults: ConditionResults): boolean {
+export function areSuccessfulResults (conditionResults: ConditionResults): boolean {
   return Object.values(conditionResults).every(conditionResult => conditionResult.status === 'success')
 }
