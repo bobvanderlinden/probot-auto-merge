@@ -38,6 +38,10 @@ export async function loadConfig (context: Context): Promise<Config | null> {
   const config = await getConfig(context, 'auto-merge.yml', defaultConfig)
   return config && {
     ...defaultConfig,
-    ...config
+    ...config,
+    rules: (config.rules || []).map((rule: any) => ({
+      ...defaultRuleConfig,
+      ...rule
+    }))
   }
 }
