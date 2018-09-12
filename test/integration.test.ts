@@ -148,15 +148,6 @@ it('pending test', async () => {
 
 it('to merge when one rule and the global configuration passes', async () => {
   const config = `
-    minApprovals:
-      COLLABORATOR: 0
-    maxRequestedChanges:
-      NONE: 0
-    blockingLabels:
-    - blocked
-
-    # Will merge whenever the above conditions are met, but also
-    # the owner has approved or merge label was added.
     rules:
     - minApprovals:
         OWNER: 1
