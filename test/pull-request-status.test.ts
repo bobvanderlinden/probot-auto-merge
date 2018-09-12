@@ -128,4 +128,26 @@ describe('pull request status', () => {
 
     expect(results.minimumApprovals.status).toEqual('success')
   })
+
+  it('returns fail when when one rule fails even if global succeeds', () => {
+    const results = getPullRequestStatus(
+      createHandlerContext({
+        config: createConfig({
+          rules: [{
+            requiredLabels: ['merge']
+          }]
+        })
+      }),
+      createConditions({
+        requiredLabels: conditions.requiredLabels
+      }),
+      createPullRequestInfo({
+        reviews: {
+          nodes: []
+        }
+      })
+    )
+
+    expect(results.requiredLabels.status).toEqual('fail')
+  })
 })
