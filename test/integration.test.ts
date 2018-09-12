@@ -145,3 +145,52 @@ it('pending test', async () => {
   expect(github.pullRequests.merge).toHaveBeenCalled()
 
 })
+
+it('to merge when one rule and the global configuration passes', async () => {
+  const config = `
+    rules:
+    - minApprovals:
+        OWNER: 1
+    - requiredLabels:
+      - merge
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    reviews: {
+      nodes: [
+        approvedReview({
+          authorAssociation: 'CONTRIBUTOR'
+        })
+      ]
+    },
+    checkRuns: [
+      successCheckRun
+    ],
+    labels: {
+      nodes: [
+        { name: 'merge' }
+      ]
+    }
+  })
+
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
+
+  const app = createApplication({
+    appFn: require('../src/index'),
+    logger: createEmptyLogger(),
+    github
+  })
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  expect(github.pullRequests.merge).toHaveBeenCalled()
+})
