@@ -24,7 +24,8 @@
     "heroku-postbuild": "npm run build"
   },
   "dependencies": {
-    "debug": "^3.1.0",
+    "@mojotech/json-type-validation": "^2.0.0",
+    "debug": "^4.0.0",
     "probot": "^7.1.0",
     "probot-config": "^0.2.0",
     "raven": "^2.6.3"
