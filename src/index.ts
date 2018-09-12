@@ -17,9 +17,9 @@ Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728', {
   }
 }).install()
 
-async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext | null> {
+async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
-  return config && {
+  return {
     config,
     github: options.context.github,
     log: options.app.log
@@ -37,10 +37,6 @@ async function useHandlerContext (options: {app: Application, context: Context},
     }
   }, async () => {
     const handlerContext = await getHandlerContext(options)
-    if (!handlerContext) {
-      Raven.captureMessage(`Failed to get handler context`)
-      return
-    }
     await fn(handlerContext)
   })
 }

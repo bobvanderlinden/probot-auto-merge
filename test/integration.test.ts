@@ -72,15 +72,15 @@ it('no configuration should not schedule any pull request', async () => {
     github
   })
 
-  await app.receive(
-    createPullRequestOpenedEvent({
-      owner: 'bobvanderlinden',
-      repo: 'probot-auto-merge',
-      number: 1
-    })
-  )
-
-  expect(require('../src/pull-request-handler').schedulePullRequestTrigger).not.toBeCalled()
+  expect(
+    app.receive(
+      createPullRequestOpenedEvent({
+        owner: 'bobvanderlinden',
+        repo: 'probot-auto-merge',
+        number: 1
+      })
+    )
+  ).rejects.toHaveProperty('message', "Configuration file '.github/auto-merge.yml' not found")
 })
 
 it('pending test', async () => {
