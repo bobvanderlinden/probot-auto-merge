@@ -54,7 +54,8 @@ export const defaultPullRequestInfo: PullRequestInfo = {
       nodes: []
     }
   },
-  checkRuns: []
+  checkRuns: [],
+  title: 'mergeable title'
 }
 
 export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {

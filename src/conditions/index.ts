@@ -6,6 +6,7 @@ import blockingLabels from './blockingLabels'
 import blockingChecks from './blockingChecks'
 import minimumApprovals from './minimumApprovals'
 import maximumChangesRequested from './maximumChangesRequested'
+import blockingTitle from './blockingTitle'
 import { keysOf } from '../utils'
 
 export const conditions = {
@@ -15,7 +16,8 @@ export const conditions = {
   blockingLabels,
   minimumApprovals,
   maximumChangesRequested,
-  blockingChecks
+  blockingChecks,
+  blockingTitle
 }
 
 export type Conditions = typeof conditions
