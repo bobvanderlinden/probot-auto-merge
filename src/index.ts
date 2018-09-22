@@ -4,18 +4,20 @@ import { HandlerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 
-Raven.config('https://ba659400a1784cbfb67b10013f46edbc@sentry.io/1260728', {
-  captureUnhandledRejections: true,
-  tags: {
-    version: process.env.HEROKU_RELEASE_VERSION as string
-  },
-  release: process.env.HEROKU_SLUG_COMMIT,
-  environment: process.env.NODE_ENV || 'development',
-  autoBreadcrumbs: {
-    'console': true,
-    'http': true
-  }
-}).install()
+if (process.env.NODE_ENV === 'production') {
+  Raven.config(process.env.SENTRY_DSN, {
+    captureUnhandledRejections: true,
+    tags: {
+      version: process.env.HEROKU_RELEASE_VERSION as string
+    },
+    release: process.env.HEROKU_SLUG_COMMIT,
+    environment: process.env.NODE_ENV || 'development',
+    autoBreadcrumbs: {
+      'console': true,
+      'http': true
+    }
+  }).install()
+}
 
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
