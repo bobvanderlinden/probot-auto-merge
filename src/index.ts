@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === 'production') {
     tags: {
       version: process.env.HEROKU_RELEASE_VERSION as string
     },
-    release: process.env.HEROKU_SLUG_COMMIT,
+    release: process.env.SOURCE_VERSION,
     environment: process.env.NODE_ENV || 'development',
     autoBreadcrumbs: {
       'console': true,
