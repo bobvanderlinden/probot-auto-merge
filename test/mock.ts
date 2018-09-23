@@ -173,6 +173,10 @@ export function createLogger (baseLogger: BaseLogger): LoggerWithTarget {
   logger.fatal = logger
   logger.target = logger
   logger.child = (opts) => logger
+
+  const loggerAsAny: any = logger
+  loggerAsAny.addStream = () => undefined
+
   return logger
 }
 
