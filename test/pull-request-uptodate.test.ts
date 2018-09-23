@@ -1,10 +1,9 @@
-import { defaultPullRequestInfo, createPullRequestInfo, createConditionConfig } from './../mock'
-import upToDateBranch from '../../src/conditions/upToDateBranch'
+import { defaultPullRequestInfo, createPullRequestInfo } from './mock'
+import { requiresBranchUpdate } from '../src/pull-request-uptodate'
 
-describe('upToDateBranch', () => {
-  it('returns fail when pull request is based on strict protected branch and base of PR is not equals to baseRef', async () => {
-    const status = upToDateBranch(
-      createConditionConfig(),
+describe('requiresBranchUpdate', () => {
+  it('returns true when pull request is based on strict protected branch and base of PR is not equals to baseRef', async () => {
+    const result = requiresBranchUpdate(
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,
@@ -25,12 +24,11 @@ describe('upToDateBranch', () => {
         }
       })
     )
-    expect(status.status).toBe('fail')
+    expect(result).toBe(true)
   })
 
-  it('returns success when pull request is not based on strict protected branch but does have base of PR not equal to baseRef', async () => {
-    const status = upToDateBranch(
-      createConditionConfig(),
+  it('returns false when pull request is not based on strict protected branch but does have base of PR not equal to baseRef', async () => {
+    const result = requiresBranchUpdate(
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,
@@ -51,12 +49,11 @@ describe('upToDateBranch', () => {
         }
       })
     )
-    expect(status.status).toBe('success')
+    expect(result).toBe(false)
   })
 
-  it('returns success when pull request is based on strict protected branch and does have base of PR equal to baseRef', async () => {
-    const status = upToDateBranch(
-      createConditionConfig(),
+  it('returns false when pull request is based on strict protected branch and does have base of PR equal to baseRef', async () => {
+    const result = requiresBranchUpdate(
       createPullRequestInfo({
         baseRef: {
           ...defaultPullRequestInfo.baseRef,
@@ -77,6 +74,6 @@ describe('upToDateBranch', () => {
         }
       })
     )
-    expect(status.status).toBe('success')
+    expect(result).toBe(false)
   })
 })

@@ -4,6 +4,7 @@ import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
 import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
+import { requiresBranchUpdate } from './pull-request-uptodate'
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void
@@ -69,21 +70,16 @@ export function getPullRequestActions (
     return ['reschedule']
   }
 
-  // If upToDateBranch condition has failed, but all other conditions have succeeded
-  // and we have updateBranch enabled, update the branch of the PR.
-  if (pullRequestStatus.upToDateBranch.status === 'fail'
-    && config.updateBranch
-    && Object.entries(pullRequestStatus)
-      .filter(([name, _]) => name !== 'upToDateBranch')
-      .every(([_, value]) => value.status === 'success')
-  ) {
+  if (!success) {
+    return []
+  }
+
+  // If the pull request is not up-to-date failed and we have updateBranch enabled,
+  // update the branch of the PR.
+  if (requiresBranchUpdate(pullRequestInfo) && config.updateBranch) {
     return isInFork(pullRequestInfo)
       ? []
       : ['update_branch']
-  }
-
-  if (!success) {
-    return []
   }
 
   return config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)

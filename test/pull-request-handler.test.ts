@@ -75,7 +75,7 @@ describe('getPullRequestActions', () => {
     expect(actions).toEqual(['reschedule'])
   })
 
-  it('updates branch when upToDateBranch fails and updateBranch is enabled', async () => {
+  it('update branch when pull request is out-of-date and update-branch is enabled', async () => {
     const actions = getPullRequestActions(
       createHandlerContext({
         config: createConfig({
@@ -84,38 +84,23 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestInfo({
         baseRef: defaultBaseRef,
-        headRef: headRefInSameRepository
-      }),
-      createPullRequestStatus({
-        upToDateBranch: {
-          status: 'fail',
-          message: ''
+        headRef: headRefInSameRepository,
+        baseRefOid: '2',
+        repository: {
+          protectedBranches: {
+            nodes: [{
+              name: 'master',
+              hasRestrictedPushes: true,
+              hasStrictRequiredStatusChecks: true
+            }]
+          }
         }
-      })
+      }),
+      createPullRequestStatus()
     )
     expect(actions).toEqual(['update_branch'])
   })
-  it('update branch when status is out_of_date_branch and update-branch is enabled', async () => {
-    const actions = getPullRequestActions(
-      createHandlerContext({
-        config: createConfig({
-          updateBranch: true
-        })
-      }),
-      createPullRequestInfo({
-        baseRef: defaultBaseRef,
-        headRef: headRefInSameRepository
-      }),
-      createPullRequestStatus({
-        upToDateBranch: {
-          status: 'fail',
-          message: ''
-        }
-      })
-    )
-    expect(actions).toEqual(['update_branch'])
-  })
-  it('not update branch when status is out_of_date_branch and update-branch is disabled', async () => {
+  it('not update branch when pull request is up-to-date and update-branch is disabled', async () => {
     const actions = getPullRequestActions(
       createHandlerContext({
         config: createConfig({
@@ -124,10 +109,25 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestInfo({
         baseRef: defaultBaseRef,
-        headRef: headRefInSameRepository
+        headRef: {
+          name: 'pr-my-branch',
+          repository: defaultBaseRef.repository,
+          target: {
+            oid: '2'
+          }
+        },
+        baseRefOid: '3',
+        repository: {
+          protectedBranches: {
+            nodes: [{
+              name: 'master',
+              hasRestrictedPushes: true,
+              hasStrictRequiredStatusChecks: true
+            }]
+          }
+        }
       }),
-      createPullRequestStatus({
-      })
+      createPullRequestStatus()
     )
     expect(actions).toEqual(['merge'])
   })
