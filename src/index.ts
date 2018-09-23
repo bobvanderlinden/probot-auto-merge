@@ -3,21 +3,7 @@ import { loadConfig } from './config'
 import { HandlerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
-
-if (process.env.NODE_ENV === 'production') {
-  Raven.config(process.env.SENTRY_DSN, {
-    captureUnhandledRejections: true,
-    tags: {
-      version: process.env.HEROKU_RELEASE_VERSION as string
-    },
-    release: process.env.SOURCE_VERSION,
-    environment: process.env.NODE_ENV || 'development',
-    autoBreadcrumbs: {
-      'console': true,
-      'http': true
-    }
-  }).install()
-}
+import sentryStream from 'bunyan-sentry-stream'
 
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
@@ -43,8 +29,31 @@ async function useHandlerContext (options: {app: Application, context: Context},
   })
 }
 
+function setupSentry (app: Application) {
+  if (process.env.NODE_ENV !== 'production') {
+    Raven.disableConsoleAlerts()
+  }
+  Raven.config(process.env.SENTRY_DSN2, {
+    captureUnhandledRejections: true,
+    tags: {
+      version: process.env.HEROKU_RELEASE_VERSION as string
+    },
+    release: process.env.SOURCE_VERSION,
+    environment: process.env.NODE_ENV || 'development',
+    autoBreadcrumbs: {
+      'console': true,
+      'http': true
+    }
+  }).install()
+
+  app.log.target.addStream(sentryStream(Raven))
+}
+
 export = (app: Application) => {
+  setupSentry(app)
+
   const repositoryWorkers = new RepositoryWorkers()
+
   app.on([
     'pull_request.opened',
     'pull_request.edited',
