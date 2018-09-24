@@ -30,7 +30,6 @@ export class RepositoryWorkers {
   queue (context: HandlerContext, pullRequestReference: PullRequestReference) {
     const queueName = getRepositoryKey(pullRequestReference)
     const repositoryWorker = this.repositoryWorkerMap[queueName] = this.repositoryWorkerMap[queueName] || this.createRepositoryWorker(pullRequestReference, context)
-    context.log.debug('repositoryWorker')
     repositoryWorker.queue(pullRequestReference.number)
   }
 }
