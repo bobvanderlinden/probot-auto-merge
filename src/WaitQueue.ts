@@ -105,4 +105,12 @@ export class WaitQueue<T> {
       this.runningTask.promise.cancel()
     }
   }
+
+  public currentTask (): WaitQueueTask<T> | null {
+    return this.runningTask && this.runningTask.task
+  }
+
+  public getQueuedTasks (): WaitQueueTask<T>[] {
+    return this.taskQueue.map(task => task)
+  }
 }
