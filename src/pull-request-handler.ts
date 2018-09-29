@@ -61,30 +61,58 @@ export function getPullRequestActions (
   pullRequestStatus: PullRequestStatus
 ): PullRequestActions {
   const { config } = context
-  const pending = Object.values(pullRequestStatus)
-    .some(conditionResult => conditionResult.status === 'pending')
-  const success = Object.values(pullRequestStatus)
-    .every(conditionResult => conditionResult.status === 'success')
+  const pendingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
+  const failingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
-  if (pending) {
-    return ['reschedule']
+  if (pendingConditions.length > 0) {
+    return {
+      code: 'pending_condition',
+      message: `There are pending conditions`,
+      actions: ['reschedule']
+    }
   }
 
-  if (!success) {
-    return []
+  if (failingConditions.length > 0) {
+    return {
+      code: 'failing_condition',
+      message: `There are failing conditions (${failingConditions.map(([name, _]) => name).join(', ')})`,
+      actions: []
+    }
   }
 
   // If the pull request is not up-to-date failed and we have updateBranch enabled,
   // update the branch of the PR.
   if (requiresBranchUpdate(pullRequestInfo) && config.updateBranch) {
-    return isInFork(pullRequestInfo)
-      ? []
-      : ['update_branch']
+    if (isInFork(pullRequestInfo)) {
+      return {
+        code: 'out_of_date_on_fork',
+        message: 'The pull request is out-of-date, but the head is located in another repository',
+        actions: []
+      }
+    } else {
+      return {
+        code: 'update_branch',
+        message: 'The pull request is out-of-date. Will update it now.',
+        actions: ['update_branch']
+      }
+    }
   }
 
-  return config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)
-    ? ['merge', 'delete_branch']
-    : ['merge']
+  if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
+    return {
+      code: 'merge_and_delete',
+      message: 'Will merge the pull request and delete its branch',
+      actions: ['merge', 'delete_branch']
+    }
+  } else {
+    return {
+      code: 'merge',
+      message: 'Will merge the pull request',
+      actions: ['merge']
+    }
+  }
 }
 
 function isInFork (pullRequestInfo: PullRequestInfo): boolean {
