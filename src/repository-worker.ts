@@ -1,5 +1,5 @@
 import { WaitQueue } from './WaitQueue'
-import { RepositoryReference } from './github-models'
+import { RepositoryReference, PullRequestReference } from './github-models'
 import { HandlerContext } from './models'
 import { handlePullRequest } from './pull-request-handler'
 
@@ -10,7 +10,8 @@ export class RepositoryWorker {
   constructor (
     public repository: RepositoryReference,
     context: HandlerContext,
-    onDrain: () => void
+    onDrain: () => void,
+    private onPullRequestError: (pullRequestReference: PullRequestReference, error: any) => void
   ) {
     this.context = {
       ...context,
@@ -45,7 +46,11 @@ export class RepositoryWorker {
         this.waitQueue.queueFirst(pullRequestNumber, 60 * 1000)
       }
     }
-    return handlePullRequest(pullRequestContext, pullRequestReference)
+    try {
+      await handlePullRequest(pullRequestContext, pullRequestReference)
+    } catch (err) {
+      this.onPullRequestError(pullRequestReference, err)
+    }
   }
 
   public queue (pullRequestNumber: number) {
