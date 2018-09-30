@@ -19,7 +19,7 @@ async function useHandlerContext (options: {app: Application, context: Context},
   await Raven.context({
     tags: {
       owner: options.context.payload.repository.owner.login,
-      repository: options.context.payload.repository.name
+      repository: `${options.context.payload.repository.owner.login}/${options.context.payload.repository.name}`
     },
     extra: {
       event: options.context.event
