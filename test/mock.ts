@@ -164,7 +164,7 @@ export const neutralCheckRun: CheckRun = {
 
 type BaseLogger = (...params: any[]) => void
 export function createLogger (baseLogger: BaseLogger): LoggerWithTarget {
-  const logger: LoggerWithTarget = ((...params) => baseLogger(...params)) as any
+  const logger: LoggerWithTarget = ((...params: any[]) => baseLogger(...params)) as any
   logger.info = logger
   logger.debug = logger
   logger.error = logger
