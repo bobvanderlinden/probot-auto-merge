@@ -7,6 +7,7 @@ import { queryPullRequest } from './pull-request-query'
 import { requiresBranchUpdate } from './pull-request-uptodate'
 
 export interface PullRequestContext extends HandlerContext {
+  reportStatus: (status: string) => Promise<void>
   reschedulePullRequest: () => void
 }
 
@@ -48,23 +49,37 @@ export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'dele
 export type PullRequestActions
   = []
   | ['reschedule']
-  | ['update_branch']
+  | ['update_branch', 'reschedule']
   | ['merge']
   | ['merge', 'delete_branch']
+
+export type PullRequestPlan = {
+  code: 'mergeable_unknown' | 'pending_condition' | 'failing_condition' | 'out_of_date_on_fork' | 'update_branch' | 'merge_and_delete' | 'merge',
+  message: string,
+  actions: PullRequestActions
+}
 
 /**
  * Determines which actions to take based on the pull request and the condition results
  */
-export function getPullRequestActions (
+export function getPullRequestPlan (
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
-): PullRequestActions {
+): PullRequestPlan {
   const { config } = context
   const pendingConditions = Object.entries(pullRequestStatus)
     .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
   const failingConditions = Object.entries(pullRequestStatus)
     .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
+
+  if (pullRequestInfo.mergeable === 'UNKNOWN') {
+    return {
+      code: 'mergeable_unknown',
+      message: `GitHub is determining whether the pull request is mergeable`,
+      actions: ['reschedule']
+    }
+  }
 
   if (pendingConditions.length > 0) {
     return {
@@ -95,7 +110,7 @@ export function getPullRequestActions (
       return {
         code: 'update_branch',
         message: 'The pull request is out-of-date. Will update it now.',
-        actions: ['update_branch']
+        actions: ['update_branch', 'reschedule']
       }
     }
   }
@@ -216,7 +231,11 @@ export async function handlePullRequestStatus (
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
 ) {
-  const actions = getPullRequestActions(context, pullRequestInfo, pullRequestStatus)
+  const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
+
+  await context.reportStatus(plan.code)
+
+  const { actions } = plan
   context.log.debug('Actions:', actions)
   await executeActions(context, pullRequestInfo, actions)
 }

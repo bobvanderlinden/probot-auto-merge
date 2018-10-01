@@ -8,7 +8,9 @@ import {
   createGithubApiFromPullRequestInfo,
   createApplication,
   createPullRequestOpenedEvent,
-  createGetContent
+  createGetContent,
+  createCheckSuiteCompletedEvent,
+  createCheckRunCreatedEvent
 } from './mock'
 import { immediate } from '../src/delay'
 
@@ -44,6 +46,68 @@ it('full happy path', async () => {
 
   await app.receive(
     createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  expect(github.pullRequests.merge).toHaveBeenCalled()
+})
+
+it('full happy path', async () => {
+  const config = `
+  minApprovals:
+    OWNER: 1
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    reviews: {
+      nodes: [
+      ]
+    },
+    checkRuns: [
+      successCheckRun
+    ]
+  })
+
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
+
+  const app = createApplication({
+    appFn: require('../src/index'),
+    logger: createEmptyLogger(),
+    github
+  })
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  await app.receive(
+    createCheckRunCreatedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  expect(github.pullRequests.merge).not.toHaveBeenCalled()
+
+  pullRequestInfo.reviews.nodes = [
+    approvedReview({
+      authorAssociation: 'OWNER'
+    })
+  ]
+
+  await app.receive(
+    createCheckSuiteCompletedEvent({
       owner: 'bobvanderlinden',
       repo: 'probot-auto-merge',
       number: 1
@@ -193,4 +257,40 @@ it('to merge when one rule and the global configuration passes', async () => {
   )
 
   expect(github.pullRequests.merge).toHaveBeenCalled()
+})
+
+it('to report error when processing pull request results in error', async () => {
+  const Raven = require('raven')
+  const captureException = jest.fn()
+  Raven.captureException = captureException
+  const consoleError = jest.fn()
+  console.error = consoleError
+
+  const github = createGithubApi({
+    repos: {
+      getContent: createGetContent({
+        '.github/auto-merge.yml': () => Buffer.from('')
+      })
+    },
+    query: jest.fn(async () => {
+      throw new Error('Something went wrong')
+    })
+  })
+
+  const app = createApplication({
+    appFn: require('../src/index'),
+    logger: createEmptyLogger(),
+    github
+  })
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  expect(captureException).toHaveBeenCalled()
+  expect(consoleError).toHaveBeenCalled()
 })
