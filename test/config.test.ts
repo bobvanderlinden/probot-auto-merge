@@ -20,7 +20,7 @@ describe('Config', () => {
     expect(config.rules[0].maxRequestedChanges.NONE).toBe(defaultConfig.maxRequestedChanges.NONE)
   })
 
-  it('will have default values for rules', () => {
+  it('will throw validation error on incorrect configuration', () => {
     const userConfig = {
       blockingLabels: ['labela', { labelb: 'labelc' }]
     }
