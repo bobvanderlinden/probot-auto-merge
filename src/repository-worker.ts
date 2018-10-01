@@ -1,19 +1,23 @@
 import { WaitQueue } from './WaitQueue'
-import { RepositoryReference } from './github-models'
+import { RepositoryReference, PullRequestReference } from './github-models'
 import { HandlerContext } from './models'
 import { handlePullRequest } from './pull-request-handler'
 
+type RepositoryContext = HandlerContext & { repository: RepositoryReference }
+
 export class RepositoryWorker {
   private waitQueue: WaitQueue<number>
-  private context: HandlerContext
+  private context: RepositoryContext
 
   constructor (
     public repository: RepositoryReference,
     context: HandlerContext,
-    onDrain: () => void
+    onDrain: () => void,
+    private onPullRequestError: (pullRequestReference: PullRequestReference, error: any) => void
   ) {
     this.context = {
       ...context,
+      repository,
       log: context.log.child({
         options: {
           owner: repository.owner,
@@ -41,11 +45,16 @@ export class RepositoryWorker {
     const pullRequestContext = {
       ...this.context,
       log,
-      reschedulePullRequest: () => {
-        this.waitQueue.queueFirst(pullRequestNumber, 60 * 1000)
+      pullRequest: pullRequestReference,
+      reschedulePullRequest: (delay: number = 60 * 1000) => {
+        this.waitQueue.queueFirst(pullRequestNumber, delay)
       }
     }
-    return handlePullRequest(pullRequestContext, pullRequestReference)
+    try {
+      await handlePullRequest(pullRequestContext, pullRequestReference)
+    } catch (err) {
+      this.onPullRequestError(pullRequestReference, err)
+    }
   }
 
   public queue (pullRequestNumber: number) {
