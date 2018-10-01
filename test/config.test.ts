@@ -1,4 +1,4 @@
-import { getConfigFromUserConfig, defaultConfig } from '../src/config'
+import { getConfigFromUserConfig, defaultConfig, ConfigValidationError } from '../src/config'
 
 describe('Config', () => {
   it('will throw upon invalid type', () => {
@@ -8,6 +8,7 @@ describe('Config', () => {
       })
     }).toThrow()
   })
+
   it('will have default values for rules', () => {
     const config = getConfigFromUserConfig({
       rules: [{
@@ -17,5 +18,22 @@ describe('Config', () => {
       }]
     })
     expect(config.rules[0].maxRequestedChanges.NONE).toBe(defaultConfig.maxRequestedChanges.NONE)
+  })
+
+  it('will have default values for rules', () => {
+    const userConfig = {
+      blockingLabels: ['labela', { labelb: 'labelc' }]
+    }
+    const validationError: ConfigValidationError = (() => {
+      try {
+        getConfigFromUserConfig(userConfig)
+      } catch (err) {
+        return err
+      }
+    })()
+    expect(validationError).not.toBeUndefined()
+    expect(validationError.config.blockingLabels[1]).toEqual(userConfig.blockingLabels[1])
+    expect(validationError.decoderError.message).toEqual('expected a string, got an object')
+    expect(validationError.decoderError.at).toEqual('input.blockingLabels[1]')
   })
 })
