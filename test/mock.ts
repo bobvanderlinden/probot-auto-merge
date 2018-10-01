@@ -218,6 +218,48 @@ export function createPullRequestOpenedEvent (pullRequest: PullRequestReference)
   }
 }
 
+export function createCheckRunCreatedEvent (pullRequest: PullRequestReference): any {
+  return {
+    name: 'check_run',
+    payload: {
+      installation: 1,
+      action: 'created',
+      repository: {
+        owner: {
+          login: pullRequest.owner
+        },
+        name: pullRequest.repo
+      },
+      check_run: {
+        pull_requests: [{
+          number: 1
+        }]
+      }
+    }
+  }
+}
+
+export function createCheckSuiteCompletedEvent (pullRequest: PullRequestReference): any {
+  return {
+    name: 'check_suite',
+    payload: {
+      installation: 1,
+      action: 'completed',
+      repository: {
+        owner: {
+          login: pullRequest.owner
+        },
+        name: pullRequest.repo
+      },
+      check_suite: {
+        pull_requests: [{
+          number: 1
+        }]
+      }
+    }
+  }
+}
+
 export function createOkResponse (): any {
   return jest.fn(() => ({ status: 200 }))
 }
