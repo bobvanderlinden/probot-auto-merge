@@ -74,10 +74,9 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
   if (!response) {
     throw new Error(`Could not query pull request ${owner}/${repo}#${pullRequestNumber}`)
   }
-  if (!response.repository || !response.repository.pullRequest || !response.repository.pullRequest.headRef) {
-    const error: any = new Error(`Query result is not complete`)
+  if (!response.repository.pullRequest.headRef && !response.repository.mergeable) {
+    const error: any = new Error(`No permission to source repository of pull request`)
     error.pullRequest = `${owner}/${repo}#${pullRequestNumber}`
-    error.response = response
     throw error
   }
 
