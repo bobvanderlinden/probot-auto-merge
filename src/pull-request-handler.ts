@@ -48,7 +48,7 @@ export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'dele
 export type PullRequestActions
   = []
   | ['reschedule']
-  | ['update_branch']
+  | ['update_branch', 'reschedule']
   | ['merge']
   | ['merge', 'delete_branch']
 
@@ -79,7 +79,7 @@ export function getPullRequestActions (
   if (requiresBranchUpdate(pullRequestInfo) && config.updateBranch) {
     return isInFork(pullRequestInfo)
       ? []
-      : ['update_branch']
+      : ['update_branch', 'reschedule']
   }
 
   return config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)

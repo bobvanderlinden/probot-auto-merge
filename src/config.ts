@@ -12,12 +12,15 @@ class ConfigNotFoundError extends Error {
   }
 }
 
-class ConfigValidationError extends Error {
+export class ConfigValidationError extends Error {
   constructor (
-    public readonly at: string,
-    public readonly message: string
+    public readonly decoderError: {
+      at: string,
+      message: string
+    },
+    public readonly config: any
   ) {
-    super(`Configuration invalid: ${message} at ${at}`)
+    super(`Configuration invalid: ${decoderError.message}: ${decoderError.at}`)
     Object.setPrototypeOf(this, new.target.prototype)
   }
 }
@@ -101,7 +104,7 @@ export function getConfigFromUserConfig (userConfig: any): Config {
   }
   const decoded = configDecoder.run(config)
   if (!decoded.ok) {
-    throw new ConfigValidationError(decoded.error.message, decoded.error.at)
+    throw new ConfigValidationError(decoded.error, config)
   }
   return decoded.result
 }

@@ -98,7 +98,7 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestStatus()
     )
-    expect(actions).toEqual(['update_branch'])
+    expect(actions).toEqual(['update_branch', 'reschedule'])
   })
 
   it('not update branch when pull request is up-to-date and update-branch is disabled', async () => {

@@ -74,6 +74,13 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
   if (!response) {
     throw new Error(`Could not query pull request ${owner}/${repo}#${pullRequestNumber}`)
   }
+  if (!response.repository || !response.repository.pullRequest || !response.repository.pullRequest.headRef) {
+    const error: any = new Error(`Query result is not complete`)
+    error.pullRequest = `${owner}/${repo}#${pullRequestNumber}`
+    error.response = response
+    throw error
+  }
+
   const queryResult = response as PullRequestQueryResult
 
   const checks = result<{ check_runs: CheckRun[] }>(await github.checks.listForRef({

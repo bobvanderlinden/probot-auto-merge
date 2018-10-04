@@ -4,6 +4,7 @@ import { HandlerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
+import { PullRequestReference } from './github-models'
 
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
@@ -18,7 +19,7 @@ async function useHandlerContext (options: {app: Application, context: Context},
   await Raven.context({
     tags: {
       owner: options.context.payload.repository.owner.login,
-      repository: options.context.payload.repository.name
+      repository: `${options.context.payload.repository.owner.login}/${options.context.payload.repository.name}`
     },
     extra: {
       event: options.context.event
@@ -52,7 +53,24 @@ function setupSentry (app: Application) {
 export = (app: Application) => {
   setupSentry(app)
 
-  const repositoryWorkers = new RepositoryWorkers()
+  const repositoryWorkers = new RepositoryWorkers(
+    onPullRequestError
+  )
+
+  function onPullRequestError (pullRequest: PullRequestReference, error: any) {
+    const repositoryName = `${pullRequest.owner}/${pullRequest.repo}`
+    const pullRequestName = `${repositoryName}#${pullRequest.number}`
+    Raven.captureException(error, {
+      tags: {
+        owner: pullRequest.owner,
+        repository: repositoryName
+      },
+      extra: {
+        pullRequest: pullRequestName
+      }
+    })
+    console.error(`Error while processing pull request ${pullRequestName}:`, error)
+  }
 
   app.on([
     'pull_request.opened',
