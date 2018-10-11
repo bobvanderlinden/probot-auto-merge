@@ -2,7 +2,7 @@ import { PullRequestReference, CheckRun, PullRequestInfo, PullRequestQueryResult
 import { Context } from 'probot'
 import { result } from './utils'
 
-function assertPullRequest(pullRequest: PullRequestReference, condition: boolean, errorMessage: string) {
+function assertPullRequest (pullRequest: PullRequestReference, condition: boolean, errorMessage: string) {
   if (!condition) {
     const error: any = new Error(errorMessage)
     error.pullRequest = `${pullRequest.owner}/${pullRequest.repo}#${pullRequest.number}`
