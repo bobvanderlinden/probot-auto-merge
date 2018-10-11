@@ -86,7 +86,7 @@ export function getPullRequestPlan (
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
-      message: `There are pending conditions`,
+      message: `There are pending conditions:\n\n${pendingConditions.map(([name, result]) => `* \`${name}\``).join('\n')}`,
       actions: ['reschedule']
     }
   }
@@ -94,7 +94,7 @@ export function getPullRequestPlan (
   if (failingConditions.length > 0) {
     return {
       code: 'failing_condition',
-      message: `There are failing conditions (${failingConditions.map(([name, _]) => name).join(', ')})`,
+      message: `There are failing conditions:\n\n${failingConditions.map(([name, result]) => `* \`${name}\`: ${result.message}`).join('\n')}`,
       actions: []
     }
   }
