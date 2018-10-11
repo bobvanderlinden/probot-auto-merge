@@ -55,7 +55,7 @@ export const defaultPullRequestInfo: PullRequestInfo = {
     }
   },
   checkRuns: [],
-  title: 'mergeable title'
+  title: 'Add some feature'
 }
 
 export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {
