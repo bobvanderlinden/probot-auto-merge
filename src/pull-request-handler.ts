@@ -61,6 +61,23 @@ export type PullRequestPlan = {
   actions: PullRequestActions
 }
 
+function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
+  return Object.entries(pullRequestStatus)
+    .map(([name, result]) => {
+      switch (result.status) {
+        case 'success':
+          return `* ✓ ${name}`
+        case 'pending':
+          return `* ○ ${name}${result.message && `: ${result.message}`}`
+        case 'fail':
+          return `* ✘ ${name}: ${result.message}`
+        default:
+          throw new Error(`Unknown status in result: ${JSON.stringify(result)}`)
+      }
+    })
+    .join('\n')
+}
+
 /**
  * Determines which actions to take based on the pull request and the condition results
  */
@@ -86,7 +103,7 @@ export function getPullRequestPlan (
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
-      message: `There are pending conditions:\n\n${pendingConditions.map(([name, result]) => `* \`${name}\``).join('\n')}`,
+      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
       actions: ['reschedule']
     }
   }
@@ -94,7 +111,7 @@ export function getPullRequestPlan (
   if (failingConditions.length > 0) {
     return {
       code: 'failing_condition',
-      message: `There are failing conditions:\n\n${failingConditions.map(([name, result]) => `* \`${name}\`: ${result.message}`).join('\n')}`,
+      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
       actions: []
     }
   }
