@@ -47,11 +47,13 @@ export async function handlePullRequest (
 
 export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'delete_branch'
 export type PullRequestActions
-  = []
+  = (
+    []
   | ['reschedule']
   | ['update_branch', 'reschedule']
   | ['merge']
   | ['merge', 'delete_branch']
+) & Array<PullRequestAction>
 
 export type PullRequestPlan = {
   code: 'mergeable_unknown' | 'pending_condition' | 'failing_condition' | 'out_of_date_on_fork' | 'update_branch' | 'merge_and_delete' | 'merge',
