@@ -57,6 +57,9 @@
     ]
   },
   "jest": {
+    "setupFiles": [
+      "./test/jest-setup.ts"
+    ],
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
