@@ -36,7 +36,7 @@ describe('queryPullRequest', () => {
         query
       }),
       { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
-    )).rejects.toThrow('Could not query')
+    )).rejects.toThrowError('Could not query pull request')
   })
 
   it('should throw error when empty query response', async () => {
@@ -47,6 +47,23 @@ describe('queryPullRequest', () => {
         query
       }),
       { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
-    )).rejects.toThrow('Query result does not have repository')
+    )).rejects.toThrowError('Query result does not have repository')
+  })
+
+  it('should throw error when no headRef and not mergeable', async () => {
+    const query = jest.fn(() => createPullRequestInfo({
+      repository: {
+        pullRequest: {
+          headRef: undefined,
+          mergeable: undefined
+        }
+      }
+    } as any))
+    expect(queryPullRequest(
+      createGithubApi({
+        query
+      }),
+      { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
+    )).rejects.toThrowError('No permission to source repository of pull request')
   })
 })
