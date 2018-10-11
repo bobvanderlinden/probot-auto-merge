@@ -46,23 +46,6 @@ export class RepositoryWorker {
       ...this.context,
       log,
       pullRequest: pullRequestReference,
-      reportStatus: async (status: string) => {
-        this.context.github.checks.create({
-          owner: pullRequestReference.owner,
-          repo: pullRequestReference.repo,
-          name: status,
-          conclusion: 'neutral',
-          status: 'completed'
-        })
-        this.context.github.checks.update({
-          check_run_id: id,
-          conclusion: 'neutral',
-          status: 'completed',
-          name: status,
-          owner: pullRequestReference.owner,
-          repo: pullRequestReference.repo
-        })
-      },
       reschedulePullRequest: (delay: number = 60 * 1000) => {
         this.waitQueue.queueFirst(pullRequestNumber, delay)
       }

@@ -106,7 +106,6 @@ export function createHandlerContext (options?: Partial<HandlerContext>): Handle
 export function createPullRequestContext (options?: Partial<PullRequestContext>): PullRequestContext {
   return {
     ...createHandlerContext(options),
-    reportStatus: jest.fn(),
     reschedulePullRequest: () => undefined,
     ...options
   }
@@ -135,32 +134,60 @@ export const changesRequestedReview = (options?: Partial<Review>) =>
   })
 
 export const successCheckRun: CheckRun = {
+  id: 123,
   name: 'checka',
   status: 'completed',
   conclusion: 'success',
   head_sha: '12345',
-  external_id: '1'
+  external_id: '1',
+  app: {
+    id: 123,
+    name: 'OtherApp',
+    owner: { login: 'OwnerAppOwner' }
+  },
+  pull_requests: []
 }
 export const queuedCheckRun: CheckRun = {
+  id: 123,
   name: 'checka',
   status: 'queued',
   conclusion: 'neutral',
   head_sha: '12345',
-  external_id: '1'
+  external_id: '1',
+  app: {
+    id: 123,
+    name: 'OtherApp',
+    owner: { login: 'OwnerAppOwner' }
+  },
+  pull_requests: []
 }
 export const failedCheckRun: CheckRun = {
+  id: 123,
   name: 'checka',
   status: 'completed',
   conclusion: 'failure',
   head_sha: '12345',
-  external_id: '1'
+  external_id: '1',
+  app: {
+    id: 123,
+    name: 'OtherApp',
+    owner: { login: 'OwnerAppOwner' }
+  },
+  pull_requests: []
 }
 export const neutralCheckRun: CheckRun = {
+  id: 123,
   name: 'checka',
   status: 'completed',
   conclusion: 'neutral',
   head_sha: '12345',
-  external_id: '1'
+  external_id: '1',
+  app: {
+    id: 123,
+    name: 'OtherApp',
+    owner: { login: 'OwnerAppOwner' }
+  },
+  pull_requests: []
 }
 
 type BaseLogger = (...params: any[]) => void
@@ -284,7 +311,9 @@ export function createGithubApiFromPullRequestInfo (opts: {
         data: {
           checkRuns: opts.pullRequestInfo.checkRuns
         }
-      }))
+      })),
+      create: jest.fn(),
+      update: jest.fn()
     },
     pullRequests: {
       merge: createOkResponse()

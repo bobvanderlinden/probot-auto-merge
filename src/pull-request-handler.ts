@@ -5,9 +5,9 @@ import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { requiresBranchUpdate } from './pull-request-uptodate'
+import myAppId from './myappid'
 
 export interface PullRequestContext extends HandlerContext {
-  reportStatus: (status: string) => Promise<void>
   reschedulePullRequest: () => void
 }
 
@@ -235,7 +235,29 @@ export async function handlePullRequestStatus (
 ) {
   const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
 
-  await context.reportStatus(plan.code)
+  const myCheckRun = pullRequestInfo.checkRuns
+    .filter(checkRun => checkRun.app.id === myAppId)[0]
+  if (myCheckRun) {
+    await context.github.checks.update({
+      check_run_id: myCheckRun.id.toString(),
+      conclusion: 'neutral',
+      status: 'completed',
+      name: 'auto-merge',
+      completed_at: new Date().toISOString(),
+      output: {
+        title: plan.actions.some(action => action === 'merge')
+          ? 'Merging'
+          : plan.actions.some(action => action === 'update_branch')
+          ? 'Updating branch'
+          : plan.actions.some(action => action === 'reschedule')
+          ? 'Waiting'
+          : 'Not merging',
+        summary: plan.message
+      },
+      owner: pullRequestInfo.baseRef.repository.owner.login,
+      repo: pullRequestInfo.baseRef.repository.name
+    })
+  }
 
   const { actions } = plan
   context.log.debug('Actions:', actions)
