@@ -14,11 +14,31 @@ export interface PullRequestReference extends RepositoryReference {
 }
 
 export interface CheckRun {
+  id: number,
   name: string
   head_sha: string
   external_id: string
   status: 'queued' | 'in_progress' | 'completed'
-  conclusion: 'success' | 'failure' | 'neutral' | 'cancelled' | 'timed_out' | 'action_required'
+  conclusion: 'success' | 'failure' | 'neutral' | 'cancelled' | 'timed_out' | 'action_required',
+  app: {
+    id: number,
+    owner: {
+      login: string
+    }
+    name: string
+  },
+  pull_requests: Array<{
+    id: number,
+    number: number,
+    head: {
+      ref: string,
+      sha: string
+    },
+    base: {
+      ref: string,
+      sha: string
+    }
+  }>
 }
 
 export interface PullRequestQueryResult {
