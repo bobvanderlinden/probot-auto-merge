@@ -35,6 +35,7 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
               name
             }
           }
+          title
           authorAssociation
           baseRef {
             repository {
