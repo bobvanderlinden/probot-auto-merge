@@ -65,6 +65,7 @@ export interface PullRequestQueryResult {
           name: string
         }>
       },
+      title: string,
       authorAssociation: CommentAuthorAssociation,
       baseRef: {
         repository: {

@@ -54,7 +54,8 @@ export const defaultPullRequestInfo: PullRequestInfo = {
       nodes: []
     }
   },
-  checkRuns: []
+  checkRuns: [],
+  title: 'Add some feature'
 }
 
 export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {

@@ -2,6 +2,14 @@ import { PullRequestReference, CheckRun, PullRequestInfo, PullRequestQueryResult
 import { Context } from 'probot'
 import { result } from './utils'
 
+function assertPullRequest (pullRequest: PullRequestReference, condition: boolean, errorMessage: string) {
+  if (!condition) {
+    const error: any = new Error(errorMessage)
+    error.pullRequest = `${pullRequest.owner}/${pullRequest.repo}#${pullRequest.number}`
+    throw error
+  }
+}
+
 export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
   const response = await github.query(`
     query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
@@ -27,6 +35,7 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
               name
             }
           }
+          title
           authorAssociation
           baseRef {
             repository {
@@ -71,15 +80,17 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
     'repo': repo,
     'pullRequestNumber': pullRequestNumber
   }) as any
-  if (!response) {
-    throw new Error(`Could not query pull request ${owner}/${repo}#${pullRequestNumber}`)
-  }
-  if (!response.repository) {
-    const error: any = new Error(`Query result does not have repository`)
-    error.pullRequest = `${owner}/${repo}#${pullRequestNumber}`
-    error.response = response
-    throw error
-  }
+
+  const assert = assertPullRequest.bind(null, {
+    owner,
+    repo,
+    number: pullRequestNumber
+  })
+
+  assert(response, 'Could not query pull request')
+  assert(response.repository, 'Query result does not have repository')
+  assert(response.repository.pullRequest.headRef && response.repository.pullRequest.mergeable, 'No permission to source repository of pull request')
+
   const queryResult = response as PullRequestQueryResult
 
   const checks = result<{ check_runs: CheckRun[] }>(await github.checks.listForRef({

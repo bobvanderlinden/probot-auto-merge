@@ -1,5 +1,5 @@
-import { conditions } from './conditions/index'
 import Raven from 'raven'
+import { conditions } from './conditions/index'
 import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
 import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
@@ -21,7 +21,12 @@ export async function handlePullRequest (
     context.github,
     pullRequestReference
   )
-  context.log.debug('pullRequestInfo:', pullRequestInfo)
+
+  Raven.mergeContext({
+    extra: {
+      pullRequestInfo
+    }
+  })
 
   const pullRequestStatus = getPullRequestStatus(
     context,
