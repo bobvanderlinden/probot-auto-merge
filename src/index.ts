@@ -105,7 +105,8 @@ export = (app: Application) => {
   app.on([
     'check_run.created',
     'check_run.rerequested',
-    'check_run.requested_action'
+    'check_run.requested_action',
+    'check_run.completed'
   ], async context => {
     await handlePullRequests(app, context, {
       owner: context.payload.repository.owner.login,
