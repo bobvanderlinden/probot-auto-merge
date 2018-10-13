@@ -118,6 +118,20 @@ requiredLabels:
 - merge
 ```
 
+### `blockingTitleRegex` (condition, default: none)
+
+Whenever a blocking title regular expression is configured, pull requests that have a title
+matching the configured expression will not be automatically merged.
+
+This is useful whenever pull requests with `WIP` in their title need to be skipped.
+
+In the example below, pull requests with the word `wip` in the title will not be
+automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swiping`:
+
+```yaml
+blockingTitleRegex: '\bWIP\b'
+```
+
 ### `updateBranch` (default: `false`)
 
 Whether an out-of-date pull request is automatically updated.
