@@ -1,11 +1,10 @@
-import { RepositoryReference } from './../lib/github-models.d'
 import { Application, Context } from 'probot'
 import { loadConfig } from './config'
 import { HandlerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
-import { PullRequestReference } from './github-models'
+import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
 
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
@@ -101,7 +100,7 @@ export = (app: Application) => {
     await handlePullRequests(app, context, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.pull_request.head.sha, [context.payload.pull_request.number])
+    }, context.payload.pull_request.head_sha, [context.payload.pull_request.number])
   })
 
   app.on([
@@ -127,26 +126,6 @@ export = (app: Application) => {
       repo: context.payload.repository.name
     }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
   })
-
-  interface CheckSuiteEventPayload {
-    action: 'completed' | 'requested' | 'rerequested',
-    check_suite: {
-      head_branch: string,
-      head_sha: string,
-      status: 'requested' | 'in_progress' | 'completed',
-      conclusion: 'success' | 'failure' | 'neutral' | 'cancelled' | 'timed_out' | 'action_required' | null,
-      url: string,
-      pull_requests: Array<{
-        number: number
-      }>
-    },
-    repository: {
-      owner: {
-        login: string
-      },
-      name: string
-    }
-  }
 
   app.on([
     'check_suite.requested',

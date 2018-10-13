@@ -1,11 +1,11 @@
-import { conditions } from './conditions/index'
 import Raven from 'raven'
+import { conditions } from './conditions/index'
 import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
 import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { requiresBranchUpdate } from './pull-request-uptodate'
-import { updateStatusReportCheck } from './status-report';
+import { updateStatusReportCheck } from './status-report'
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void
@@ -21,7 +21,12 @@ export async function handlePullRequest (
     context.github,
     pullRequestReference
   )
-  context.log.debug('pullRequestInfo:', pullRequestInfo)
+
+  Raven.mergeContext({
+    extra: {
+      pullRequestInfo
+    }
+  })
 
   const pullRequestStatus = getPullRequestStatus(
     context,
@@ -252,7 +257,7 @@ export async function handlePullRequestStatus (
 ) {
   const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
 
-  updateStatusReportCheck(context, pullRequestInfo,
+  await updateStatusReportCheck(context, pullRequestInfo,
     plan.actions.some(action => action === 'merge')
       ? 'Merging'
       : plan.actions.some(action => action === 'update_branch')

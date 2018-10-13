@@ -100,6 +100,7 @@ describe('getPullRequestPlan', () => {
     )
     expect(plan.actions).toEqual(['update_branch', 'reschedule'])
   })
+
   it('not update branch when pull request is up-to-date and update-branch is disabled', async () => {
     const plan = getPullRequestPlan(
       createHandlerContext({
@@ -131,6 +132,44 @@ describe('getPullRequestPlan', () => {
     )
     expect(plan.actions).toEqual(['merge'])
   })
+
+  it('not update branch when pull request is is based in fork', async () => {
+    const plan = getPullRequestPlan(
+      createHandlerContext({
+        config: createConfig({
+          updateBranch: true
+        })
+      }),
+      createPullRequestInfo({
+        baseRef: defaultBaseRef,
+        headRef: {
+          name: 'pr-my-branch',
+          repository: {
+            ...defaultBaseRef.repository,
+            owner: {
+              login: 'some-contributor'
+            }
+          },
+          target: {
+            oid: '2'
+          }
+        },
+        baseRefOid: '3',
+        repository: {
+          protectedBranches: {
+            nodes: [{
+              name: 'master',
+              hasRestrictedPushes: true,
+              hasStrictRequiredStatusChecks: true
+            }]
+          }
+        }
+      }),
+      createPullRequestStatus()
+    )
+    expect(plan.actions).toEqual([])
+  })
+
   it('delete branch when status is ready_for_merge and delete-branch-after-merge is enabled and branch resides in same repository', async () => {
     const plan = getPullRequestPlan(
       createHandlerContext({

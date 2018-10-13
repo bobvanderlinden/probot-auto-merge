@@ -294,3 +294,41 @@ it('to report error when processing pull request results in error', async () => 
   expect(captureException).toHaveBeenCalled()
   expect(consoleError).toHaveBeenCalled()
 })
+
+it('when no permission to source repository throw a no permission error', async () => {
+  const Raven = require('raven')
+  const captureException = jest.fn()
+  Raven.captureException = captureException
+
+  const config = `
+  minApprovals:
+    OWNER: 1
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    headRef: undefined,
+    mergeable: undefined
+  })
+
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
+
+  const app = createApplication({
+    appFn: require('../src/index'),
+    logger: createEmptyLogger(),
+    github
+  })
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: pullRequestInfo.baseRef.repository.owner.login,
+      repo: pullRequestInfo.baseRef.repository.name,
+      number: 1
+    })
+  )
+
+  expect(captureException).toHaveBeenCalled()
+  expect(captureException.mock.calls[0][0].message).toContain('No permission')
+})

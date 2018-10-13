@@ -54,7 +54,8 @@ export const defaultPullRequestInfo: PullRequestInfo = {
       nodes: []
     }
   },
-  checkRuns: []
+  checkRuns: [],
+  title: 'Add some feature'
 }
 
 export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {
@@ -260,7 +261,12 @@ export function createCheckRunCreatedEvent (pullRequest: PullRequestReference): 
       check_run: {
         pull_requests: [{
           number: 1
-        }]
+        }],
+        check_suite: {
+          app: {
+            id: 1
+          }
+        }
       }
     }
   }

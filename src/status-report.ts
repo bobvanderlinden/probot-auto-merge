@@ -46,12 +46,8 @@ export async function updateStatusReportCheck (
     // only create a new one if reportStatus is enabled
     // in their repository.
 
-    const headSha = pullRequestInfo.headRefOid
-    if (headSha === undefined) {
-      throw new Error('Pull request headRefOid is undefined while trying to create status report check')
-    }
     await context.github.checks.create({
-      head_sha: headSha,
+      head_sha: pullRequestInfo.headRefOid,
       ...checkOptions
     })
   }
