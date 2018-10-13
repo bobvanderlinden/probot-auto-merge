@@ -5,6 +5,7 @@ import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
+import myAppId from './myappid'
 
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
   const config = await loadConfig(options.context)
@@ -104,9 +105,21 @@ export = (app: Application) => {
 
   app.on([
     'check_run.created',
-    'check_run.rerequested',
-    'check_run.requested_action',
     'check_run.completed'
+  ], async context => {
+    if (context.payload.check_run.check_suite.app.id === myAppId) {
+      return
+    }
+
+    await handlePullRequests(app, context, {
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name
+    }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
+  })
+
+  app.on([
+    'check_run.rerequested',
+    'check_run.requested_action'
   ], async context => {
     await handlePullRequests(app, context, {
       owner: context.payload.repository.owner.login,
@@ -115,9 +128,17 @@ export = (app: Application) => {
   })
 
   app.on([
-    'check_suite.completed',
     'check_suite.requested',
     'check_suite.rerequested'
+  ], async context => {
+    await handlePullRequests(app, context, {
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name
+    }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
+  })
+
+  app.on([
+    'check_suite.completed'
   ], async context => {
     await handlePullRequests(app, context, {
       owner: context.payload.repository.owner.login,

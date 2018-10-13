@@ -5,6 +5,7 @@ import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { requiresBranchUpdate } from './pull-request-uptodate'
+import { updateStatusReportCheck } from './status-report'
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void
@@ -51,45 +52,106 @@ export async function handlePullRequest (
 
 export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'delete_branch'
 export type PullRequestActions
-  = []
+  = (
+    []
   | ['reschedule']
   | ['update_branch', 'reschedule']
   | ['merge']
   | ['merge', 'delete_branch']
+) & Array<PullRequestAction>
+
+export type PullRequestPlan = {
+  code: 'mergeable_unknown' | 'pending_condition' | 'failing_condition' | 'out_of_date_on_fork' | 'update_branch' | 'merge_and_delete' | 'merge',
+  message: string,
+  actions: PullRequestActions
+}
+
+function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
+  return Object.entries(pullRequestStatus)
+    .map(([name, result]) => {
+      switch (result.status) {
+        case 'success':
+          return `* ✓ \`${name}\``
+        case 'pending':
+          return `* ○ \`${name}\`${result.message && `: ${result.message}`}`
+        case 'fail':
+          return `* ✘ \`${name}\`: ${result.message}`
+        default:
+          throw new Error(`Unknown status in result: ${JSON.stringify(result)}`)
+      }
+    })
+    .join('\n')
+}
 
 /**
  * Determines which actions to take based on the pull request and the condition results
  */
-export function getPullRequestActions (
+export function getPullRequestPlan (
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
-): PullRequestActions {
+): PullRequestPlan {
   const { config } = context
-  const pending = Object.values(pullRequestStatus)
-    .some(conditionResult => conditionResult.status === 'pending')
-  const success = Object.values(pullRequestStatus)
-    .every(conditionResult => conditionResult.status === 'success')
+  const pendingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
+  const failingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
-  if (pending) {
-    return ['reschedule']
+  if (pullRequestInfo.mergeable === 'UNKNOWN') {
+    return {
+      code: 'mergeable_unknown',
+      message: `GitHub is determining whether the pull request is mergeable`,
+      actions: ['reschedule']
+    }
   }
 
-  if (!success) {
-    return []
+  if (pendingConditions.length > 0) {
+    return {
+      code: 'pending_condition',
+      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+      actions: ['reschedule']
+    }
+  }
+
+  if (failingConditions.length > 0) {
+    return {
+      code: 'failing_condition',
+      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+      actions: []
+    }
   }
 
   // If the pull request is not up-to-date failed and we have updateBranch enabled,
   // update the branch of the PR.
   if (requiresBranchUpdate(pullRequestInfo) && config.updateBranch) {
-    return isInFork(pullRequestInfo)
-      ? []
-      : ['update_branch', 'reschedule']
+    if (isInFork(pullRequestInfo)) {
+      return {
+        code: 'out_of_date_on_fork',
+        message: 'The pull request is out-of-date, but the head is located in another repository',
+        actions: []
+      }
+    } else {
+      return {
+        code: 'update_branch',
+        message: 'The pull request is out-of-date. Will update it now.',
+        actions: ['update_branch', 'reschedule']
+      }
+    }
   }
 
-  return config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)
-    ? ['merge', 'delete_branch']
-    : ['merge']
+  if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
+    return {
+      code: 'merge_and_delete',
+      message: 'Will merge the pull request and delete its branch',
+      actions: ['merge', 'delete_branch']
+    }
+  } else {
+    return {
+      code: 'merge',
+      message: 'Will merge the pull request',
+      actions: ['merge']
+    }
+  }
 }
 
 function isInFork (pullRequestInfo: PullRequestInfo): boolean {
@@ -193,7 +255,20 @@ export async function handlePullRequestStatus (
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
 ) {
-  const actions = getPullRequestActions(context, pullRequestInfo, pullRequestStatus)
+  const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
+
+  await updateStatusReportCheck(context, pullRequestInfo,
+    plan.actions.some(action => action === 'merge')
+      ? 'Merging'
+      : plan.actions.some(action => action === 'update_branch')
+      ? 'Updating branch'
+      : plan.actions.some(action => action === 'reschedule')
+      ? 'Waiting'
+      : 'Not merging',
+    plan.message
+  )
+
+  const { actions } = plan
   context.log.debug('Actions:', actions)
   await executeActions(context, pullRequestInfo, actions)
 }

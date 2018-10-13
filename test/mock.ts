@@ -1,7 +1,7 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
 import { Review, CheckRun, PullRequestReviewState } from './../src/github-models'
-import { DeepPartial } from './../src/utils'
+import { DeepPartial, Omit } from './../src/utils'
 import { HandlerContext, PullRequestReference, PullRequestQueryResult } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
@@ -71,7 +71,6 @@ export function createGithubApi (options?: DeepPartial<GitHubAPI>): GitHubAPI {
   } as GitHubAPI
 }
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type PartialConfig = {
   rules?: Partial<ConditionConfig>[]
 } & Partial<Omit<Config, 'rules'>>
@@ -134,34 +133,42 @@ export const changesRequestedReview = (options?: Partial<Review>) =>
     ...options
   })
 
-export const successCheckRun: CheckRun = {
-  name: 'checka',
-  status: 'completed',
-  conclusion: 'success',
-  head_sha: '12345',
-  external_id: '1'
+export function createCheckRun (options?: Partial<CheckRun>): CheckRun {
+  return {
+    id: 123,
+    name: 'checka',
+    status: 'completed',
+    conclusion: 'success',
+    head_sha: '12345',
+    external_id: '1',
+    app: {
+      id: 123,
+      name: 'OtherApp',
+      owner: {
+        login: 'OwnerAppOwner'
+      }
+    },
+    pull_requests: [],
+    ...options
+  }
 }
-export const queuedCheckRun: CheckRun = {
-  name: 'checka',
+
+export const successCheckRun = createCheckRun({
+  status: 'completed',
+  conclusion: 'success'
+})
+export const queuedCheckRun = createCheckRun({
   status: 'queued',
-  conclusion: 'neutral',
-  head_sha: '12345',
-  external_id: '1'
-}
-export const failedCheckRun: CheckRun = {
-  name: 'checka',
+  conclusion: 'neutral'
+})
+export const failedCheckRun = createCheckRun({
   status: 'completed',
-  conclusion: 'failure',
-  head_sha: '12345',
-  external_id: '1'
-}
-export const neutralCheckRun: CheckRun = {
-  name: 'checka',
+  conclusion: 'failure'
+})
+export const neutralCheckRun = createCheckRun({
   status: 'completed',
-  conclusion: 'neutral',
-  head_sha: '12345',
-  external_id: '1'
-}
+  conclusion: 'neutral'
+})
 
 type BaseLogger = (...params: any[]) => void
 export function createLogger (baseLogger: BaseLogger): LoggerWithTarget {
@@ -234,7 +241,12 @@ export function createCheckRunCreatedEvent (pullRequest: PullRequestReference): 
       check_run: {
         pull_requests: [{
           number: 1
-        }]
+        }],
+        check_suite: {
+          app: {
+            id: 1
+          }
+        }
       }
     }
   }
@@ -284,7 +296,9 @@ export function createGithubApiFromPullRequestInfo (opts: {
         data: {
           checkRuns: opts.pullRequestInfo.checkRuns
         }
-      }))
+      })),
+      create: jest.fn(),
+      update: jest.fn()
     },
     pullRequests: {
       merge: createOkResponse()

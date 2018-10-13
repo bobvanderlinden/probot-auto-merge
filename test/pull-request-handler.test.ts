@@ -3,7 +3,7 @@ import { conditionNames } from './../src/conditions/index'
 import { conditions, ConditionName } from './../src/conditions/'
 import { ConditionResult } from './../src/condition'
 import { PullRequestInfo } from './../src/models'
-import { getPullRequestActions, executeAction } from '../src/pull-request-handler'
+import { getPullRequestPlan, executeAction } from '../src/pull-request-handler'
 import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext } from './mock'
 import { mapObject } from '../src/utils'
 
@@ -39,18 +39,18 @@ const headRefInSameRepository: PullRequestInfo['headRef'] = {
   }
 }
 
-describe('getPullRequestActions', () => {
+describe('getPullRequestPlan', () => {
   it('merges when status is ready_for_merge', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext(),
       createPullRequestInfo(),
       createPullRequestStatus()
     )
-    expect(actions).toEqual(['merge'])
+    expect(plan.actions).toEqual(['merge'])
   })
 
   test.each(conditionNames)('does not merge when condition %s fails', async (conditionName) => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext(),
       createPullRequestInfo(),
       createPullRequestStatus({
@@ -60,10 +60,10 @@ describe('getPullRequestActions', () => {
         }
       })
     )
-    expect(actions).toEqual([])
+    expect(plan.actions).toEqual([])
   })
   it('schedules next run when one of the conditions is pending', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext(),
       createPullRequestInfo(),
       createPullRequestStatus({
@@ -72,11 +72,11 @@ describe('getPullRequestActions', () => {
         }
       })
     )
-    expect(actions).toEqual(['reschedule'])
+    expect(plan.actions).toEqual(['reschedule'])
   })
 
   it('update branch when pull request is out-of-date and update-branch is enabled', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext({
         config: createConfig({
           updateBranch: true
@@ -98,11 +98,11 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestStatus()
     )
-    expect(actions).toEqual(['update_branch', 'reschedule'])
+    expect(plan.actions).toEqual(['update_branch', 'reschedule'])
   })
 
   it('not update branch when pull request is up-to-date and update-branch is disabled', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext({
         config: createConfig({
           updateBranch: false
@@ -130,11 +130,11 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestStatus()
     )
-    expect(actions).toEqual(['merge'])
+    expect(plan.actions).toEqual(['merge'])
   })
 
   it('not update branch when pull request is is based in fork', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext({
         config: createConfig({
           updateBranch: true
@@ -167,11 +167,11 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestStatus()
     )
-    expect(actions).toEqual([])
+    expect(plan.actions).toEqual([])
   })
 
   it('delete branch when status is ready_for_merge and delete-branch-after-merge is enabled and branch resides in same repository', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext({
         config: createConfig({
           deleteBranchAfterMerge: true
@@ -181,10 +181,10 @@ describe('getPullRequestActions', () => {
       createPullRequestStatus()
     )
 
-    expect(actions).toEqual(['merge', 'delete_branch'])
+    expect(plan.actions).toEqual(['merge', 'delete_branch'])
   })
   it('do not delete branch when status is ready_for_merge and delete-branch-after-merge is enabled, but branch resides in another repository', async () => {
-    const actions = getPullRequestActions(
+    const plan = getPullRequestPlan(
       createHandlerContext({
         config: createConfig({
           deleteBranchAfterMerge: true
@@ -214,7 +214,7 @@ describe('getPullRequestActions', () => {
       }),
       createPullRequestStatus()
     )
-    expect(actions).toEqual(['merge'])
+    expect(plan.actions).toEqual(['merge'])
   })
 })
 

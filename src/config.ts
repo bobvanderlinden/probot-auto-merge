@@ -38,6 +38,7 @@ export type Config = {
   updateBranch: boolean,
   deleteBranchAfterMerge: boolean,
   mergeMethod: 'merge' | 'rebase' | 'squash'
+  reportStatus: boolean
 } & ConditionConfig
 
 export const defaultRuleConfig: ConditionConfig = {
@@ -56,6 +57,7 @@ export const defaultConfig: Config = {
   updateBranch: false,
   deleteBranchAfterMerge: false,
   mergeMethod: 'merge',
+  reportStatus: false,
   ...defaultRuleConfig
 }
 
@@ -86,6 +88,7 @@ const configDecoder: Decoder<Config> = object({
   blockingTitleRegex: optional(string()),
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
+  reportStatus: boolean(),
   mergeMethod: oneOf(
     constant<'merge'>('merge'),
     constant<'rebase'>('rebase'),
