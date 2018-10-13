@@ -105,7 +105,8 @@ export = (app: Application) => {
   })
 
   app.on([
-    'check_run.created'
+    'check_run.created',
+    'check_run.completed'
   ], async context => {
     if (context.payload.check_run.check_suite.app.id === myAppId) {
       return
