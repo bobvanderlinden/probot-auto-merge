@@ -66,11 +66,11 @@ function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
     .map(([name, result]) => {
       switch (result.status) {
         case 'success':
-          return `* ✓ ${name}`
+          return `* ✓ \`${name}\``
         case 'pending':
-          return `* ○ ${name}${result.message && `: ${result.message}`}`
+          return `* ○ \`${name}\`${result.message && `: ${result.message}`}`
         case 'fail':
-          return `* ✘ ${name}: ${result.message}`
+          return `* ✘ \`${name}\`: ${result.message}`
         default:
           throw new Error(`Unknown status in result: ${JSON.stringify(result)}`)
       }
