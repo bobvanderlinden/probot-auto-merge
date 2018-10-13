@@ -1,7 +1,7 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
 import { Review, CheckRun, PullRequestReviewState } from './../src/github-models'
-import { DeepPartial } from './../src/utils'
+import { DeepPartial, Omit } from './../src/utils'
 import { HandlerContext, PullRequestReference, PullRequestQueryResult } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
@@ -70,7 +70,6 @@ export function createGithubApi (options?: DeepPartial<GitHubAPI>): GitHubAPI {
   } as GitHubAPI
 }
 
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type PartialConfig = {
   rules?: Partial<ConditionConfig>[]
 } & Partial<Omit<Config, 'rules'>>
