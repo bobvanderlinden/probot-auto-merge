@@ -133,62 +133,42 @@ export const changesRequestedReview = (options?: Partial<Review>) =>
     ...options
   })
 
-export const successCheckRun: CheckRun = {
-  id: 123,
-  name: 'checka',
-  status: 'completed',
-  conclusion: 'success',
-  head_sha: '12345',
-  external_id: '1',
-  app: {
+export function createCheckRun (options?: Partial<CheckRun>): CheckRun {
+  return {
     id: 123,
-    name: 'OtherApp',
-    owner: { login: 'OwnerAppOwner' }
-  },
-  pull_requests: []
+    name: 'checka',
+    status: 'completed',
+    conclusion: 'success',
+    head_sha: '12345',
+    external_id: '1',
+    app: {
+      id: 123,
+      name: 'OtherApp',
+      owner: {
+        login: 'OwnerAppOwner'
+      }
+    },
+    pull_requests: [],
+    ...options
+  }
 }
-export const queuedCheckRun: CheckRun = {
-  id: 123,
-  name: 'checka',
+
+export const successCheckRun = createCheckRun({
+  status: 'completed',
+  conclusion: 'success'
+})
+export const queuedCheckRun = createCheckRun({
   status: 'queued',
-  conclusion: 'neutral',
-  head_sha: '12345',
-  external_id: '1',
-  app: {
-    id: 123,
-    name: 'OtherApp',
-    owner: { login: 'OwnerAppOwner' }
-  },
-  pull_requests: []
-}
-export const failedCheckRun: CheckRun = {
-  id: 123,
-  name: 'checka',
+  conclusion: 'neutral'
+})
+export const failedCheckRun = createCheckRun({
   status: 'completed',
-  conclusion: 'failure',
-  head_sha: '12345',
-  external_id: '1',
-  app: {
-    id: 123,
-    name: 'OtherApp',
-    owner: { login: 'OwnerAppOwner' }
-  },
-  pull_requests: []
-}
-export const neutralCheckRun: CheckRun = {
-  id: 123,
-  name: 'checka',
+  conclusion: 'failure'
+})
+export const neutralCheckRun = createCheckRun({
   status: 'completed',
-  conclusion: 'neutral',
-  head_sha: '12345',
-  external_id: '1',
-  app: {
-    id: 123,
-    name: 'OtherApp',
-    owner: { login: 'OwnerAppOwner' }
-  },
-  pull_requests: []
-}
+  conclusion: 'neutral'
+})
 
 type BaseLogger = (...params: any[]) => void
 export function createLogger (baseLogger: BaseLogger): LoggerWithTarget {
