@@ -64,11 +64,11 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
           }
           headRefOid
           repository {
-            protectedBranches(last: 100) {
+            branchProtectionRules(last: 100) {
               nodes {
-                name
-                hasRestrictedPushes
-                hasStrictRequiredStatusChecks
+                pattern
+                restrictsPushes
+                requiresStrictStatusChecks
               }
             }
           }

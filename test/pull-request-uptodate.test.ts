@@ -14,11 +14,11 @@ describe('requiresBranchUpdate', () => {
         },
         baseRefOid: '0000000000000000000000000000000000000000',
         repository: {
-          protectedBranches: {
+          branchProtectionRules: {
             nodes: [{
-              name: 'master',
-              hasRestrictedPushes: true,
-              hasStrictRequiredStatusChecks: true
+              pattern: 'master',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: true
             }]
           }
         }
@@ -39,11 +39,11 @@ describe('requiresBranchUpdate', () => {
         },
         baseRefOid: '0000000000000000000000000000000000000000',
         repository: {
-          protectedBranches: {
+          branchProtectionRules: {
             nodes: [{
-              name: 'master',
-              hasRestrictedPushes: true,
-              hasStrictRequiredStatusChecks: false
+              pattern: 'master',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: false
             }]
           }
         }
@@ -64,16 +64,41 @@ describe('requiresBranchUpdate', () => {
         },
         baseRefOid: '0000000000000000000000000000000000000000',
         repository: {
-          protectedBranches: {
+          branchProtectionRules: {
             nodes: [{
-              name: 'master',
-              hasRestrictedPushes: true,
-              hasStrictRequiredStatusChecks: true
+              pattern: 'master',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: true
             }]
           }
         }
       })
     )
     expect(result).toBe(false)
+  })
+
+  it('returns true when pull request is based on strict protected branch using pattern and base of PR is not equals to baseRef', async () => {
+    const result = requiresBranchUpdate(
+      createPullRequestInfo({
+        baseRef: {
+          ...defaultPullRequestInfo.baseRef,
+          name: 'master',
+          target: {
+            oid: '1111111111111111111111111111111111111111'
+          }
+        },
+        baseRefOid: '0000000000000000000000000000000000000000',
+        repository: {
+          branchProtectionRules: {
+            nodes: [{
+              pattern: 'mas*',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: true
+            }]
+          }
+        }
+      })
+    )
+    expect(result).toBe(true)
   })
 })

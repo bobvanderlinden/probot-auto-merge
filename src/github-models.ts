@@ -94,11 +94,11 @@ export interface PullRequestQueryResult {
       },
       headRefOid: string,
       repository: {
-        protectedBranches: {
+        branchProtectionRules: {
           nodes: Array<{
-            name: string,
-            hasRestrictedPushes: boolean,
-            hasStrictRequiredStatusChecks: boolean
+            pattern: string,
+            restrictsPushes: boolean,
+            requiresStrictStatusChecks: boolean
           }>
         }
       }
