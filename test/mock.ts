@@ -50,7 +50,7 @@ export const defaultPullRequestInfo: PullRequestInfo = {
     nodes: []
   },
   repository: {
-    protectedBranches: {
+    branchProtectionRules: {
       nodes: []
     }
   },

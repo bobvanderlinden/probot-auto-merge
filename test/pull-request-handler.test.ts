@@ -87,11 +87,11 @@ describe('getPullRequestPlan', () => {
         headRef: headRefInSameRepository,
         baseRefOid: '2',
         repository: {
-          protectedBranches: {
+          branchProtectionRules: {
             nodes: [{
-              name: 'master',
-              hasRestrictedPushes: true,
-              hasStrictRequiredStatusChecks: true
+              pattern: 'master',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: true
             }]
           }
         }
@@ -119,11 +119,11 @@ describe('getPullRequestPlan', () => {
         },
         baseRefOid: '3',
         repository: {
-          protectedBranches: {
+          branchProtectionRules: {
             nodes: [{
-              name: 'master',
-              hasRestrictedPushes: true,
-              hasStrictRequiredStatusChecks: true
+              pattern: 'master',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: true
             }]
           }
         }
@@ -156,11 +156,11 @@ describe('getPullRequestPlan', () => {
         },
         baseRefOid: '3',
         repository: {
-          protectedBranches: {
+          branchProtectionRules: {
             nodes: [{
-              name: 'master',
-              hasRestrictedPushes: true,
-              hasStrictRequiredStatusChecks: true
+              pattern: 'master',
+              restrictsPushes: true,
+              requiresStrictStatusChecks: true
             }]
           }
         }
