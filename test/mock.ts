@@ -198,7 +198,6 @@ export function createApplication (opts: {
   github: GitHubAPI
 }): Application {
   const app = new Application()
-  app.catchErrors = false
   app.log = opts.logger
   app.auth = () => {
     return Promise.resolve(opts.github)
