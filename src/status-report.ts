@@ -38,7 +38,7 @@ export async function updateStatusReportCheck (
     // Whenever we find an existing check_run from this app,
     // we will update that check_run.
     await context.github.checks.update({
-      check_run_id: myCheckRun.id.toString(),
+      check_run_id: myCheckRun.id,
       ...checkOptions
     })
   } else if (context.config.reportStatus) {
