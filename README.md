@@ -105,6 +105,11 @@ blockingLabels:
 - blocked
 ```
 
+If there is no blocking labels, then either delete the item `blockingLabels` or setup empty value.
+```yaml
+blockingLabels: ~
+```
+
 ### `requiredLabels` (condition, default: none)
 
 Whenever required labels are configured, pull requests will only be automatically
@@ -116,6 +121,11 @@ will be automatically merged.
 ```yaml
 requiredLabels:
 - merge
+```
+
+If there is no required labels, then either delete the item `requiredLabels` or setup empty value.
+```yaml
+requiredLabels: ~
 ```
 
 ### `blockingTitleRegex` (condition, default: none)
