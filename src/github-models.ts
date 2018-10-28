@@ -99,6 +99,7 @@ export interface PullRequestQueryResult {
             pattern: string,
             restrictsPushes: boolean,
             requiresStrictStatusChecks: boolean
+            requiredStatusCheckContexts: string[]
           }>
         }
       }
