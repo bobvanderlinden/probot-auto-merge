@@ -1,6 +1,6 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
-import { Review, CheckRun, PullRequestReviewState } from './../src/github-models'
+import { Review, CheckRun, PullRequestReviewState, Ref } from './../src/github-models'
 import { DeepPartial, Omit } from './../src/utils'
 import { HandlerContext, PullRequestReference, PullRequestQueryResult } from './../src/models'
 import { PullRequestInfo } from '../src/models'
@@ -151,6 +151,28 @@ export function createCheckRun (options?: Partial<CheckRun>): CheckRun {
     pull_requests: [],
     ...options
   }
+}
+
+export function createRef (options: Partial<Ref> & Pick<Ref, 'name'>): Ref {
+  return {
+    repository: {
+      name: 'probot-auto-merge',
+      owner: {
+        login: 'bobvanderlinden'
+      }
+    },
+    target: {
+      oid: 'c00dbbc9dadfbe1e232e93a729dd4752fade0abf'
+    },
+    ...options
+  }
+}
+
+export function createMasterRef (options?: Partial<Ref>): Ref {
+  return createRef({
+    name: 'master',
+    ...options
+  })
 }
 
 export const successCheckRun = createCheckRun({
