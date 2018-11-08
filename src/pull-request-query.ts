@@ -27,6 +27,7 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
               author {
                 login
               }
+              submittedAt
               state
             }
           }

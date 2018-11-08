@@ -105,6 +105,8 @@ blockingLabels:
 - blocked
 ```
 
+Note: remove the whole section when you're not using blocking labels.
+
 ### `requiredLabels` (condition, default: none)
 
 Whenever required labels are configured, pull requests will only be automatically
@@ -117,6 +119,8 @@ will be automatically merged.
 requiredLabels:
 - merge
 ```
+
+Note: remove the whole section when you're not using required labels.
 
 ### `blockingTitleRegex` (condition, default: none)
 
@@ -208,6 +212,8 @@ rules:
 - requiredLabels:
     - merge
 ```
+
+Note: remove the whole rules section when you're not using any rules.
 
 ## Development
 

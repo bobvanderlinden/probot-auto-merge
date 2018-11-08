@@ -183,8 +183,22 @@ export async function executeActions (
   actions: PullRequestAction[]
 ) {
   for (let action of actions) {
-    await executeAction(context, pullRequestInfo, action)
+    try {
+      await executeAction(context, pullRequestInfo, action)
+    } catch (err) {
+      await updateStatusReportCheck(context, pullRequestInfo, `Failed to ${getPullRequestActionName(action)}`, err.toString())
+      throw err
+    }
   }
+}
+
+export function getPullRequestActionName (action: PullRequestAction) {
+  return ({
+    'delete_branch': 'delete branch',
+    'merge': 'merge',
+    'reschedule': 'reschedule',
+    'update_branch': 'update branch'
+  })[action]
 }
 
 export async function executeAction (
