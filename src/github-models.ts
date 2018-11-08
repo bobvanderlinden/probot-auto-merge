@@ -41,6 +41,19 @@ export interface CheckRun {
   }>
 }
 
+export interface Ref {
+  repository: {
+    owner: {
+      login: string
+    },
+    name: string
+  },
+  target: {
+    oid: string
+  }
+  name: string
+}
+
 export interface PullRequestQueryResult {
   repository: {
     pullRequest: {
@@ -67,31 +80,9 @@ export interface PullRequestQueryResult {
       },
       title: string,
       authorAssociation: CommentAuthorAssociation,
-      baseRef: {
-        repository: {
-          owner: {
-            login: string
-          },
-          name: string
-        },
-        target: {
-          oid: string
-        }
-        name: string
-      },
+      baseRef: Ref,
       baseRefOid: string,
-      headRef: {
-        repository: {
-          owner: {
-            login: string
-          },
-          name: string
-        },
-        target: {
-          oid: string
-        }
-        name: string
-      },
+      headRef: Ref,
       headRefOid: string,
       repository: {
         branchProtectionRules: {
@@ -99,6 +90,7 @@ export interface PullRequestQueryResult {
             pattern: string,
             restrictsPushes: boolean,
             requiresStrictStatusChecks: boolean
+            requiredStatusCheckContexts: string[]
           }>
         }
       }

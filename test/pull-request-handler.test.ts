@@ -91,7 +91,8 @@ describe('getPullRequestPlan', () => {
             nodes: [{
               pattern: 'master',
               restrictsPushes: true,
-              requiresStrictStatusChecks: true
+              requiresStrictStatusChecks: true,
+              requiredStatusCheckContexts: []
             }]
           }
         }
@@ -123,7 +124,8 @@ describe('getPullRequestPlan', () => {
             nodes: [{
               pattern: 'master',
               restrictsPushes: true,
-              requiresStrictStatusChecks: true
+              requiresStrictStatusChecks: true,
+              requiredStatusCheckContexts: []
             }]
           }
         }
@@ -160,7 +162,8 @@ describe('getPullRequestPlan', () => {
             nodes: [{
               pattern: 'master',
               restrictsPushes: true,
-              requiresStrictStatusChecks: true
+              requiresStrictStatusChecks: true,
+              requiredStatusCheckContexts: []
             }]
           }
         }

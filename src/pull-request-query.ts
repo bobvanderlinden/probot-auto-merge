@@ -70,6 +70,7 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
                 pattern
                 restrictsPushes
                 requiresStrictStatusChecks
+                requiredStatusCheckContexts
               }
             }
           }

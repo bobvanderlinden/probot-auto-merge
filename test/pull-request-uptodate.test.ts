@@ -18,7 +18,8 @@ describe('requiresBranchUpdate', () => {
             nodes: [{
               pattern: 'master',
               restrictsPushes: true,
-              requiresStrictStatusChecks: true
+              requiresStrictStatusChecks: true,
+              requiredStatusCheckContexts: []
             }]
           }
         }
@@ -43,7 +44,8 @@ describe('requiresBranchUpdate', () => {
             nodes: [{
               pattern: 'master',
               restrictsPushes: true,
-              requiresStrictStatusChecks: false
+              requiresStrictStatusChecks: false,
+              requiredStatusCheckContexts: []
             }]
           }
         }
@@ -68,7 +70,8 @@ describe('requiresBranchUpdate', () => {
             nodes: [{
               pattern: 'master',
               restrictsPushes: true,
-              requiresStrictStatusChecks: true
+              requiresStrictStatusChecks: true,
+              requiredStatusCheckContexts: []
             }]
           }
         }
@@ -93,7 +96,8 @@ describe('requiresBranchUpdate', () => {
             nodes: [{
               pattern: 'mas*',
               restrictsPushes: true,
-              requiresStrictStatusChecks: true
+              requiresStrictStatusChecks: true,
+              requiredStatusCheckContexts: []
             }]
           }
         }
