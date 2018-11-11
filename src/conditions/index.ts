@@ -2,6 +2,7 @@ import { ConditionResult } from './../condition'
 import open from './open'
 import mergeable from './mergeable'
 import requiredLabels from './requiredLabels'
+import requiredChecks from './requiredChecks'
 import blockingLabels from './blockingLabels'
 import blockingChecks from './blockingChecks'
 import minimumApprovals from './minimumApprovals'
@@ -13,6 +14,7 @@ export const conditions = {
   open,
   mergeable,
   requiredLabels,
+  requiredChecks,
   blockingLabels,
   minimumApprovals,
   maximumChangesRequested,
