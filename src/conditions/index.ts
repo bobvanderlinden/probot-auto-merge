@@ -1,25 +1,25 @@
 import { ConditionResult } from './../condition'
-import open from './open'
-import mergeable from './mergeable'
-import requiredLabels from './requiredLabels'
-import requiredChecks from './requiredChecks'
-import blockingLabels from './blockingLabels'
-import blockingChecks from './blockingChecks'
-import minimumApprovals from './minimumApprovals'
-import maximumChangesRequested from './maximumChangesRequested'
-import blockingTitle from './blockingTitle'
 import { keysOf } from '../utils'
+import blockingChecks from './blockingChecks'
+import blockingLabels from './blockingLabels'
+import blockingTitle from './blockingTitle'
+import maximumChangesRequested from './maximumChangesRequested'
+import mergeable from './mergeable'
+import minimumApprovals from './minimumApprovals'
+import open from './open'
+import requiredChecks from './requiredChecks'
+import requiredLabels from './requiredLabels'
 
 export const conditions = {
-  open,
-  mergeable,
-  requiredLabels,
-  requiredChecks,
-  blockingLabels,
-  minimumApprovals,
-  maximumChangesRequested,
   blockingChecks,
-  blockingTitle
+  blockingLabels,
+  blockingTitle,
+  maximumChangesRequested,
+  mergeable,
+  minimumApprovals,
+  open,
+  requiredChecks,
+  requiredLabels
 }
 
 export type Conditions = typeof conditions
