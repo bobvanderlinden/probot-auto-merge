@@ -1,3 +1,4 @@
+import { PullRequestQuery } from '../__generated__/PullRequestQuery'
 import { ElementOf } from './utils'
 export type PullRequestState = 'OPEN' | 'CLOSED' | 'MERGED'
 export type MergeableState = 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
@@ -54,52 +55,8 @@ export interface Ref {
   name: string
 }
 
-export interface PullRequestQueryResult {
-  repository: {
-    pullRequest: {
-      number: number,
-      state: PullRequestState,
-      mergeable: MergeableState,
-      potentialMergeCommit: {
-        oid: string
-      },
-      reviews: {
-        nodes: Array<{
-          authorAssociation: CommentAuthorAssociation,
-          author: {
-            login: string
-          }
-          submittedAt: string,
-          state: PullRequestReviewState
-        }>
-      },
-      labels: {
-        nodes: Array<{
-          name: string
-        }>
-      },
-      title: string,
-      authorAssociation: CommentAuthorAssociation,
-      baseRef: Ref,
-      baseRefOid: string,
-      headRef: Ref,
-      headRefOid: string,
-      repository: {
-        branchProtectionRules: {
-          nodes: Array<{
-            pattern: string,
-            restrictsPushes: boolean,
-            requiresStrictStatusChecks: boolean
-            requiredStatusCheckContexts: string[]
-          }>
-        }
-      }
-    }
-  }
-}
-
-export type PullRequestInfo = PullRequestQueryResult['repository']['pullRequest'] & {
-  checkRuns: CheckRun[]
-}
-
-export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
+export type PullRequestQueryResult = PullRequestQuery
+type Diff<T, U> = T extends U ? never : T
+type NonNullable<T> = Diff<T, null | undefined>
+export type PullRequestInfo = NonNullable<NonNullable<PullRequestQueryResult['repository']>['pullRequest']>
+export type Review = ElementOf<NonNullable<PullRequestInfo['reviews']>['nodes']>
