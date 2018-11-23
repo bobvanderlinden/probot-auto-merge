@@ -1,10 +1,10 @@
 import { PullRequestQuery, PullRequestQuery_repository_pullRequest_headRef, PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes } from '../__generated__/PullRequestQuery'
-import { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState } from '../__generated__/globalTypes'
+import * as globalTypes from '../__generated__/globalTypes'
 import { ElementOf } from './utils'
-export type PullRequestState = PullRequestState
-export type MergeableState = MergeableState
-export type CommentAuthorAssociation = CommentAuthorAssociation
-export type PullRequestReviewState = PullRequestReviewState
+export const PullRequestState = globalTypes.PullRequestState
+export const MergeableState = globalTypes.MergeableState
+export const CommentAuthorAssociation = globalTypes.CommentAuthorAssociation
+export const PullRequestReviewState = globalTypes.PullRequestReviewState
 
 export interface RepositoryReference {
   owner: string
