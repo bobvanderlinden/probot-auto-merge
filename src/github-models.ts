@@ -1,10 +1,6 @@
 import { PullRequestQuery, PullRequestQuery_repository_pullRequest_headRef, PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes } from '../__generated__/PullRequestQuery'
-import * as globalTypes from '../__generated__/globalTypes'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState } from '../__generated__/globalTypes'
 import { ElementOf } from './utils'
-export const PullRequestState = globalTypes.PullRequestState
-export const MergeableState = globalTypes.MergeableState
-export const CommentAuthorAssociation = globalTypes.CommentAuthorAssociation
-export const PullRequestReviewState = globalTypes.PullRequestReviewState
 
 export interface RepositoryReference {
   owner: string
@@ -25,6 +21,23 @@ function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, error
   return fn(input)
 }
 
+function assertNotNullNodes<TNode, TNodeOutput> (input: { nodes: (TNode | null)[] | null } | null, errorMessage: string, fn: (input: TNode) => TNodeOutput): { nodes: TNodeOutput[] } {
+  if (input === null) {
+    throw new Error(errorMessage)
+  }
+  if (input.nodes === null) {
+    throw new Error(errorMessage)
+  }
+  return {
+    nodes: input.nodes.map(inputNode => {
+      if (inputNode === null) {
+        throw new Error(errorMessage)
+      }
+      return fn(inputNode)
+    })
+  }
+}
+
 export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
   return assertNotNull(pullRequestQuery, 'Could not query pull request',
     response => ({
@@ -36,18 +49,32 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
             pullRequest => ({
               ...pullRequest,
               mergeable: assertNotNull(pullRequest.mergeable, 'No permission to source repository of pull request', mergeable => mergeable),
-              labels: assertNotNull(pullRequest.labels, 'No permission to labels of pull request',
+              labels: assertNotNullNodes(pullRequest.labels, 'No permission to labels of pull request',
                 labels => labels
               ),
-              reviews: assertNotNull(pullRequest.reviews, 'No permission to fetch reviews',
-                reviews => reviews
+              reviews: assertNotNullNodes(pullRequest.reviews, 'No permission to fetch reviews',
+                review => ({
+                  ...review,
+                  author: assertNotNull(review.author, 'No permission to fetch author of review', author => author)
+                })
               ),
               baseRef: assertNotNull(pullRequest.baseRef, 'No permission to fetch baseRef',
                 baseRef => baseRef
               ),
               headRef: assertNotNull(pullRequest.headRef, 'No permission to fetch headRef',
                 headRef => headRef
-              )
+              ),
+              repository: {
+                ...pullRequest.repository,
+                branchProtectionRules: assertNotNullNodes(pullRequest.repository.branchProtectionRules, 'No permission to fetch branchProtectionRules',
+                  branchProtectionRule => ({
+                    ...branchProtectionRule,
+                    requiredStatusCheckContexts: assertNotNull(branchProtectionRule.requiredStatusCheckContexts, 'No permission to fetch requiredStatusCheckContexts',
+                      requiredStatusCheckContexts => requiredStatusCheckContexts.map(requiredStatusCheckContext => assertNotNull(requiredStatusCheckContext, 'No permission to fetch requiredStatusCheckContext', requiredStatusCheckContext => requiredStatusCheckContext))
+                    )
+                  })
+                )
+              }
             })
           )
         })
