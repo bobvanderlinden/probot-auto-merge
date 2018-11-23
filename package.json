@@ -29,7 +29,7 @@
     "debug": "*",
     "minimatch": "*",
     "probot": "*",
-    "probot-config": "*",
+    "probot-config": "git+ssh://git@github.com:bobvanderlinden/probot-config#pr-probot-7.4.0",
     "raven": "*"
   },
   "devDependencies": {
