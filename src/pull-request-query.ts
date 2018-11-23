@@ -24,7 +24,7 @@ function assertNotNull<TInput, TOutput> (input: TInput | null, errorMessage: str
 
 async function graphQLQuery(github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
   return await github.query(query, variables, {
-    'Accept': 'application/vnd.github.antiope-preview+json'
+    'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
   }) as any
 }
 

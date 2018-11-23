@@ -1,7 +1,7 @@
 /* tslint:disable */
 // This file was automatically generated and should not be edited.
 
-import { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from "./globalTypes";
+import { PullRequestState, MergeableState, MergeStateStatus, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from "./globalTypes";
 
 // ====================================================
 // GraphQL query operation: PullRequestQuery
@@ -286,6 +286,10 @@ export interface PullRequestQuery_repository_pullRequest {
    * Whether or not the pull request can be merged based on the existence of merge conflicts.
    */
   mergeable: MergeableState;
+  /**
+   * Detailed information about the current pull request merge state status.
+   */
+  mergeStateStatus: MergeStateStatus;
   /**
    * The commit that GitHub automatically generated to test if this pull request
    * could be merged. This field will not return a value if the pull request is
