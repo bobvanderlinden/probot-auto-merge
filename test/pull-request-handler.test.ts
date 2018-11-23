@@ -260,12 +260,12 @@ describe('executeAction with action', () => {
   })
 
   it('delete_branch', async () => {
-    const deleteReference = jest.fn(() => ({ status: 200 }))
+    const deleteRef = jest.fn(() => ({ status: 200 }))
     await executeAction(
       createPullRequestContext({
         github: createGithubApi({
           gitdata: {
-            deleteReference
+            deleteRef
           }
         })
       }),
@@ -286,8 +286,8 @@ describe('executeAction with action', () => {
       'delete_branch'
     )
 
-    expect(deleteReference).toHaveBeenCalledTimes(1)
-    expect(deleteReference).toBeCalledWith({
+    expect(deleteRef).toHaveBeenCalledTimes(1)
+    expect(deleteRef).toBeCalledWith({
       owner: 'bobvanderlinden',
       repo: 'probot-auto-merge',
       ref: 'heads/the-merged-branch'
