@@ -8,7 +8,7 @@ import { Config, defaultConfig } from '../src/config'
 import { Application, ApplicationFunction } from 'probot'
 import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
-import { Response, GitdataDeleteReferenceResponse } from '@octokit/rest'
+import { Response } from '@octokit/rest'
 
 export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
@@ -303,7 +303,7 @@ export function createGithubApiFromPullRequestInfo (opts: {
   pullRequestInfo: PullRequestInfo,
   config: string
 }): GitHubAPI {
-  return createPartialGithubApiFromPullRequestInfo(opts) as GitHubAPI
+  return createGithubApi(createPartialGithubApiFromPullRequestInfo(opts))
 }
 
 function createPartialGithubApiFromPullRequestInfo (opts: {
@@ -334,17 +334,17 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
     },
     repos: {
       merge: createOkResponse(),
-      getContent: createGetContent({
+      getContents: createGetContents({
         '.github/auto-merge.yml': () => Buffer.from(opts.config)
       })
     },
     gitdata: {
-      deleteReference: createOkResponse<GitdataDeleteReferenceResponse>()
+      deleteRef: createOkResponse()
     }
   }
 }
 
-export function createGetContent (paths: { [key: string]: () => Buffer }): any {
+export function createGetContents (paths: { [key: string]: () => Buffer }): any {
   return ({ user, repo, path }: { user: string, repo: string, path: string }) => {
     const contentFactory = paths[path]
     if (!contentFactory) {

@@ -8,7 +8,7 @@ import {
   createGithubApiFromPullRequestInfo,
   createApplication,
   createPullRequestOpenedEvent,
-  createGetContent,
+  createGetContents,
   createCheckSuiteCompletedEvent,
   createCheckRunCreatedEvent
 } from './mock'
@@ -126,7 +126,7 @@ it('no configuration should not schedule any pull request', async () => {
 
   const github = createGithubApi({
     repos: {
-      getContent: createGetContent({})
+      getContents: createGetContents({})
     }
   })
 
@@ -268,7 +268,7 @@ it('to report error when processing pull request results in error', async () => 
 
   const github = createGithubApi({
     repos: {
-      getContent: createGetContent({
+      getContents: createGetContents({
         '.github/auto-merge.yml': () => Buffer.from('')
       })
     },
