@@ -81,7 +81,7 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
     'owner': owner,
     'repo': repo,
     'pullRequestNumber': pullRequestNumber
-  }) as any
+  })
 
   const assert = assertPullRequest.bind(null, {
     owner,
