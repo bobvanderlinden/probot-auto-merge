@@ -56,7 +56,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
   )
 }
 
-type AnyFunction = (...args: any[]) => any;
+type AnyFunction = (...args: any[]) => any
 type ReturnType<T extends AnyFunction> = T extends (...args: any[]) => infer R ? R : any
 
 export type PullRequestQueryResult = ReturnType<typeof validatePullRequestQuery>

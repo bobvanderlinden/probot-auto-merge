@@ -1,7 +1,7 @@
 import { ConditionConfig } from './../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
-import { MergeableState } from '../github-models';
+import { MergeableState } from '../github-models'
 
 export default function isMergeable (
   config: ConditionConfig,
