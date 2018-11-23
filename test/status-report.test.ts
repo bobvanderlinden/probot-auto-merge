@@ -1,3 +1,4 @@
+import { CheckRun } from './../src/github-models'
 import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig } from './mock'
 import { updateStatusReportCheck } from '../src/status-report'
 

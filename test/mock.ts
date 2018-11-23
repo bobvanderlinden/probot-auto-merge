@@ -8,6 +8,7 @@ import { Config, defaultConfig } from '../src/config'
 import { Application, ApplicationFunction } from 'probot'
 import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
+import { Response } from '@octokit/rest'
 
 export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
@@ -294,7 +295,7 @@ export function createCheckSuiteCompletedEvent (pullRequest: PullRequestReferenc
   }
 }
 
-export function createOkResponse (): any {
+export function createOkResponse<T> (): (...args: any[]) => Response<T> {
   return jest.fn(() => ({ status: 200 }))
 }
 
@@ -302,6 +303,13 @@ export function createGithubApiFromPullRequestInfo (opts: {
   pullRequestInfo: PullRequestInfo,
   config: string
 }): GitHubAPI {
+  return createGithubApi(createPartialGithubApiFromPullRequestInfo(opts))
+}
+
+function createPartialGithubApiFromPullRequestInfo (opts: {
+  pullRequestInfo: PullRequestInfo,
+  config: string
+}): DeepPartial<GitHubAPI> {
   const pullRequestQueryResult: PullRequestQueryResult = {
     repository: {
       pullRequest: opts.pullRequestInfo
@@ -326,17 +334,17 @@ export function createGithubApiFromPullRequestInfo (opts: {
     },
     repos: {
       merge: createOkResponse(),
-      getContent: createGetContent({
+      getContents: createGetContents({
         '.github/auto-merge.yml': () => Buffer.from(opts.config)
       })
     },
     gitdata: {
-      deleteReference: createOkResponse()
+      deleteRef: createOkResponse()
     }
-  } as any
+  }
 }
 
-export function createGetContent (paths: { [key: string]: () => Buffer }): any {
+export function createGetContents (paths: { [key: string]: () => Buffer }): any {
   return ({ user, repo, path }: { user: string, repo: string, path: string }) => {
     const contentFactory = paths[path]
     if (!contentFactory) {

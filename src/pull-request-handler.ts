@@ -169,7 +169,7 @@ async function deleteBranch (
   pullRequestInfo: PullRequestInfo
 ) {
   return result(
-    await context.github.gitdata.deleteReference({
+    await context.github.gitdata.deleteRef({
       owner: pullRequestInfo.headRef.repository.owner.login,
       repo: pullRequestInfo.headRef.repository.name,
       ref: `heads/${pullRequestInfo.headRef.name}`

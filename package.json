@@ -28,8 +28,8 @@
     "bunyan-sentry-stream": "*",
     "debug": "*",
     "minimatch": "*",
-    "probot": "*",
-    "probot-config": "*",
+    "probot": "^7.4.0",
+    "probot-config": "git+https://github.com:bobvanderlinden/probot-config#pr-probot-7.4.0",
     "raven": "*"
   },
   "devDependencies": {
