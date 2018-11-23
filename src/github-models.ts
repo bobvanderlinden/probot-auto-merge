@@ -18,8 +18,8 @@ export interface PullRequestReference extends RepositoryReference {
 export type CheckRun = PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes
 export type Ref = PullRequestQuery_repository_pullRequest_headRef
 
-function assertNotNull<TInput, TOutput> (input: TInput | null, errorMessage: string, fn: (input: TInput) => TOutput): TOutput {
-  if (input === null) {
+function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, errorMessage: string, fn: (input: TInput) => TOutput): TOutput {
+  if (input === null || input === undefined) {
     throw new Error(errorMessage)
   }
   return fn(input)
@@ -35,6 +35,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
           pullRequest: assertNotNull(repository.pullRequest, 'No permission to source repository of pull request',
             pullRequest => ({
               ...pullRequest,
+              mergeable: assertNotNull(pullRequest.mergeable, 'No permission to source repository of pull request', mergeable => mergeable),
               labels: assertNotNull(pullRequest.labels, 'No permission to labels of pull request',
                 labels => labels
               ),
