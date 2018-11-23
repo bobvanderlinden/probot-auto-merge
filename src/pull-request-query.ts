@@ -6,10 +6,10 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
 
-async function graphQLQuery(github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
-  return await github.query(query, variables, {
+async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
+  return github.query(query, variables, {
     'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
-  }) as any
+  })
 }
 
 export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
