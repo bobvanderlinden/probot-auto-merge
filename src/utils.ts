@@ -1,5 +1,6 @@
 import { AnyResponse } from '@octokit/rest'
 import { PullRequestInfo } from './models'
+import myappid from './myappid'
 
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
@@ -117,4 +118,26 @@ export function mapObject<TKey extends string, TValue, TMappedValue> (obj: { [ke
     result[key] = mapper(obj[key])
   }
   return result
+}
+
+export function flatMap<TInput, TOutput> (array: Array<TInput>, fn: (input: TInput) => Array<TOutput>): Array<TOutput> {
+  return array.reduce<Array<TOutput>>((result, input) => [...result, ...fn(input)], [])
+}
+
+export function getMyCheckSuite (pullRequestInfo: PullRequestInfo) {
+  return pullRequestInfo.commits.nodes[0]
+    .commit.checkSuites.nodes
+    .filter(checkSuite => checkSuite.app.id === myappid)[0]
+}
+
+export function getOtherCheckRuns (pullRequestInfo: PullRequestInfo) {
+  return flatMap(pullRequestInfo.commits.nodes,
+    commit => flatMap(commit.commit.checkSuites.nodes,
+      checkSuite => checkSuite.checkRuns.nodes.map(
+        checkRun => ({
+          ...checkRun,
+          checkSuite
+        }))
+    )
+  ).filter(checkRun => checkRun.checkSuite.app.id !== myappid)
 }

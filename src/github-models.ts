@@ -1,5 +1,5 @@
 import { PullRequestQuery, PullRequestQuery_repository_pullRequest_headRef, PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes } from '../__generated__/PullRequestQuery'
-export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState } from '../__generated__/globalTypes'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from '../__generated__/globalTypes'
 import { ElementOf } from './utils'
 
 export interface RepositoryReference {
@@ -63,6 +63,23 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
               ),
               headRef: assertNotNull(pullRequest.headRef, 'No permission to fetch headRef',
                 headRef => headRef
+              ),
+              commits: assertNotNullNodes(pullRequest.commits, 'No permission to fetch commits',
+                commit => ({
+                  ...commit,
+                  commit: {
+                    ...commit.commit,
+                    checkSuites: assertNotNullNodes(commit.commit.checkSuites, 'No permission to fetch checkSuites',
+                      checkSuite => ({
+                        ...checkSuite,
+                        app: assertNotNull(checkSuite.app, 'No permission to fetch app', app => app),
+                        checkRuns: assertNotNullNodes(checkSuite.checkRuns, 'No permission to fetch checkRuns',
+                          checkRun => checkRun
+                        )
+                      })
+                    )
+                  }
+                })
               ),
               repository: {
                 ...pullRequest.repository,

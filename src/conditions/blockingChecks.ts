@@ -1,17 +1,25 @@
 import { ConditionConfig } from './../config'
-import { PullRequestInfo } from '../models'
+import { PullRequestInfo  } from '../models'
 import { ConditionResult } from '../condition'
-import { groupByLastMap } from '../utils'
+import { groupByLastMap, flatMap } from '../utils'
+import { CheckStatusState } from '../github-models'
 import myAppId from '../myappid'
 
 export default function doesNotHaveBlockingChecks (
   config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
-  const checkRuns = pullRequestInfo.checkRuns
-    .filter(checkRun => checkRun.app.id !== myAppId)
+  const checkRuns = flatMap(pullRequestInfo.commits.nodes,
+    commit => flatMap(commit.commit.checkSuites.nodes,
+      checkSuite => checkSuite.checkRuns.nodes.map(
+        checkRun => ({
+          ...checkRun,
+          checkSuite
+        }))
+    )
+  ).filter(checkRun => checkRun.checkSuite.app.id !== myAppId)
   const allChecksCompleted = checkRuns.every(
-    checkRun => checkRun.status === 'completed'
+    checkRun => checkRun.status === CheckStatusState.COMPLETED
   )
   if (!allChecksCompleted) {
     return {
@@ -20,15 +28,16 @@ export default function doesNotHaveBlockingChecks (
     }
   }
   const checkConclusions = groupByLastMap(
-    checkRun => checkRun.conclusion,
+    checkRun => checkRun.conclusion || 'UNKNOWN',
     _ => true,
     checkRuns
   )
   const checksBlocking =
-    checkConclusions.failure ||
-    checkConclusions.cancelled ||
-    checkConclusions.timed_out ||
-    checkConclusions.action_required
+    checkConclusions.UNKNOWN ||
+    checkConclusions.FAILURE ||
+    checkConclusions.CANCELLED ||
+    checkConclusions.TIMED_OUT ||
+    checkConclusions.ACTION_REQUIRED
   if (checksBlocking) {
     return {
       status: 'fail',

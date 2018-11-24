@@ -50,6 +50,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
                 conclusion
                 checkRuns(last: 10) {
                   nodes {
+                    id
                     name
                     conclusion
                     status

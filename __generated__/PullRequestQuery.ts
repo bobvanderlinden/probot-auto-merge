@@ -118,6 +118,7 @@ export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_ch
 
 export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes {
   __typename: "CheckRun";
+  id: string;
   /**
    * The name of the check for this check run.
    */
