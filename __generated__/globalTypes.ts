@@ -41,19 +41,6 @@ export enum CommentAuthorAssociation {
 }
 
 /**
- * Detailed status information about a pull request merge.
- */
-export enum MergeStateStatus {
-  BEHIND = "BEHIND",
-  BLOCKED = "BLOCKED",
-  CLEAN = "CLEAN",
-  DIRTY = "DIRTY",
-  HAS_HOOKS = "HAS_HOOKS",
-  UNKNOWN = "UNKNOWN",
-  UNSTABLE = "UNSTABLE",
-}
-
-/**
  * Whether or not a PullRequest can be merged.
  */
 export enum MergeableState {
