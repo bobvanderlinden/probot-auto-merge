@@ -39,6 +39,7 @@
     "@types/node": "*",
     "@types/p-queue": "*",
     "@types/raven": "*",
+    "apollo": "^2.1.6",
     "coveralls": "*",
     "jest": "*",
     "nodemon": "^1.18.7",
