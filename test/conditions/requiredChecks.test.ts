@@ -1,6 +1,6 @@
 import requiredChecks from '../../src/conditions/requiredChecks'
 import { createConditionConfig, createPullRequestInfo, createCheckRun, createMasterRef, createCommitsWithCheckSuiteWithCheckRun, createCommit, createCheckSuite } from '../mock'
-import { CheckConclusionState, CheckStatusState } from '../../src/models';
+import { CheckConclusionState, CheckStatusState } from '../../src/models'
 
 describe('requiredChecks', () => {
   it('returns success when there are no required check runs', () => {

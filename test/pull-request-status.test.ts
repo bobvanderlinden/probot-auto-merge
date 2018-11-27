@@ -3,7 +3,7 @@ import { getPullRequestStatus } from '../src/pull-request-status'
 import { mapObject } from '../src/utils'
 import { createHandlerContext, createPullRequestInfo, createConfig, approvedReview } from './mock'
 import { ConditionResult } from '../src/condition'
-import { CommentAuthorAssociation } from '../src/models';
+import { CommentAuthorAssociation } from '../src/models'
 
 const successConditionResults: ConditionResults = mapObject(conditions, (_) => ({ status: 'success' } as ConditionResult))
 
