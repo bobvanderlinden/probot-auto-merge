@@ -1,6 +1,6 @@
 import { PullRequestQuery, PullRequestQuery_repository_pullRequest_headRef, PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes } from '../__generated__/PullRequestQuery'
 export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from '../__generated__/globalTypes'
-import { ElementOf } from './utils'
+import { ElementOf, DeepConvert, Omit } from './type-utils'
 
 export interface RepositoryReference {
   owner: string

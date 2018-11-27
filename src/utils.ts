@@ -2,11 +2,6 @@ import { AnyResponse } from '@octokit/rest'
 import { PullRequestInfo } from './models'
 import myappid from './myappid'
 
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-
-export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; }
-export type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never
-
 export function identity<T> (v: T): T { return v }
 export function keysOf<TKey extends string> (obj: { [key in TKey]: any }): TKey[] {
   return Object.keys(obj) as TKey[]
