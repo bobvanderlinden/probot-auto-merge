@@ -1,5 +1,5 @@
-import { PullRequestQuery, PullRequestQuery_repository_pullRequest_headRef, PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes } from '../__generated__/PullRequestQuery'
-export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from '../__generated__/globalTypes'
+import { PullRequestQuery } from '../__generated__/PullRequestQuery'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState, MergeStateStatus } from '../__generated__/globalTypes'
 import { ElementOf, DeepConvert, Omit } from './type-utils'
 
 export interface RepositoryReference {
@@ -10,9 +10,6 @@ export interface RepositoryReference {
 export interface PullRequestReference extends RepositoryReference {
   number: number
 }
-
-export type CheckRun = PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes
-export type Ref = PullRequestQuery_repository_pullRequest_headRef
 
 function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, errorMessage: string, fn: (input: TInput) => TOutput): TOutput {
   if (input === null || input === undefined) {
@@ -131,11 +128,10 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
   )
 }
 
-type AnyFunction = (...args: any[]) => any
-type ReturnType<T extends AnyFunction> = T extends (...args: any[]) => infer R ? R : any
-
-export type PullRequestQueryResult = ReturnType<typeof validatePullRequestQuery>
-type Diff<T, U> = T extends U ? never : T
-type NonNullable<T> = Diff<T, null | undefined>
-export type PullRequestInfo = NonNullable<NonNullable<PullRequestQueryResult['repository']>['pullRequest']>
-export type Review = ElementOf<NonNullable<PullRequestInfo['reviews']>['nodes']>
+export type PullRequestQueryResult_Validated = ReturnType<typeof validatePullRequestQuery>
+export type PullRequestInfo = PullRequestQueryResult_Validated['repository']['pullRequest']
+export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
+export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
+export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
+export type CheckRun = ElementOf<CheckSuite['checkRuns']['nodes']>
+export type Ref = PullRequestInfo['headRef']
