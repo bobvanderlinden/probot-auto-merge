@@ -8,7 +8,7 @@ const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
 
 async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
   return github.query(query, variables, {
-    'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+    'Accept': 'application/vnd.github.antiope-preview+json'
   })
 }
 
