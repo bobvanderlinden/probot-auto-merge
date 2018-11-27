@@ -24,7 +24,7 @@ it('full happy path', async () => {
     reviews: {
       nodes: [
         approvedReview({
-          authorAssociation: 'OWNER'
+          authorAssociation: CommentAuthorAssociation.OWNER
         })
       ]
     },
@@ -102,7 +102,7 @@ it('full happy path', async () => {
 
   pullRequestInfo.reviews.nodes = [
     approvedReview({
-      authorAssociation: 'OWNER'
+      authorAssociation: CommentAuthorAssociation.OWNER
     })
   ]
 
@@ -158,7 +158,7 @@ it('pending test', async () => {
     reviews: {
       nodes: [
         approvedReview({
-          authorAssociation: 'OWNER'
+          authorAssociation: CommentAuthorAssociation.OWNER
         })
       ]
     },
@@ -223,7 +223,7 @@ it('to merge when one rule and the global configuration passes', async () => {
     reviews: {
       nodes: [
         approvedReview({
-          authorAssociation: 'CONTRIBUTOR'
+          authorAssociation: CommentAuthorAssociation.CONTRIBUTOR
         })
       ]
     },
