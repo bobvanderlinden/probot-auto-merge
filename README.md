@@ -31,8 +31,6 @@ of the conditions inside a rule are met, the PR is also merged. See [rules](#Rul
 Note that the default configuration options are to do nothing. This is to prevent
 impicit and possibly unintended behavior.
 
-A simple configuration
-
 The configuration fields are as follows:
 
 ### `minApprovals` (required, condition)
