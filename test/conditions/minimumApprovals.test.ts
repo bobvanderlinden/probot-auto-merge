@@ -1,5 +1,6 @@
 import hasMinimumApprovals from '../../src/conditions/minimumApprovals'
 import { createConditionConfig, createPullRequestInfo, approvedReview } from '../mock'
+import { CommentAuthorAssociation } from '../../src/models'
 
 describe('minimumApprovals', () => {
   it('returns success when owner approved and owner was configured', async () => {
@@ -12,7 +13,7 @@ describe('minimumApprovals', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'henk' }, authorAssociation: 'OWNER' })
+            approvedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.OWNER })
           ]
         }
       })
@@ -30,7 +31,7 @@ describe('minimumApprovals', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'henk' }, authorAssociation: 'MEMBER' })
+            approvedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.MEMBER })
           ]
         }
       })
@@ -48,7 +49,7 @@ describe('minimumApprovals', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'henk' }, authorAssociation: 'OWNER' })
+            approvedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.OWNER })
           ]
         }
       })
@@ -62,7 +63,7 @@ describe('minimumApprovals', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'henk' }, authorAssociation: 'OWNER' })
+            approvedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.OWNER })
           ]
         }
       })

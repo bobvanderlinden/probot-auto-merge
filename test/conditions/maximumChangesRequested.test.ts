@@ -1,5 +1,6 @@
 import doesNotHaveMaximumChangesRequested from '../../src/conditions/maximumChangesRequested'
 import { createConditionConfig, createPullRequestInfo, approvedReview, changesRequestedReview } from '../mock'
+import { CommentAuthorAssociation } from '../../src/models'
 
 describe('maximumChangesRequested', () => {
   it('returns success when owner approved and nothing was configured', async () => {
@@ -8,7 +9,7 @@ describe('maximumChangesRequested', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'henk' }, authorAssociation: 'OWNER' })
+            approvedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.OWNER })
           ]
         }
       })
@@ -26,7 +27,7 @@ describe('maximumChangesRequested', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            changesRequestedReview({ author: { login: 'henk' }, authorAssociation: 'OWNER' })
+            changesRequestedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.OWNER })
           ]
         }
       })
@@ -44,7 +45,7 @@ describe('maximumChangesRequested', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            changesRequestedReview({ author: { login: 'henk' }, authorAssociation: 'OWNER' })
+            changesRequestedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.OWNER })
           ]
         }
       })
@@ -62,7 +63,7 @@ describe('maximumChangesRequested', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            changesRequestedReview({ author: { login: 'henk' }, authorAssociation: 'MEMBER' })
+            changesRequestedReview({ author: { login: 'henk' }, authorAssociation: CommentAuthorAssociation.MEMBER })
           ]
         }
       })
