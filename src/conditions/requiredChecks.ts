@@ -4,7 +4,7 @@ import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import minimatch from 'minimatch'
 import { CheckConclusionState, CheckStatusState } from '../github-models'
-import { getOtherCheckRuns } from '../utils';
+import { getOtherCheckRuns } from '../utils'
 
 const positiveCheckRunConclusions: Array<CheckRun['conclusion']> = [
   CheckConclusionState.SUCCESS, CheckConclusionState.NEUTRAL
@@ -39,7 +39,10 @@ export default function areRequiredChecksPositive (
     )
   )
 
-  const allRequiredChecksExist = Array.from(requiredStatusCheckContexts).every(requiredCheck => getOtherCheckRuns(pullRequestInfo).some(checkRun => checkRun.name === requiredCheck))
+  const allRequiredChecksExist = Array.from(requiredStatusCheckContexts)
+    .every(requiredCheck => getOtherCheckRuns(pullRequestInfo)
+      .some(checkRun => checkRun.name === requiredCheck)
+    )
 
   if (!allRequiredChecksExist) {
     return {

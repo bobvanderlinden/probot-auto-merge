@@ -1,5 +1,5 @@
 import { ConditionConfig } from './../config'
-import { PullRequestInfo  } from '../models'
+import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import { groupByLastMap, flatMap } from '../utils'
 import { CheckStatusState } from '../github-models'
