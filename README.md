@@ -31,6 +31,8 @@ of the conditions inside a rule are met, the PR is also merged. See [rules](#Rul
 Note that the default configuration options are to do nothing. This is to prevent
 impicit and possibly unintended behavior.
 
+A simple configuration
+
 The configuration fields are as follows:
 
 ### `minApprovals` (required, condition)
@@ -134,6 +136,16 @@ automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swi
 
 ```yaml
 blockingTitleRegex: '\bWIP\b'
+```
+
+### `reportStatus` (default: `false`)
+
+The status of the auto-merge process will be shown in each PR as a [check](https://help.github.com/articles/about-status-checks/). This can be especially useful to find out why a PR is not being merged automatically.
+
+To enable status reporting, add the following to your configuration:
+
+```yaml
+reportStatus: true
 ```
 
 ### `updateBranch` (default: `false`)
