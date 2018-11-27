@@ -10,10 +10,12 @@ import {
   createPullRequestOpenedEvent,
   createGetContents,
   createCheckSuiteCompletedEvent,
-  createCheckRunCreatedEvent
+  createCheckRunCreatedEvent,
+  createCommitsWithCheckSuiteWithCheckRun
 } from './mock'
 import { immediate } from '../src/delay'
-
+import appFn from '../src/index'
+import { CommentAuthorAssociation } from '../src/models'
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -28,9 +30,9 @@ it('full happy path', async () => {
         })
       ]
     },
-    checkRuns: [
-      successCheckRun
-    ]
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    })
   })
 
   const github = createGithubApiFromPullRequestInfo({
@@ -39,7 +41,7 @@ it('full happy path', async () => {
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
@@ -55,7 +57,7 @@ it('full happy path', async () => {
   expect(github.pullRequests.merge).toHaveBeenCalled()
 })
 
-it('full happy path', async () => {
+it('not enough approval reviews', async () => {
   const config = `
   minApprovals:
     OWNER: 1
@@ -66,9 +68,9 @@ it('full happy path', async () => {
       nodes: [
       ]
     },
-    checkRuns: [
-      successCheckRun
-    ]
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    })
   })
 
   const github = createGithubApiFromPullRequestInfo({
@@ -77,7 +79,7 @@ it('full happy path', async () => {
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
@@ -131,7 +133,7 @@ it('no configuration should not schedule any pull request', async () => {
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
@@ -147,7 +149,7 @@ it('no configuration should not schedule any pull request', async () => {
   ).rejects.toHaveProperty('message', "Configuration file '.github/auto-merge.yml' not found")
 })
 
-it('pending test', async () => {
+it('pending check run', async () => {
   jest.useFakeTimers()
   const config = `
   minApprovals:
@@ -162,9 +164,9 @@ it('pending test', async () => {
         })
       ]
     },
-    checkRuns: [
-      queuedCheckRun
-    ]
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: queuedCheckRun
+    })
   })
 
   const github = createGithubApiFromPullRequestInfo({
@@ -173,7 +175,7 @@ it('pending test', async () => {
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
@@ -196,9 +198,9 @@ it('pending test', async () => {
       repository: {
         pullRequest: {
           ...pullRequestInfo,
-          checkRuns: [
-            successCheckRun
-          ]
+          commits: createCommitsWithCheckSuiteWithCheckRun({
+            checkRun: successCheckRun
+          })
         }
       }
     }
@@ -227,9 +229,9 @@ it('to merge when one rule and the global configuration passes', async () => {
         })
       ]
     },
-    checkRuns: [
-      successCheckRun
-    ],
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    }),
     labels: {
       nodes: [
         { name: 'merge' }
@@ -243,7 +245,7 @@ it('to merge when one rule and the global configuration passes', async () => {
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
@@ -278,7 +280,7 @@ it('to report error when processing pull request results in error', async () => 
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
@@ -316,7 +318,7 @@ it('when no permission to source repository throw a no permission error', async 
   })
 
   const app = createApplication({
-    appFn: require('../src/index'),
+    appFn,
     logger: createEmptyLogger(),
     github
   })
