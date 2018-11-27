@@ -9,8 +9,8 @@ export async function updateStatusReportCheck (
   title: string,
   summary: string
 ) {
-  const myCheckRun = getMyCheckSuite(pullRequestInfo)
-    .checkRuns.nodes[0]
+  const myCheckSuite = getMyCheckSuite(pullRequestInfo)
+  const myCheckRun = myCheckSuite && myCheckSuite.checkRuns.nodes[0]
 
   const checkOptions: {
     conclusion: 'neutral',
