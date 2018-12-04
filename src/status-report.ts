@@ -1,8 +1,7 @@
 import { PullRequestContext } from './pull-request-handler'
 import { PullRequestInfo } from './models'
 import { ChecksCreateParams } from '@octokit/rest'
-
-import myAppId from './myappid'
+import { getMyCheckSuite } from './utils'
 
 export async function updateStatusReportCheck (
   context: PullRequestContext,
@@ -10,8 +9,8 @@ export async function updateStatusReportCheck (
   title: string,
   summary: string
 ) {
-  const myCheckRun = pullRequestInfo.checkRuns
-    .filter(checkRun => checkRun.app.id === myAppId)[0]
+  const myCheckSuite = getMyCheckSuite(pullRequestInfo)
+  const myCheckRun = myCheckSuite && myCheckSuite.checkRuns.nodes[0]
 
   const checkOptions: {
     conclusion: 'neutral',
@@ -38,7 +37,7 @@ export async function updateStatusReportCheck (
     // Whenever we find an existing check_run from this app,
     // we will update that check_run.
     await context.github.checks.update({
-      check_run_id: myCheckRun.id,
+      check_run_id: parseInt(myCheckRun.id, 10),
       ...checkOptions
     })
   } else if (context.config.reportStatus) {

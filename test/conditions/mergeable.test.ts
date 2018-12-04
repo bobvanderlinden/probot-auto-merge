@@ -1,12 +1,13 @@
 import mergeable from '../../src/conditions/mergeable'
 import { createConditionConfig, createPullRequestInfo } from '../mock'
+import { MergeableState } from '../../src/models'
 
 describe('mergeable', () => {
   it('returns success pull request state is MERGEABLE', async () => {
     const result = mergeable(
       createConditionConfig(),
       createPullRequestInfo({
-        mergeable: 'MERGEABLE'
+        mergeable: MergeableState.MERGEABLE
       })
     )
     expect(result.status).toBe('success')
@@ -16,7 +17,7 @@ describe('mergeable', () => {
     const result = mergeable(
       createConditionConfig(),
       createPullRequestInfo({
-        mergeable: 'CONFLICTING'
+        mergeable: MergeableState.CONFLICTING
       })
     )
     expect(result.status).toBe('fail')
@@ -26,7 +27,7 @@ describe('mergeable', () => {
     const result = mergeable(
       createConditionConfig(),
       createPullRequestInfo({
-        mergeable: 'UNKNOWN'
+        mergeable: MergeableState.UNKNOWN
       })
     )
     expect(result.status).toBe('pending')

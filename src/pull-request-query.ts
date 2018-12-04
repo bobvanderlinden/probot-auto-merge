@@ -1,109 +1,25 @@
-import { PullRequestReference, CheckRun, PullRequestInfo, PullRequestQueryResult } from './github-models'
+import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
+import { PullRequestQueryVariables, PullRequestQuery } from '../__generated__/PullRequestQuery'
 import { Context } from 'probot'
-import { result } from './utils'
+import { GitHubAPI } from 'probot/lib/github'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
 
-function assertPullRequest (pullRequest: PullRequestReference, condition: boolean, errorMessage: string) {
-  if (!condition) {
-    const error: any = new Error(errorMessage)
-    error.pullRequest = `${pullRequest.owner}/${pullRequest.repo}#${pullRequest.number}`
-    throw error
-  }
+async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
+  return github.query(query, variables, {
+    'Accept': 'application/vnd.github.antiope-preview+json'
+  })
 }
 
 export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
-  const response = await github.query(`
-    query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
-      repository(owner: $owner, name: $repo) {
-        pullRequest(number: $pullRequestNumber) {
-          number
-          state
-          mergeable
-          potentialMergeCommit {
-            oid
-          }
-          reviews(last: 100) {
-            nodes {
-              authorAssociation
-              author {
-                login
-              }
-              submittedAt
-              state
-            }
-          }
-          labels(last: 100) {
-            nodes {
-              name
-            }
-          }
-          title
-          authorAssociation
-          baseRef {
-            repository {
-              owner {
-                login
-              }
-              name
-            }
-            target{
-              oid
-            }
-            name
-          }
-          baseRefOid
-          headRef {
-            repository {
-              owner {
-                login
-              }
-              name
-            }
-            target{
-              oid
-            }
-            name
-          }
-          headRefOid
-          repository {
-            branchProtectionRules(last: 100) {
-              nodes {
-                pattern
-                restrictsPushes
-                requiresStrictStatusChecks
-                requiredStatusCheckContexts
-              }
-            }
-          }
-        }
-      }
-    }
-  `, {
+  const response = await graphQLQuery(github, {
     'owner': owner,
     'repo': repo,
     'pullRequestNumber': pullRequestNumber
   })
 
-  const assert = assertPullRequest.bind(null, {
-    owner,
-    repo,
-    number: pullRequestNumber
-  })
+  const checkedResponse = validatePullRequestQuery(response)
 
-  assert(response, 'Could not query pull request')
-  assert(response.repository, 'Query result does not have repository')
-  assert(response.repository.pullRequest.headRef && response.repository.pullRequest.mergeable, 'No permission to source repository of pull request')
-
-  const queryResult = response as PullRequestQueryResult
-
-  const checks = result<{ check_runs: CheckRun[] }>(await github.checks.listForRef({
-    owner: queryResult.repository.pullRequest.headRef.repository.owner.login,
-    repo: queryResult.repository.pullRequest.headRef.repository.name,
-    ref: queryResult.repository.pullRequest.headRef.name,
-    filter: 'latest'
-  }))
-
-  return {
-    checkRuns: checks.check_runs,
-    ...queryResult.repository.pullRequest
-  }
+  return checkedResponse.repository.pullRequest
 }

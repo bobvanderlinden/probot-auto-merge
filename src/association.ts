@@ -1,13 +1,13 @@
 import { CommentAuthorAssociation } from './github-models'
 
 export const associations: CommentAuthorAssociation[] = [
-  'NONE',
-  'FIRST_TIMER',
-  'FIRST_TIME_CONTRIBUTOR',
-  'CONTRIBUTOR',
-  'COLLABORATOR',
-  'MEMBER',
-  'OWNER'
+  CommentAuthorAssociation.NONE,
+  CommentAuthorAssociation.FIRST_TIMER,
+  CommentAuthorAssociation.FIRST_TIME_CONTRIBUTOR,
+  CommentAuthorAssociation.CONTRIBUTOR,
+  CommentAuthorAssociation.COLLABORATOR,
+  CommentAuthorAssociation.MEMBER,
+  CommentAuthorAssociation.OWNER
 ]
 
 export function getAssociationPriority (association: CommentAuthorAssociation): number {

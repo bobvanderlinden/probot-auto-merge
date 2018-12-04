@@ -21,7 +21,10 @@
     "test": "jest && tslint --project .",
     "test:travis": "jest --coverage --coverageReporters=text-lcov | coveralls && tslint --project .",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "npm run build",
+    "schema:download": "apollo service:download --endpoint https://api.github.com/graphql --header \"Authorization: bearer $GITHUB_TOKEN\" --header \"Accept: application/vnd.github.antiope-preview\"",
+    "schema:codegen": "apollo client:codegen --target typescript --config=apollo.config.js",
+    "schema:update": "npm run schema:download && npm run schema:codegen"
   },
   "dependencies": {
     "@mojotech/json-type-validation": "*",
@@ -39,6 +42,7 @@
     "@types/node": "*",
     "@types/p-queue": "*",
     "@types/raven": "*",
+    "apollo": "^2.1.6",
     "coveralls": "*",
     "jest": "*",
     "nodemon": "^1.18.7",

@@ -1,30 +1,28 @@
-import { CheckRun } from './../src/github-models'
-import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig } from './mock'
+import { CheckSuite } from './../src/github-models'
+import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig, createCheckSuite, createCommit } from './mock'
 import { updateStatusReportCheck } from '../src/status-report'
 
-const myappid = 1
+const myappid = '1'
 
-function createOtherAppCheckRun (options?: Partial<CheckRun>) {
-  return createCheckRun({
+function createOtherAppCheckSuite (options?: Partial<CheckSuite>) {
+  return createCheckSuite({
     app: {
-      id: 123,
-      name: 'otherapp',
-      owner: {
-        login: 'other'
-      }
+      id: '123'
+    },
+    checkRuns: {
+      nodes: [createCheckRun()]
     },
     ...options
   })
 }
 
-function createMyCheckRun (options?: Partial<CheckRun>) {
-  return createCheckRun({
+function createMyCheckSuite (options?: Partial<CheckSuite>) {
+  return createCheckSuite({
     app: {
-      id: 1,
-      name: 'probot-auto-merge',
-      owner: {
-        login: 'bobvanderlinden'
-      }
+      id: myappid
+    },
+    checkRuns: {
+      nodes: [createCheckRun()]
     },
     ...options
   })
@@ -32,7 +30,7 @@ function createMyCheckRun (options?: Partial<CheckRun>) {
 
 function mock (options: {
   reportStatus: boolean,
-  checkRuns: CheckRun[]
+  checkSuites: CheckSuite[]
 }) {
   const updateCheck = jest.fn()
   const createCheck = jest.fn()
@@ -54,7 +52,13 @@ function mock (options: {
   })
 
   const pullRequestInfo = createPullRequestInfo({
-    checkRuns: options.checkRuns
+    commits: {
+      nodes: [createCommit({
+        checkSuites: {
+          nodes: options.checkSuites
+        }
+      })]
+    }
   })
 
   return {
@@ -83,8 +87,8 @@ describe('updateStatusReportCheck', () => {
       updateCheck
     } = mock({
       reportStatus: true,
-      checkRuns: [
-        createMyCheckRun()
+      checkSuites: [
+        createMyCheckSuite()
       ]
     })
 
@@ -100,8 +104,8 @@ describe('updateStatusReportCheck', () => {
       createCheck
     } = mock({
       reportStatus: true,
-      checkRuns: [
-        createOtherAppCheckRun()
+      checkSuites: [
+        createOtherAppCheckSuite()
       ]
     })
 
@@ -118,8 +122,8 @@ describe('updateStatusReportCheck', () => {
       updateCheck
     } = mock({
       reportStatus: false,
-      checkRuns: [
-        createOtherAppCheckRun()
+      checkSuites: [
+        createOtherAppCheckSuite()
       ]
     })
 
@@ -137,8 +141,8 @@ describe('updateStatusReportCheck', () => {
       updateCheck
     } = mock({
       reportStatus: false,
-      checkRuns: [
-        createMyCheckRun()
+      checkSuites: [
+        createMyCheckSuite()
       ]
     })
 

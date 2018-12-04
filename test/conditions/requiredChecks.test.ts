@@ -1,18 +1,19 @@
 import requiredChecks from '../../src/conditions/requiredChecks'
-import { createConditionConfig, createPullRequestInfo, createCheckRun, createMasterRef } from '../mock'
+import { createConditionConfig, createPullRequestInfo, createCheckRun, createMasterRef, createCommitsWithCheckSuiteWithCheckRun, createCommit, createCheckSuite } from '../mock'
+import { CheckConclusionState, CheckStatusState } from '../../src/models'
 
 describe('requiredChecks', () => {
   it('returns success when there are no required check runs', () => {
     const result = requiredChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [
-          createCheckRun({
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
             name: 'mycheckrun',
-            status: 'completed',
-            conclusion: 'failure'
-          })
-        ],
+            status: CheckStatusState.COMPLETED,
+            conclusion: CheckConclusionState.FAILURE
+          }
+        }),
         baseRef: createMasterRef(),
         repository: {
           branchProtectionRules: {
@@ -33,13 +34,13 @@ describe('requiredChecks', () => {
     const result = requiredChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [
-          createCheckRun({
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
             name: 'mycheckrun',
-            status: 'completed',
-            conclusion: 'success'
-          })
-        ],
+            status: CheckStatusState.COMPLETED,
+            conclusion: CheckConclusionState.SUCCESS
+          }
+        }),
         baseRef: createMasterRef(),
         repository: {
           branchProtectionRules: {
@@ -62,12 +63,12 @@ describe('requiredChecks', () => {
     const result = requiredChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [
-          createCheckRun({
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
             name: 'mycheckrun',
-            status: 'in_progress'
-          })
-        ],
+            status: CheckStatusState.IN_PROGRESS
+          }
+        }),
         baseRef: createMasterRef(),
         repository: {
           branchProtectionRules: {
@@ -90,8 +91,13 @@ describe('requiredChecks', () => {
     const result = requiredChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [
-        ],
+        commits: {
+          nodes: [createCommit({
+            checkSuites: {
+              nodes: []
+            }
+          })]
+        },
         baseRef: createMasterRef(),
         repository: {
           branchProtectionRules: {
@@ -114,13 +120,13 @@ describe('requiredChecks', () => {
     const result = requiredChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [
-          createCheckRun({
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
             name: 'mycheckrun',
-            status: 'completed',
-            conclusion: 'failure'
-          })
-        ],
+            status: CheckStatusState.COMPLETED,
+            conclusion: CheckConclusionState.FAILURE
+          }
+        }),
         baseRef: createMasterRef(),
         repository: {
           branchProtectionRules: {
@@ -143,18 +149,25 @@ describe('requiredChecks', () => {
     const result = requiredChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [
-          createCheckRun({
-            name: 'mycheckrun1',
-            status: 'completed',
-            conclusion: 'success'
-          }),
-          createCheckRun({
-            name: 'mycheckrun2',
-            status: 'completed',
-            conclusion: 'failure'
-          })
-        ],
+        commits: {
+          nodes: [createCommit({
+            checkSuites: {
+              nodes: [createCheckSuite({
+                checkRuns: {
+                  nodes: [createCheckRun({
+                    name: 'mycheckrun1',
+                    status: CheckStatusState.COMPLETED,
+                    conclusion: CheckConclusionState.SUCCESS
+                  }), createCheckRun({
+                    name: 'mycheckrun2',
+                    status: CheckStatusState.COMPLETED,
+                    conclusion: CheckConclusionState.FAILURE
+                  })]
+                }
+              })]
+            }
+          })]
+        },
         baseRef: createMasterRef(),
         repository: {
           branchProtectionRules: {

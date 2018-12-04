@@ -1,12 +1,15 @@
 import blockingChecks from '../../src/conditions/blockingChecks'
-import { createConditionConfig, createPullRequestInfo, successCheckRun, failedCheckRun } from '../mock'
+import { createConditionConfig, createPullRequestInfo, successCheckRun, failedCheckRun, createCommitsWithCheckSuiteWithCheckRun } from '../mock'
+import { CheckStatusState, CheckConclusionState } from '../../src/models'
 
 describe('blockingChecks', () => {
   it('returns success pull request has succeeding check', async () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [successCheckRun]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: successCheckRun
+        })
       })
     )
     expect(result.status).toBe('success')
@@ -16,10 +19,11 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [{
-          ...successCheckRun,
-          status: 'in_progress'
-        }]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
+            status: CheckStatusState.IN_PROGRESS
+          }
+        })
       })
     )
     expect(result.status).toBe('pending')
@@ -29,10 +33,11 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [{
-          ...successCheckRun,
-          status: 'queued'
-        }]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
+            status: CheckStatusState.QUEUED
+          }
+        })
       })
     )
     expect(result.status).toBe('pending')
@@ -42,7 +47,9 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [failedCheckRun]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: failedCheckRun
+        })
       })
     )
     expect(result.status).toBe('fail')
@@ -52,10 +59,12 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [{
-          ...failedCheckRun,
-          conclusion: 'timed_out'
-        }]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
+            ...failedCheckRun,
+            conclusion: CheckConclusionState.TIMED_OUT
+          }
+        })
       })
     )
     expect(result.status).toBe('fail')
@@ -65,10 +74,12 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [{
-          ...failedCheckRun,
-          conclusion: 'cancelled'
-        }]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
+            ...failedCheckRun,
+            conclusion: CheckConclusionState.CANCELLED
+          }
+        })
       })
     )
     expect(result.status).toBe('fail')
@@ -78,10 +89,12 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [{
-          ...failedCheckRun,
-          conclusion: 'action_required'
-        }]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
+            ...failedCheckRun,
+            conclusion: CheckConclusionState.ACTION_REQUIRED
+          }
+        })
       })
     )
     expect(result.status).toBe('fail')
@@ -91,10 +104,12 @@ describe('blockingChecks', () => {
     const result = blockingChecks(
       createConditionConfig(),
       createPullRequestInfo({
-        checkRuns: [{
-          ...failedCheckRun,
-          conclusion: 'neutral'
-        }]
+        commits: createCommitsWithCheckSuiteWithCheckRun({
+          checkRun: {
+            ...failedCheckRun,
+            conclusion: CheckConclusionState.NEUTRAL
+          }
+        })
       })
     )
     expect(result.status).toBe('success')

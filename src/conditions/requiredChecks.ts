@@ -3,18 +3,20 @@ import { ConditionConfig } from './../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import minimatch from 'minimatch'
+import { CheckConclusionState, CheckStatusState } from '../github-models'
+import { getOtherCheckRuns } from '../utils'
 
 const positiveCheckRunConclusions: Array<CheckRun['conclusion']> = [
-  'success', 'neutral'
+  CheckConclusionState.SUCCESS, CheckConclusionState.NEUTRAL
 ]
 
 function isPositiveCheckRun (checkRun: CheckRun): boolean {
-  return checkRun.status === 'completed'
+  return checkRun.status === CheckStatusState.COMPLETED
     && positiveCheckRunConclusions.indexOf(checkRun.conclusion) > -1
 }
 
 function isPendingCheckRun (checkRun: CheckRun): boolean {
-  return checkRun.status !== 'completed'
+  return checkRun.status !== CheckStatusState.COMPLETED
 }
 
 function flatMap<TIn, TOut> (list: TIn[], fn: (item: TIn) => TOut[]): TOut[] {
@@ -37,7 +39,10 @@ export default function areRequiredChecksPositive (
     )
   )
 
-  const allRequiredChecksExist = Array.from(requiredStatusCheckContexts).every(requiredCheck => pullRequestInfo.checkRuns.some(checkRun => checkRun.name === requiredCheck))
+  const allRequiredChecksExist = Array.from(requiredStatusCheckContexts)
+    .every(requiredCheck => getOtherCheckRuns(pullRequestInfo)
+      .some(checkRun => checkRun.name === requiredCheck)
+    )
 
   if (!allRequiredChecksExist) {
     return {
@@ -46,7 +51,7 @@ export default function areRequiredChecksPositive (
     }
   }
 
-  const requiredCheckRuns = pullRequestInfo.checkRuns
+  const requiredCheckRuns = getOtherCheckRuns(pullRequestInfo)
     .filter(checkRun => requiredStatusCheckContexts.has(checkRun.name))
 
   const arePendingCheckRuns = requiredCheckRuns.some(isPendingCheckRun)

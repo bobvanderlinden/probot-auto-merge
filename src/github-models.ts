@@ -1,8 +1,6 @@
-import { ElementOf } from './utils'
-export type PullRequestState = 'OPEN' | 'CLOSED' | 'MERGED'
-export type MergeableState = 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
-export type CommentAuthorAssociation = 'MEMBER' | 'OWNER' | 'COLLABORATOR' | 'CONTRIBUTOR' | 'FIRST_TIME_CONTRIBUTOR' | 'FIRST_TIMER' | 'NONE'
-export type PullRequestReviewState = 'PENDING' | 'COMMENTED' | 'APPROVED' | 'CHANGES_REQUESTED' | 'DISMISSED'
+import { PullRequestQuery } from '../__generated__/PullRequestQuery'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from '../__generated__/globalTypes'
+import { ElementOf, Omit } from './type-utils'
 
 export interface RepositoryReference {
   owner: string
@@ -13,93 +11,127 @@ export interface PullRequestReference extends RepositoryReference {
   number: number
 }
 
-export interface CheckRun {
-  id: number,
-  name: string
-  head_sha: string
-  external_id: string
-  status: 'queued' | 'in_progress' | 'completed'
-  conclusion: 'success' | 'failure' | 'neutral' | 'cancelled' | 'timed_out' | 'action_required',
-  app: {
-    id: number,
-    owner: {
-      login: string
-    }
-    name: string
-  },
-  pull_requests: Array<{
-    id: number,
-    number: number,
-    head: {
-      ref: string,
-      sha: string
-    },
-    base: {
-      ref: string,
-      sha: string
-    }
-  }>
-}
-
-export interface Ref {
-  repository: {
-    owner: {
-      login: string
-    },
-    name: string
-  },
-  target: {
-    oid: string
+function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, errorMessage: string, fn: (input: TInput) => TOutput): TOutput {
+  if (input === null || input === undefined) {
+    throw new Error(errorMessage)
   }
-  name: string
+  return fn(input)
 }
 
-export interface PullRequestQueryResult {
-  repository: {
-    pullRequest: {
-      number: number,
-      state: PullRequestState,
-      mergeable: MergeableState,
-      potentialMergeCommit: {
-        oid: string
-      },
-      reviews: {
-        nodes: Array<{
-          authorAssociation: CommentAuthorAssociation,
-          author: {
-            login: string
-          }
-          submittedAt: string,
-          state: PullRequestReviewState
-        }>
-      },
-      labels: {
-        nodes: Array<{
-          name: string
-        }>
-      },
-      title: string,
-      authorAssociation: CommentAuthorAssociation,
-      baseRef: Ref,
-      baseRefOid: string,
-      headRef: Ref,
-      headRefOid: string,
-      repository: {
-        branchProtectionRules: {
-          nodes: Array<{
-            pattern: string,
-            restrictsPushes: boolean,
-            requiresStrictStatusChecks: boolean
-            requiredStatusCheckContexts: string[]
-          }>
-        }
+function assertNotNullNodes<TNode, TNodeOutput> (input: { nodes: (TNode | null)[] | null } | null, errorMessage: string, fn: (input: TNode) => TNodeOutput): { nodes: TNodeOutput[] } {
+  if (input === null) {
+    throw new Error(errorMessage)
+  }
+  if (input.nodes === null) {
+    throw new Error(errorMessage)
+  }
+  return {
+    nodes: input.nodes.map(inputNode => {
+      if (inputNode === null) {
+        throw new Error(errorMessage)
       }
-    }
+      return fn(inputNode)
+    })
   }
 }
 
-export type PullRequestInfo = PullRequestQueryResult['repository']['pullRequest'] & {
-  checkRuns: CheckRun[]
+function removeTypename<T extends { __typename: any }> (obj: T): Omit<T, '__typename'> {
+  const result = obj
+  delete result['__typename']
+  return result
 }
 
+export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
+  return assertNotNull(pullRequestQuery, 'Could not query pull request',
+    response => ({
+      ...response,
+      repository: assertNotNull(response.repository, 'Query result does not have repository',
+        repository => ({
+          ...removeTypename(repository),
+          pullRequest: assertNotNull(repository.pullRequest, 'No permission to source repository of pull request',
+            pullRequest => ({
+              ...removeTypename(pullRequest),
+              potentialMergeCommit: pullRequest.potentialMergeCommit && {
+                ...removeTypename(pullRequest.potentialMergeCommit),
+                oid: pullRequest.potentialMergeCommit.oid as string
+              },
+              mergeable: assertNotNull(pullRequest.mergeable, 'No permission to source repository of pull request', mergeable => mergeable),
+              labels: assertNotNullNodes(pullRequest.labels, 'No permission to labels of pull request',
+                labels => removeTypename(labels)
+              ),
+              reviews: assertNotNullNodes(pullRequest.reviews, 'No permission to fetch reviews',
+                review => ({
+                  ...removeTypename(review),
+                  submittedAt: review.submittedAt as string,
+                  author: assertNotNull(review.author, 'No permission to fetch author of review', author => removeTypename(author))
+                })
+              ),
+              baseRef: assertNotNull(pullRequest.baseRef, 'No permission to fetch baseRef',
+                baseRef => ({
+                  ...removeTypename(baseRef),
+                  repository: {
+                    ...removeTypename(baseRef.repository),
+                    owner: removeTypename(baseRef.repository.owner)
+                  },
+                  target: {
+                    oid: baseRef.target.oid as string
+                  }
+                })
+              ),
+              baseRefOid: pullRequest.baseRefOid as string,
+              headRef: assertNotNull(pullRequest.headRef, 'No permission to fetch headRef',
+                headRef => ({
+                  ...removeTypename(headRef),
+                  repository: {
+                    ...removeTypename(headRef.repository),
+                    owner: removeTypename(headRef.repository.owner)
+                  },
+                  target: {
+                    oid: headRef.target.oid as string
+                  }
+                })
+              ),
+              headRefOid: pullRequest.headRefOid as string,
+              commits: assertNotNullNodes(pullRequest.commits, 'No permission to fetch commits',
+                commit => ({
+                  ...removeTypename(commit),
+                  commit: {
+                    ...removeTypename(commit.commit),
+                    checkSuites: assertNotNullNodes(commit.commit.checkSuites, 'No permission to fetch checkSuites',
+                      checkSuite => ({
+                        ...removeTypename(checkSuite),
+                        app: assertNotNull(checkSuite.app, 'No permission to fetch app', app => removeTypename(app)),
+                        checkRuns: assertNotNullNodes(checkSuite.checkRuns, 'No permission to fetch checkRuns',
+                          checkRun => removeTypename(checkRun)
+                        )
+                      })
+                    )
+                  }
+                })
+              ),
+              repository: {
+                ...removeTypename(pullRequest.repository),
+                branchProtectionRules: assertNotNullNodes(pullRequest.repository.branchProtectionRules, 'No permission to fetch branchProtectionRules',
+                  branchProtectionRule => ({
+                    ...removeTypename(branchProtectionRule),
+                    requiredStatusCheckContexts: assertNotNull(branchProtectionRule.requiredStatusCheckContexts, 'No permission to fetch requiredStatusCheckContexts',
+                      requiredStatusCheckContexts => requiredStatusCheckContexts.map(requiredStatusCheckContext => assertNotNull(requiredStatusCheckContext, 'No permission to fetch requiredStatusCheckContext', requiredStatusCheckContext => requiredStatusCheckContext))
+                    )
+                  })
+                )
+              }
+            })
+          )
+        })
+      )
+    })
+  )
+}
+
+export type PullRequestQueryResult_Validated = ReturnType<typeof validatePullRequestQuery>
+export type PullRequestInfo = PullRequestQueryResult_Validated['repository']['pullRequest']
 export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
+export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
+export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
+export type CheckRun = ElementOf<CheckSuite['checkRuns']['nodes']>
+export type Ref = PullRequestInfo['headRef']

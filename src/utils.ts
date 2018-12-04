@@ -1,10 +1,6 @@
 import { AnyResponse } from '@octokit/rest'
 import { PullRequestInfo } from './models'
-
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-
-export type DeepPartial<T> = { [Key in keyof T]?: DeepPartial<T[Key]>; }
-export type ElementOf<TArray> = TArray extends Array<infer TElement> ? TElement : never
+import myappid from './myappid'
 
 export function identity<T> (v: T): T { return v }
 export function keysOf<TKey extends string> (obj: { [key in TKey]: any }): TKey[] {
@@ -117,4 +113,26 @@ export function mapObject<TKey extends string, TValue, TMappedValue> (obj: { [ke
     result[key] = mapper(obj[key])
   }
   return result
+}
+
+export function flatMap<TInput, TOutput> (array: Array<TInput>, fn: (input: TInput) => Array<TOutput>): Array<TOutput> {
+  return array.reduce<Array<TOutput>>((result, input) => [...result, ...fn(input)], [])
+}
+
+export function getMyCheckSuite (pullRequestInfo: PullRequestInfo) {
+  return pullRequestInfo.commits.nodes[0]
+    .commit.checkSuites.nodes
+    .filter(checkSuite => checkSuite.app.id === myappid)[0]
+}
+
+export function getOtherCheckRuns (pullRequestInfo: PullRequestInfo) {
+  return flatMap(pullRequestInfo.commits.nodes,
+    commit => flatMap(commit.commit.checkSuites.nodes,
+      checkSuite => checkSuite.checkRuns.nodes.map(
+        checkRun => ({
+          ...checkRun,
+          checkSuite
+        }))
+    )
+  ).filter(checkRun => checkRun.checkSuite.app.id !== myappid)
 }
