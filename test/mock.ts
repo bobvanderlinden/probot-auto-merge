@@ -1,6 +1,6 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
-import { Review, CheckRun, PullRequestReviewState, Ref, MergeStateStatus, CheckStatusState, CheckConclusionState, CheckSuite, Commit } from './../src/github-models'
+import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit } from './../src/github-models'
 import { HandlerContext, PullRequestReference, PullRequestState, MergeableState, CommentAuthorAssociation } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
@@ -18,7 +18,6 @@ export const defaultPullRequestInfo: PullRequestInfo = {
   potentialMergeCommit: {
     oid: 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
   },
-  mergeStateStatus: MergeStateStatus.CLEAN,
   baseRef: {
     name: 'master',
     repository: {

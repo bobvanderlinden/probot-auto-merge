@@ -1,5 +1,5 @@
 import { PullRequestQuery } from '../__generated__/PullRequestQuery'
-export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState, MergeStateStatus } from '../__generated__/globalTypes'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from '../__generated__/globalTypes'
 import { ElementOf, Omit } from './type-utils'
 
 export interface RepositoryReference {
