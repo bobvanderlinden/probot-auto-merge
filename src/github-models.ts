@@ -57,7 +57,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
               },
               mergeable: assertNotNull(pullRequest.mergeable, 'No permission to source repository of pull request', mergeable => mergeable),
               labels: assertNotNullNodes(pullRequest.labels, 'No permission to labels of pull request',
-                labels => labels
+                labels => removeTypename(labels)
               ),
               reviews: assertNotNullNodes(pullRequest.reviews, 'No permission to fetch reviews',
                 review => ({
