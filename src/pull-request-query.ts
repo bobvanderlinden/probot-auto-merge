@@ -1,3 +1,4 @@
+import { captureException } from 'raven'
 import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
 import { PullRequestQueryVariables, PullRequestQuery } from './query.graphql'
 import { Context } from 'probot'
@@ -7,9 +8,18 @@ import { join } from 'path'
 const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
 
 async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
-  return github.query(query, variables, {
-    'Accept': 'application/vnd.github.antiope-preview+json'
-  })
+  try {
+    return await github.query(query, variables, {
+      'Accept': 'application/vnd.github.antiope-preview+json'
+    })
+  } catch (e) {
+    if (e && e.name === 'GraphQLQueryError') {
+      captureException(e)
+      return e.data as PullRequestQuery
+    } else {
+      throw e
+    }
+  }
 }
 
 export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
