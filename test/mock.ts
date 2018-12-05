@@ -9,7 +9,7 @@ import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
 import { Response } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
-import { PullRequestQuery } from '../__generated__/PullRequestQuery'
+import { PullRequestQuery } from '../src/query.graphql'
 
 export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,

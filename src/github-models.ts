@@ -1,5 +1,5 @@
-import { PullRequestQuery } from '../__generated__/PullRequestQuery'
-export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from '../__generated__/globalTypes'
+import { PullRequestQuery } from './query.graphql'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from './query.graphql'
 import { ElementOf, Omit } from './type-utils'
 
 export interface RepositoryReference {

@@ -1,5 +1,5 @@
 import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
-import { PullRequestQueryVariables, PullRequestQuery } from '../__generated__/PullRequestQuery'
+import { PullRequestQueryVariables, PullRequestQuery } from './query.graphql'
 import { Context } from 'probot'
 import { GitHubAPI } from 'probot/lib/github'
 import { readFileSync } from 'fs'
