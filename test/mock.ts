@@ -355,16 +355,20 @@ export function createGithubApiFromPullRequestInfo (opts: {
   return createGithubApi(createPartialGithubApiFromPullRequestInfo(opts))
 }
 
+export function createPullRequestQuery (pullRequestInfo: PullRequestInfo): PullRequestQuery {
+  return {
+    repository: {
+      __typename: 'Repository',
+      pullRequest: pullRequestInfo as any
+    }
+  }
+}
+
 function createPartialGithubApiFromPullRequestInfo (opts: {
   pullRequestInfo: PullRequestInfo,
   config: string
 }): DeepPartial<GitHubAPI> {
-  const pullRequestQueryResult: PullRequestQuery = {
-    repository: {
-      __typename: 'Repository',
-      pullRequest: opts.pullRequestInfo as any
-    }
-  }
+  const pullRequestQueryResult = createPullRequestQuery(opts.pullRequestInfo)
   return {
     query: jest.fn(() => {
       return pullRequestQueryResult

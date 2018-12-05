@@ -11,11 +11,13 @@ import {
   createGetContents,
   createCheckSuiteCompletedEvent,
   createCheckRunCreatedEvent,
-  createCommitsWithCheckSuiteWithCheckRun
+  createCommitsWithCheckSuiteWithCheckRun,
+  createPullRequestQuery
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
 import { CommentAuthorAssociation } from '../src/models'
+import { GraphQLQueryError } from 'probot/lib/github'
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -295,6 +297,67 @@ it('to report error when processing pull request results in error', async () => 
 
   expect(captureException).toHaveBeenCalled()
   expect(consoleError).toHaveBeenCalled()
+})
+
+it('to report error and continue when graphql query contained errors', async () => {
+  const Raven = require('raven')
+  const captureException = jest.fn()
+  Raven.captureException = captureException
+  const consoleError = jest.fn()
+  console.error = consoleError
+
+  const config = `
+  minApprovals:
+    OWNER: 1
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    reviews: {
+      nodes: [
+        approvedReview({
+          authorAssociation: CommentAuthorAssociation.OWNER
+        })
+      ]
+    },
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    })
+  })
+
+  const pullRequestQuery = createPullRequestQuery(pullRequestInfo)
+
+  const github = createGithubApi({
+    repos: {
+      getContents: createGetContents({
+        '.github/auto-merge.yml': () => Buffer.from(config)
+      })
+    },
+    pullRequests: {
+      merge: jest.fn()
+    },
+    query: jest.fn(async () => Promise.reject(
+      new GraphQLQueryError([{
+        message: 'Some problem'
+      }], '', {}, pullRequestQuery)
+    ))
+  })
+
+  const app = createApplication({
+    appFn,
+    logger: createEmptyLogger(),
+    github
+  })
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  expect(captureException).toHaveBeenCalledTimes(1)
+  expect(github.pullRequests.merge).toHaveBeenCalled()
 })
 
 it('when no permission to source repository throw a no permission error', async () => {
