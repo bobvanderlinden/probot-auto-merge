@@ -9,12 +9,13 @@ import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
 import { Response } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
-import { PullRequestQuery } from '../src/query.graphql'
+import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
 
 export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
   mergeable: MergeableState.MERGEABLE,
+  mergeStateStatus: MergeStateStatus.CLEAN,
   potentialMergeCommit: {
     oid: 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
   },

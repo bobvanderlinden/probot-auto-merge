@@ -6,6 +6,7 @@ import { PullRequestInfo } from './../src/models'
 import { getPullRequestPlan, executeAction } from '../src/pull-request-handler'
 import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext } from './mock'
 import { mapObject } from '../src/utils'
+import { MergeStateStatus } from '../src/query.graphql';
 
 const defaultBaseRef: PullRequestInfo['baseRef'] = {
   repository: {
@@ -86,6 +87,7 @@ describe('getPullRequestPlan', () => {
         baseRef: defaultBaseRef,
         headRef: headRefInSameRepository,
         baseRefOid: '2',
+        mergeStateStatus: MergeStateStatus.BEHIND,
         repository: {
           branchProtectionRules: {
             nodes: [{
@@ -157,6 +159,7 @@ describe('getPullRequestPlan', () => {
           }
         },
         baseRefOid: '3',
+        mergeStateStatus: MergeStateStatus.BEHIND,
         repository: {
           branchProtectionRules: {
             nodes: [{

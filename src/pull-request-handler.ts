@@ -4,8 +4,8 @@ import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
 import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
-import { requiresBranchUpdate } from './pull-request-uptodate'
 import { updateStatusReportCheck } from './status-report'
+import { MergeStateStatus } from './query.graphql';
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void
@@ -60,8 +60,20 @@ export type PullRequestActions
   | ['merge', 'delete_branch']
 ) & Array<PullRequestAction>
 
+export type PullRequestPlanCode
+  = 'mergeable_unknown'
+  | 'pending_condition'
+  | 'failing_condition'
+  | 'blocked'
+  | 'dirty'
+  | 'out_of_date'
+  | 'out_of_date_on_fork'
+  | 'update_branch'
+  | 'merge_and_delete'
+  | 'merge'
+
 export type PullRequestPlan = {
-  code: 'mergeable_unknown' | 'pending_condition' | 'failing_condition' | 'out_of_date_on_fork' | 'update_branch' | 'merge_and_delete' | 'merge',
+  code: PullRequestPlanCode,
   message: string,
   actions: PullRequestActions
 }
@@ -97,14 +109,6 @@ export function getPullRequestPlan (
   const failingConditions = Object.entries(pullRequestStatus)
     .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
-  if (pullRequestInfo.mergeable === 'UNKNOWN') {
-    return {
-      code: 'mergeable_unknown',
-      message: `GitHub is determining whether the pull request is mergeable`,
-      actions: ['reschedule']
-    }
-  }
-
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
@@ -121,36 +125,67 @@ export function getPullRequestPlan (
     }
   }
 
-  // If the pull request is not up-to-date failed and we have updateBranch enabled,
-  // update the branch of the PR.
-  if (requiresBranchUpdate(pullRequestInfo) && config.updateBranch) {
-    if (isInFork(pullRequestInfo)) {
+  switch (pullRequestInfo.mergeStateStatus) {
+    case MergeStateStatus.UNKNOWN:
       return {
-        code: 'out_of_date_on_fork',
-        message: 'The pull request is out-of-date, but the head is located in another repository',
+        code: 'mergeable_unknown',
+        message: `GitHub is determining whether the pull request is mergeable`,
+        actions: ['reschedule']
+      }
+    case MergeStateStatus.HAS_HOOKS:
+      return {
+        code: 'pending_condition',
+        message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+        actions: ['reschedule']
+      }
+    case MergeStateStatus.BEHIND:
+      if (!config.updateBranch) {
+        return {
+          code: 'out_of_date',
+          message: 'The pull request is out-of-date.',
+          actions: []
+        }
+      } else if (isInFork(pullRequestInfo)) {
+        return {
+          code: 'out_of_date_on_fork',
+          message: 'The pull request is out-of-date, but the head is located in another repository',
+          actions: []
+        }
+      } else {
+        return {
+          code: 'update_branch',
+          message: 'The pull request is out-of-date. Will update it now.',
+          actions: ['update_branch', 'reschedule']
+        }
+      }
+    case MergeStateStatus.BLOCKED:
+      return {
+        code: 'blocked',
+        message: 'The pull request is blocked.',
         actions: []
       }
-    } else {
+    case MergeStateStatus.DIRTY:
       return {
-        code: 'update_branch',
-        message: 'The pull request is out-of-date. Will update it now.',
-        actions: ['update_branch', 'reschedule']
+        code: 'dirty',
+        message: 'The pull request is dirty',
+        actions: []
       }
-    }
-  }
-
-  if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
-    return {
-      code: 'merge_and_delete',
-      message: 'Will merge the pull request and delete its branch',
-      actions: ['merge', 'delete_branch']
-    }
-  } else {
-    return {
-      code: 'merge',
-      message: 'Will merge the pull request',
-      actions: ['merge']
-    }
+    case MergeStateStatus.UNSTABLE:
+    case MergeStateStatus.HAS_HOOKS:
+    case MergeStateStatus.CLEAN:
+      if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
+        return {
+          code: 'merge_and_delete',
+          message: 'Will merge the pull request and delete its branch',
+          actions: ['merge', 'delete_branch']
+        }
+      } else {
+        return {
+          code: 'merge',
+          message: 'Will merge the pull request',
+          actions: ['merge']
+        }
+      }
   }
 }
 
