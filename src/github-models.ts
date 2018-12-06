@@ -100,7 +100,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                     checkSuites: assertNotNullNodes(commit.commit.checkSuites, 'No permission to fetch checkSuites',
                       checkSuite => ({
                         ...removeTypename(checkSuite),
-                        app: assertNotNull(checkSuite.app, 'No permission to fetch app', app => removeTypename(app)),
+                        app: checkSuite.app && removeTypename(checkSuite.app),
                         checkRuns: assertNotNullNodes(checkSuite.checkRuns, 'No permission to fetch checkRuns',
                           checkRun => removeTypename(checkRun)
                         )

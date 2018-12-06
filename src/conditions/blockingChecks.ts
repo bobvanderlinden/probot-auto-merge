@@ -17,7 +17,7 @@ export default function doesNotHaveBlockingChecks (
           checkSuite
         }))
     )
-  ).filter(checkRun => checkRun.checkSuite.app.id !== myAppId)
+  ).filter(checkRun => (checkRun.checkSuite.app && checkRun.checkSuite.app.id) !== myAppId)
   const allChecksCompleted = checkRuns.every(
     checkRun => checkRun.status === CheckStatusState.COMPLETED
   )
