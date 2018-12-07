@@ -161,7 +161,7 @@ export function getPullRequestPlan (
     case MergeStateStatus.DIRTY:
       return {
         code: 'dirty',
-        message: 'The pull request is dirty',
+        message: 'The pull request has a merge conflict.',
         actions: []
       }
     case MergeStateStatus.UNSTABLE:
