@@ -132,12 +132,6 @@ export function getPullRequestPlan (
         message: `GitHub is determining whether the pull request is mergeable`,
         actions: ['reschedule']
       }
-    case MergeStateStatus.HAS_HOOKS:
-      return {
-        code: 'pending_condition',
-        message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
-        actions: ['reschedule']
-      }
     case MergeStateStatus.BEHIND:
       if (!config.updateBranch) {
         return {
