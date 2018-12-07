@@ -36,7 +36,7 @@ const appPath = [
 async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
   try {
     return await github.query(query, variables, {
-      'Accept': 'application/vnd.github.antiope-preview+json'
+      'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
     })
   } catch (e) {
     if (e && e.name === 'GraphQLQueryError') {
