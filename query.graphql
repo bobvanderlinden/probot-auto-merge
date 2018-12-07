@@ -4,6 +4,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
       number
       state
       mergeable
+      mergeStateStatus
       potentialMergeCommit {
         oid
       }

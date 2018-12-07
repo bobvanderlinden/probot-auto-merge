@@ -286,6 +286,10 @@ export interface PullRequestQuery_repository_pullRequest {
    */
   mergeable: MergeableState;
   /**
+   * Detailed information about the current pull request merge state status.
+   */
+  mergeStateStatus: MergeStateStatus;
+  /**
    * The commit that GitHub automatically generated to test if this pull request
    * could be merged. This field will not return a value if the pull request is
    * merged, or if the test merge commit is still being generated. See the
@@ -395,6 +399,19 @@ export enum CommentAuthorAssociation {
   MEMBER = "MEMBER",
   NONE = "NONE",
   OWNER = "OWNER",
+}
+
+/**
+ * Detailed status information about a pull request merge.
+ */
+export enum MergeStateStatus {
+  BEHIND = "BEHIND",
+  BLOCKED = "BLOCKED",
+  CLEAN = "CLEAN",
+  DIRTY = "DIRTY",
+  HAS_HOOKS = "HAS_HOOKS",
+  UNKNOWN = "UNKNOWN",
+  UNSTABLE = "UNSTABLE",
 }
 
 /**
