@@ -5,7 +5,7 @@ import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { updateStatusReportCheck } from './status-report'
-import { MergeStateStatus } from './query.graphql';
+import { MergeStateStatus } from './query.graphql'
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void

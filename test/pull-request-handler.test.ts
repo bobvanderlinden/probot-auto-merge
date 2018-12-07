@@ -6,7 +6,7 @@ import { PullRequestInfo } from './../src/models'
 import { getPullRequestPlan, executeAction } from '../src/pull-request-handler'
 import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext } from './mock'
 import { mapObject } from '../src/utils'
-import { MergeStateStatus } from '../src/query.graphql';
+import { MergeStateStatus } from '../src/query.graphql'
 
 const defaultBaseRef: PullRequestInfo['baseRef'] = {
   repository: {
