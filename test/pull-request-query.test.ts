@@ -1,5 +1,6 @@
 import { queryPullRequest } from '../src/pull-request-query'
-import { createGithubApi, createPullRequestInfo } from './mock'
+import { createGithubApi, createPullRequestInfo, createPullRequestQuery } from './mock'
+import { GraphQLQueryError } from 'probot/lib/github';
 
 describe('queryPullRequest', () => {
   it('should do a single graphql query', async () => {
@@ -65,5 +66,60 @@ describe('queryPullRequest', () => {
       }),
       { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
     )).rejects.toThrowError('No permission to source repository of pull request')
+  })
+
+  it('should captureError on query error', async () => {
+    const Raven = require('raven')
+    const captureException = jest.fn()
+    Raven.captureException = captureException
+    const queryResult = createPullRequestQuery(createPullRequestInfo())
+    const query = jest.fn(() => {
+      throw new GraphQLQueryError([{
+        extensions: [],
+        locations: [],
+        message: '',
+        path: ['repository', 'some', 'field']
+      }], '', {}, queryResult)
+    })
+    await queryPullRequest(
+      createGithubApi({
+        query
+      }),
+      { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
+    )
+    expect(captureException).toBeCalled()
+  })
+
+  it('should captureError on query error', async () => {
+    const Raven = require('raven')
+    const captureException = jest.fn()
+    Raven.captureException = captureException
+    const queryResult = createPullRequestQuery(createPullRequestInfo())
+    const query = jest.fn(() => {
+      throw new GraphQLQueryError([{
+        extensions: [],
+        locations: [],
+        message: '',
+        path: [
+          'repository',
+          'pullRequest',
+          'commits',
+          'nodes',
+          0,
+          'commit',
+          'checkSuites',
+          'nodes',
+          2,
+          'app'
+        ]
+      }], '', {}, queryResult)
+    })
+    await queryPullRequest(
+      createGithubApi({
+        query
+      }),
+      { owner: 'bobvanderlinden', repo: 'probot-auto-merge', number: 1 }
+    )
+    expect(captureException).not.toBeCalled()
   })
 })
