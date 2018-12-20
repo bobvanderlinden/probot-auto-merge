@@ -5,10 +5,6 @@ node_js:
 notifications:
   email: false
 
-env:
-  global:
-  - secure: LnQ0W1wqRzxa6MaqQbEbsC7Xpg5MTJgXcMkfVwqk8PESIvpmznLP8vZ3QD0rPtZQa2E+46nD9lfNNWp+8MOOHcrBahF/UxPnLGZ8ieeReh725Y9rSrh7vncfX0AYfpZ6fiQdXnhvL+347nLQn9pzOq9xYcWNiw6LUPmyP5PSHUoqE9u7nNjZ99iaTu2KwfGcg683l2uydStkIacE/eqlDkqQUUhVukCLxKBhSlNJHT/WBMOjIlGoZI98MD/+6eRTkoLFru4BNuNqFpEW3KscruRps+/mAhQlRWIO/YZubRujxfe1vwUDFdQZPVcQQ4JH3Un7CI9u3oHzKPQnoi8kDwvdUHjMcjuUffp5yqc34So091rFFZUmav93oWZfSZIWFLXZmX0xP8WvZH9cAcJ07EZllsolcoX7zpxu78yiz8+OdGyt8UAlIXGXsmWnqQRE/J4vBZgIDy//65fEr5YzoSlmTJBkT/S/TB0M2/TVvI3BOUwEd27qfBXP5ZoijopSNQR6SJjBU97DTNjDD/i9SQCXBPwzrf2t/kRfR33Ifo2C/xWoUjF19zFz//3/4e5OJd/DkSMq3u4p5I3JuUQg3tSdk4NeKs7+8vFUNKW3U78FRgMSBd462NyIeTMkNK44U1OiKbduuWoRtrZpwNAJ1iyyZnOUoErnQ3tvIy/LBfg=
-
 jobs:
   include:
   - stage: build
@@ -16,7 +12,6 @@ jobs:
   - stage: test
     script: npm run test:travis
   - stage: release
-    node_js: lts/*
     script: skip
     deploy:
       provider: script
