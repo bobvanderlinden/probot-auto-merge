@@ -1,6 +1,6 @@
 {
   "name": "probot-auto-merge",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "A Probot app that automatically merges PRs",
   "author": "Bob van der Linden <bobvanderlinden@gmail.com> (https://github.com/bobvanderlinden)",
   "license": "ISC",
@@ -24,7 +24,8 @@
     "heroku-postbuild": "npm run build",
     "schema:download": "apollo service:download --endpoint https://api.github.com/graphql --header \"Authorization: bearer $GITHUB_TOKEN\" --header \"Accept: application/vnd.github.antiope-preview, application/vnd.github.merge-info-preview+json\"",
     "schema:codegen": "apollo client:codegen --target typescript --config=apollo.config.js --outputFlat src/query.graphql.ts",
-    "schema:update": "npm run schema:download && npm run schema:codegen"
+    "schema:update": "npm run schema:download && npm run schema:codegen",
+    "semantic-release": "semantic-release"
   },
   "dependencies": {
     "@mojotech/json-type-validation": "*",
@@ -51,7 +52,8 @@
     "ts-jest": "*",
     "tslint": "*",
     "tslint-config-standard": "*",
-    "typescript": "*"
+    "typescript": "*",
+    "semantic-release": "^15.13.1"
   },
   "engines": {
     "node": "8.3.x",
