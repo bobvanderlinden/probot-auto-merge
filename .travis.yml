@@ -13,7 +13,7 @@ stages:
   - build
   - test
   - name: release
-    if: branch = master
+    if: branch = release-experiment
 
 jobs:
   include:
