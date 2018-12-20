@@ -37,7 +37,7 @@ The configuration fields are as follows:
 
 The minimum number of reviews from each association that approve the pull request before
 doing an automatic merge. For more information about associations see:
-https://developer.github.com/v4/reference/enum/commentauthorassociation/
+https://developer.github.com/v4/enum/commentauthorassociation/
 
 Possible associations: `OWNER`, `MEMBER`, `COLLABORATOR`, `CONTRIBUTOR`, `FIRST_TIMER`, `FIRST_TIME_CONTRIBUTOR`, `NONE`
 
