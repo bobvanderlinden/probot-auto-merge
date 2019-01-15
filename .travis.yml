@@ -2,12 +2,10 @@ sudo: false
 language: node_js
 node_js:
 - '8.3'
-cache:
-  ccache: true
+cache: 
+  npm: true
   directories:
-    - $HOME/.npm
-    - $TRAVIS_BUILD_DIR/.cache
-    - $TRAVIS_BUILD_DIR/node_modules
+  - ~/.cache
 notifications:
   email: false
 
