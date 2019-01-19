@@ -1,7 +1,8 @@
 sudo: false
 language: node_js
 node_js:
-- '8.3'
+- '10.15.0'
+cache: npm
 notifications:
   email: false
 
