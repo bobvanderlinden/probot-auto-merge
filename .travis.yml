@@ -20,4 +20,4 @@ jobs:
       script: npx semantic-release
       on:
         branch: master
-        condition: env(GITHUB_TOKEN) IS present
+        condition: "$GITHUB_TOKEN" != ""
