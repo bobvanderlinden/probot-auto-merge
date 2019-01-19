@@ -8,7 +8,8 @@ import { updateStatusReportCheck } from './status-report'
 import { MergeStateStatus } from './query.graphql'
 
 export interface PullRequestContext extends HandlerContext {
-  reschedulePullRequest: () => void
+  reschedulePullRequest: () => void,
+  startedAt: Date
 }
 
 export async function handlePullRequest (

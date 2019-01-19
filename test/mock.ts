@@ -118,6 +118,7 @@ export function createPullRequestContext (options?: Partial<PullRequestContext>)
   return {
     ...createHandlerContext(options),
     reschedulePullRequest: () => undefined,
+    startedAt: new Date('2018-07-15T20:54:39Z'),
     ...options
   }
 }

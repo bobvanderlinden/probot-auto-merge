@@ -16,6 +16,7 @@ export async function updateStatusReportCheck (
     conclusion: 'neutral',
     status: 'completed',
     name: string,
+    started_at: string,
     completed_at: string,
     output: ChecksCreateParams['output'],
     owner: string,
@@ -24,6 +25,7 @@ export async function updateStatusReportCheck (
     conclusion: 'neutral',
     status: 'completed',
     name: 'auto-merge',
+    started_at: context.startedAt.toISOString(),
     completed_at: new Date().toISOString(),
     output: {
       title,
