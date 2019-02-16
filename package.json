@@ -19,7 +19,7 @@
     "start": "probot run ./lib/index.js",
     "lint": "tslint --project . --fix",
     "test": "jest && tslint --project .",
-    "test:travis": "jest --coverage --coverageReporters=text-lcov | coveralls && tslint --project .",
+    "test:travis": "jest --coverage --coverageReporters=text-lcov > coverage && (cat coverage | coveralls) && tslint --project .",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
     "heroku-postbuild": "npm run build",
     "schema:download": "apollo service:download --endpoint https://api.github.com/graphql --header \"Authorization: bearer $GITHUB_TOKEN\" --header \"Accept: application/vnd.github.antiope-preview, application/vnd.github.merge-info-preview+json\"",
