@@ -19,7 +19,8 @@
     "start": "probot run ./lib/index.js",
     "lint": "tslint --project . --fix",
     "test": "jest && tslint --project .",
-    "test:travis": "jest --coverage --coverageReporters=text-lcov > coverage && (cat coverage | coveralls) && tslint --project .",
+    "test:travis": "npm run test:ci",
+    "test:ci": "jest --coverage && codecov && tslint --project .",
     "test:watch": "jest --watch --notify --notifyMode=change --coverage",
     "heroku-postbuild": "npm run build",
     "schema:download": "apollo service:download --endpoint https://api.github.com/graphql --header \"Authorization: bearer $GITHUB_TOKEN\" --header \"Accept: application/vnd.github.antiope-preview, application/vnd.github.merge-info-preview+json\"",
@@ -44,16 +45,17 @@
     "@types/p-queue": "*",
     "@types/raven": "*",
     "apollo": "^2.1.8",
+    "codecov": "^3.2.0",
     "coveralls": "*",
     "jest": "*",
     "nodemon": "^1.18.9",
+    "semantic-release": "^15.13.1",
     "smee-client": "*",
     "standard": "*",
     "ts-jest": "*",
     "tslint": "*",
     "tslint-config-standard": "*",
-    "typescript": "*",
-    "semantic-release": "^15.13.1"
+    "typescript": "*"
   },
   "engines": {
     "node": "10.15.0",
@@ -80,6 +82,7 @@
       "json",
       "node"
     ],
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coverageDirectory": "./coverage/"
   }
 }
