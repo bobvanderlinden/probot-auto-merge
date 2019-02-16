@@ -195,7 +195,7 @@ it('pending check run', async () => {
   expect(github.query).toHaveBeenCalled()
   expect(setTimeout).toHaveBeenCalled()
   expect(github.pullRequests.merge).not.toHaveBeenCalled()
-  github.query = jest.fn(() => {
+  github.query = jest.fn(async () => {
     return {
       repository: {
         pullRequest: {

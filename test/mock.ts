@@ -346,8 +346,17 @@ export function createCheckSuiteCompletedEvent (pullRequest: PullRequestReferenc
   }
 }
 
+export function createResponse<T> (options: Partial<Response<T>>): Response<T> {
+  return {
+    data: null,
+    status: 200,
+    headers: {},
+    ...options
+  } as any as Response<T>
+}
+
 export function createOkResponse<T> (): (...args: any[]) => Response<T> {
-  return jest.fn(() => ({ status: 200 }))
+  return jest.fn(() => createResponse({ status: 200 }))
 }
 
 export function createGithubApiFromPullRequestInfo (opts: {
