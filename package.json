@@ -33,7 +33,7 @@
     "bunyan-sentry-stream": "^1.2.1",
     "debug": "^4.1.1",
     "minimatch": "^3.0.4",
-    "probot": "^7.4.0",
+    "probot": "^9.0.0",
     "probot-config": "^1.0.1",
     "raven": "^2.6.4"
   },
