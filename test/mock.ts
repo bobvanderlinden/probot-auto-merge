@@ -9,7 +9,7 @@ import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
 import { Response } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
-import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
+import { MergeStateStatus, RepositoryQuery } from '../src/query.graphql'
 
 export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
@@ -17,7 +17,19 @@ export const defaultPullRequestInfo: PullRequestInfo = {
   mergeable: MergeableState.MERGEABLE,
   mergeStateStatus: MergeStateStatus.CLEAN,
   potentialMergeCommit: {
-    oid: 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+    oid: 'da39a3ee5e6b4b0d3255bfef95601890afd80709',
+    parents: {
+      nodes: [{
+        oid: ''
+      }, {
+        oid: ''
+      }]
+    }
+  },
+  repository: {
+    branchProtectionRules: {
+      nodes: []
+    }
   },
   baseRef: {
     name: 'master',
@@ -61,11 +73,6 @@ export const defaultPullRequestInfo: PullRequestInfo = {
       }
     }]
   },
-  repository: {
-    branchProtectionRules: {
-      nodes: []
-    }
-  },
   title: 'Add some feature'
 }
 
@@ -74,6 +81,35 @@ export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo
     ...defaultPullRequestInfo,
     ...pullRequestInfo
   }
+}
+
+export function createRepositoryQuery (repositoryQuery?: Partial<RepositoryQuery>): RepositoryQuery {
+  return {
+    ...repositoryQuery,
+    repository: {
+      ...repositoryQuery.repository,
+      configFile: null,
+      pullRequests: {
+        nodes: []
+      },
+      branchProtectionRules: {
+        nodes: []
+      }
+    }
+  } as RepositoryQuery
+}
+
+export function createRepositoryQueryFromPullRequestInfo (pullRequestInfo: PullRequestInfo) {
+  return createRepositoryQuery({
+    repository: {
+      pullRequests: {
+        nodes: [pullRequestInfo]
+      },
+      branchProtectionRules: {
+        ...pullRequestInfo.repository.branchProtectionRules
+      }
+    }
+  } as any)
 }
 
 export function createGithubApi (options?: DeepPartial<GitHubAPI>): GitHubAPI {
@@ -117,7 +153,6 @@ export function createHandlerContext (options?: Partial<HandlerContext>): Handle
 export function createPullRequestContext (options?: Partial<PullRequestContext>): PullRequestContext {
   return {
     ...createHandlerContext(options),
-    reschedulePullRequest: () => undefined,
     startedAt: new Date('2018-07-15T20:54:39Z'),
     ...options
   }
@@ -364,15 +399,6 @@ export function createGithubApiFromPullRequestInfo (opts: {
   config: string
 }): GitHubAPI {
   return createGithubApi(createPartialGithubApiFromPullRequestInfo(opts))
-}
-
-export function createPullRequestQuery (pullRequestInfo: PullRequestInfo): PullRequestQuery {
-  return {
-    repository: {
-      __typename: 'Repository',
-      pullRequest: pullRequestInfo as any
-    }
-  }
 }
 
 function createPartialGithubApiFromPullRequestInfo (opts: {

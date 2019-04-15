@@ -46,9 +46,6 @@ export class RepositoryWorker {
       ...this.context,
       log,
       pullRequest: pullRequestReference,
-      reschedulePullRequest: (delay: number = 60 * 1000) => {
-        this.waitQueue.queueFirst(pullRequestNumber, delay)
-      },
       startedAt: new Date()
     }
     try {

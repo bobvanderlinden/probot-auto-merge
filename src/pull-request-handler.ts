@@ -1,55 +1,8 @@
-import Raven from 'raven'
-import { conditions } from './conditions/index'
-import { HandlerContext, PullRequestReference, PullRequestInfo } from './models'
-import { result } from './utils'
-import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
-import { queryPullRequest } from './pull-request-query'
-import { updateStatusReportCheck } from './status-report'
+import { HandlerContext } from './../lib/models.d'
+import { PullRequestInfo } from './models'
+import { PullRequestStatus } from './pull-request-status'
 import { MergeStateStatus } from './query.graphql'
-
-export interface PullRequestContext extends HandlerContext {
-  reschedulePullRequest: () => void,
-  startedAt: Date
-}
-
-export async function handlePullRequest (
-  context: PullRequestContext,
-  pullRequestReference: PullRequestReference
-) {
-  const { log } = context
-  context.log.debug('Querying', pullRequestReference)
-  const pullRequestInfo = await queryPullRequest(
-    context.github,
-    pullRequestReference
-  )
-
-  Raven.mergeContext({
-    extra: {
-      pullRequestInfo
-    }
-  })
-
-  const pullRequestStatus = getPullRequestStatus(
-    context,
-    conditions,
-    pullRequestInfo
-  )
-
-  context.log.debug('pullRequestStatus:', pullRequestStatus)
-
-  Raven.mergeContext({
-    extra: {
-      pullRequestStatus
-    }
-  })
-
-  log(`result:\n${JSON.stringify(pullRequestStatus, null, 2)}`)
-  await handlePullRequestStatus(
-    context,
-    pullRequestInfo,
-    pullRequestStatus
-  )
-}
+import { Config } from './config'
 
 export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'delete_branch'
 export type PullRequestActions
@@ -79,6 +32,10 @@ export type PullRequestPlan = {
   actions: PullRequestActions
 }
 
+export type PullRequestContext = {
+  startedAt: Date
+} & HandlerContext
+
 function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
   return Object.entries(pullRequestStatus)
     .map(([name, result]) => {
@@ -100,7 +57,7 @@ function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
  * Determines which actions to take based on the pull request and the condition results
  */
 export function getPullRequestPlan (
-  context: HandlerContext,
+  context: { config: Config },
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
 ): PullRequestPlan {
@@ -191,37 +148,6 @@ function isInFork (pullRequestInfo: PullRequestInfo): boolean {
   )
 }
 
-/**
- * Deletes the branch of the pull request
- */
-async function deleteBranch (
-  context: HandlerContext,
-  pullRequestInfo: PullRequestInfo
-) {
-  return result(
-    await context.github.gitdata.deleteRef({
-      owner: pullRequestInfo.headRef.repository.owner.login,
-      repo: pullRequestInfo.headRef.repository.name,
-      ref: `heads/${pullRequestInfo.headRef.name}`
-    })
-  )
-}
-
-export async function executeActions (
-  context: PullRequestContext,
-  pullRequestInfo: PullRequestInfo,
-  actions: PullRequestAction[]
-) {
-  for (let action of actions) {
-    try {
-      await executeAction(context, pullRequestInfo, action)
-    } catch (err) {
-      await updateStatusReportCheck(context, pullRequestInfo, `Failed to ${getPullRequestActionName(action)}`, err.toString())
-      throw err
-    }
-  }
-}
-
 export function getPullRequestActionName (action: PullRequestAction) {
   return ({
     'delete_branch': 'delete branch',
@@ -229,90 +155,4 @@ export function getPullRequestActionName (action: PullRequestAction) {
     'reschedule': 'reschedule',
     'update_branch': 'update branch'
   })[action]
-}
-
-export async function executeAction (
-  context: PullRequestContext,
-  pullRequestInfo: PullRequestInfo,
-  action: PullRequestAction
-): Promise<void> {
-  context.log.debug('Executing action:', action)
-  switch (action) {
-    case 'update_branch':
-      return updateBranch(context, pullRequestInfo)
-    case 'reschedule':
-      return context.reschedulePullRequest()
-    case 'merge':
-      return mergePullRequest(context, pullRequestInfo)
-    case 'delete_branch':
-      return deleteBranch(context, pullRequestInfo)
-    default:
-      throw new Error('Invalid PullRequestAction ' + action)
-  }
-}
-
-/**
- * Merges the base reference of the pull request onto the pull request branch
- * This is the equivalent of pushing the 'Update branch' button
- */
-async function updateBranch (
-  context: PullRequestContext,
-  pullRequestInfo: PullRequestInfo
-) {
-  // This merges the baseRef on top of headRef of the PR.
-  return result(await context.github.repos.merge({
-    owner: pullRequestInfo.headRef.repository.owner.login,
-    repo: pullRequestInfo.headRef.repository.name,
-    base: pullRequestInfo.headRef.name,
-    head: pullRequestInfo.baseRef.name
-  }))
-}
-
-function getPullRequestReference (pullRequestInfo: PullRequestInfo) {
-  return {
-    owner: pullRequestInfo.baseRef.repository.owner.login,
-    repo: pullRequestInfo.baseRef.repository.name,
-    number: pullRequestInfo.number
-  }
-}
-
-/**
- * Presses the merge button on a pull request
- */
-async function mergePullRequest (
-  context: HandlerContext,
-  pullRequestInfo: PullRequestInfo
-) {
-  const { config } = context
-  const pullRequestReference = getPullRequestReference(pullRequestInfo)
-  // This presses the merge button.
-  result(
-    await context.github.pullRequests.merge({
-      ...pullRequestReference,
-      merge_method: config.mergeMethod
-    })
-  )
-}
-
-export async function handlePullRequestStatus (
-  context: PullRequestContext,
-  pullRequestInfo: PullRequestInfo,
-  pullRequestStatus: PullRequestStatus
-) {
-  const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
-
-  await updateStatusReportCheck(context, pullRequestInfo,
-    plan.actions.some(action => action === 'merge')
-      ? 'Merging'
-      : plan.actions.some(action => action === 'update_branch')
-      ? 'Updating branch'
-      : plan.actions.some(action => action === 'reschedule')
-      ? 'Waiting'
-      : 'Not merging',
-    plan.message
-  )
-
-  const { actions } = plan
-  context.log.debug('Actions:', actions)
-  await executeActions(context, pullRequestInfo, actions)
 }

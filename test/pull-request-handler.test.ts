@@ -346,16 +346,4 @@ describe('executeAction with action', () => {
       head: 'master'
     })
   })
-
-  it('reschedule', async () => {
-    const reschedulePullRequest = jest.fn(() => undefined)
-    await executeAction(
-      createPullRequestContext({
-        reschedulePullRequest
-      }),
-      createPullRequestInfo(),
-      'reschedule'
-    )
-    expect(reschedulePullRequest).toHaveBeenCalledTimes(1)
-  })
 })

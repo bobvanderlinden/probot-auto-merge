@@ -1,6 +1,6 @@
-{ pkgs ? import <nixpkgs> { } }:
+{ pkgs ? import (builtins.fetchTarball (builtins.fromJSON (builtins.readFile ./nixpkgs.lock.json))) { } }:
 with pkgs;
-stdenv.mkDerivation {
+mkShell {
   name = "probot-auto-merge";
-  buildInputs = [ heroku nodejs-10_x python ];
+  buildInputs = builtins.map (name: builtins.getAttr name pkgs) (builtins.fromJSON (builtins.readFile ./pkgs.json));
 }

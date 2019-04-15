@@ -1,11 +1,12 @@
 import { captureException } from 'raven'
-import { PullRequestReference, PullRequestInfo } from './github-models'
-import { PullRequestQueryVariables } from './query.graphql'
+import { RepositoryReference, QueryResult } from './github-models'
+import { RepositoryQueryVariables, RepositoryQuery } from './query.graphql'
 import { Context } from 'probot'
 import { GitHubAPI, GraphQLQueryError } from 'probot/lib/github'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
+import { validateQuery } from './query-validator';
+const queryGraphqlString = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
 
 const isNumber = (v: string | number) => typeof v === 'number'
 type Matcher = string | number | ((v: string | number) => boolean)
@@ -35,9 +36,9 @@ const appPath = [
   'app'
 ]
 
-async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
+async function graphQLQuery (github: GitHubAPI, variables: RepositoryQueryVariables): Promise<RepositoryQuery> {
   try {
-    return await github.query(query, variables, {
+    return await github.query(queryGraphqlString, variables, {
       'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
     })
   } catch (e) {
@@ -52,21 +53,18 @@ async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVaria
         captureException(queryError)
       }
 
-      return queryError.data as PullRequestQuery
+      return queryError.data as RepositoryQuery
     } else {
       throw e
     }
   }
 }
 
-export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
+export async function query (github: Context['github'], { owner, repo }: RepositoryReference): Promise<QueryResult> {
   const response = await graphQLQuery(github, {
     'owner': owner,
-    'repo': repo,
-    'pullRequestNumber': pullRequestNumber
+    'repo': repo
   })
 
-  const checkedResponse = validatePullRequestQuery(response)
-
-  return checkedResponse.repository.pullRequest
+  return validateQuery(response)
 }

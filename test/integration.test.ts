@@ -12,7 +12,7 @@ import {
   createCheckSuiteCompletedEvent,
   createCheckRunCreatedEvent,
   createCommitsWithCheckSuiteWithCheckRun,
-  createPullRequestQuery
+  createRepositoryQueryFromPullRequestInfo
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
@@ -324,7 +324,7 @@ it('to report error and continue when graphql query contained errors', async () 
     })
   })
 
-  const pullRequestQuery = createPullRequestQuery(pullRequestInfo)
+  const pullRequestQuery = createRepositoryQueryFromPullRequestInfo(pullRequestInfo)
 
   const github = createGithubApi({
     repos: {

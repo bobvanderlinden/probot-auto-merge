@@ -1,5 +1,4 @@
 import { Application, Context } from 'probot'
-import { loadConfig } from './config'
 import { HandlerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
@@ -7,8 +6,15 @@ import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
 
+function stringifyRepositoryReference (reference: RepositoryReference) {
+  return `${reference.owner}/${reference.repo}`
+}
+
+function stringifyPullRequestReference (reference: PullRequestReference) {
+  return `${stringifyRepositoryReference(reference)}#${reference.number}`
+}
+
 async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
-  const config = await loadConfig(options.context)
   return {
     config,
     github: options.context.github,
@@ -54,10 +60,6 @@ function setupSentry (app: Application) {
 export = (app: Application) => {
   setupSentry(app)
 
-  const repositoryWorkers = new RepositoryWorkers(
-    onPullRequestError
-  )
-
   function onPullRequestError (pullRequest: PullRequestReference, error: any) {
     const repositoryName = `${pullRequest.owner}/${pullRequest.repo}`
     const pullRequestName = `${repositoryName}#${pullRequest.number}`
@@ -73,16 +75,36 @@ export = (app: Application) => {
     console.error(`Error while processing pull request ${pullRequestName}:`, error)
   }
 
-  async function handlePullRequests (app: Application, context: Context, repository: RepositoryReference, headSha: string, pullRequestNumbers: number[]) {
-    await useHandlerContext({ app, context }, async (handlerContext) => {
-      for (let pullRequestNumber of pullRequestNumbers) {
-        repositoryWorkers.queue(handlerContext, {
-          owner: repository.owner,
-          repo: repository.repo,
-          number: pullRequestNumber
-        })
-      }
+  const workers: { [name: string]: 'working' | 'requeued' } = {}
+
+  async function handleWork (app: Application, context: Context, repository: RepositoryReference) {
+    await handleRepository({
+      github: context.github,
+      log: context.log,
+      repository
     })
+
+    const repositoryName = stringifyRepositoryReference(repository)
+    if (workers[repositoryName] === 'requeued') {
+      workers[repositoryName] = 'working'
+      await handleWork(app, context, repository)
+    }
+  }
+
+  async function queueWork (app: Application, context: Context, repository: RepositoryReference) {
+    const repositoryRef = stringifyRepositoryReference(repository)
+    const currentRepositoryState = workers[repositoryRef]
+    switch (currentRepositoryState) {
+      case undefined:
+        workers[repositoryRef] = 'working'
+        await handleRepository(app, context, repository)
+        break
+      case 'working':
+        workers[repositoryRef] = 'requeued'
+        break
+      case 'requeued':
+        break
+    }
   }
 
   app.on([
@@ -97,10 +119,10 @@ export = (app: Application) => {
     'pull_request_review.edited',
     'pull_request_review.dismissed'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await queueRepository(app, context, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.pull_request.head_sha, [context.payload.pull_request.number])
+    })
   })
 
   app.on([
@@ -111,38 +133,38 @@ export = (app: Application) => {
       return
     }
 
-    await handlePullRequests(app, context, {
+    await queueRepository(app, context, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
+    })
   })
 
   app.on([
     'check_run.rerequested',
     'check_run.requested_action'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await queueRepository(app, context, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
+    })
   })
 
   app.on([
     'check_suite.requested',
     'check_suite.rerequested'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await queueRepository(app, context, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
+    })
   })
 
   app.on([
     'check_suite.completed'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await queueRepository(app, context, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
+    })
   })
 }

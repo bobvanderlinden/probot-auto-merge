@@ -1,5 +1,5 @@
 import { queryPullRequest } from '../src/pull-request-query'
-import { createGithubApi, createPullRequestInfo, createPullRequestQuery } from './mock'
+import { createGithubApi, createPullRequestInfo, createRepositoryQuery } from './mock'
 import { GraphQLQueryError } from 'probot/lib/github';
 
 describe('queryPullRequest', () => {
@@ -72,7 +72,7 @@ describe('queryPullRequest', () => {
     const Raven = require('raven')
     const captureException = jest.fn()
     Raven.captureException = captureException
-    const queryResult = createPullRequestQuery(createPullRequestInfo())
+    const queryResult = createRepositoryQuery(createPullRequestInfo())
     const query = jest.fn(() => {
       throw new GraphQLQueryError([{
         extensions: [],
@@ -94,7 +94,7 @@ describe('queryPullRequest', () => {
     const Raven = require('raven')
     const captureException = jest.fn()
     Raven.captureException = captureException
-    const queryResult = createPullRequestQuery(createPullRequestInfo())
+    const queryResult = createRepositoryQuery(createPullRequestInfo())
     const query = jest.fn(() => {
       throw new GraphQLQueryError([{
         extensions: [],

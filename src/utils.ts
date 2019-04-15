@@ -55,6 +55,10 @@ export function merge<A, B> (a: A, b: B): A & B {
   return Object.assign({}, a, b) as any
 }
 
+export function intersection<T> (a: Array<T>, b: Array<T>): Array<T> {
+  return a.filter(item => b.includes(item))
+}
+
 export function arrayToMap<TKey extends string, TValue, TItem> (
   arr: Array<TItem>,
   keyFn: (item: TItem) => TKey,
@@ -83,6 +87,15 @@ export function groupByCount<TKey extends string, TItem> (
       [key]: newValue + 1
     })
   }, {})
+}
+
+export function mapKeys<TKeyOut extends string, TValue> (map: { [key in string]?: TValue }, keyMapFn: (key: string) => TKeyOut): { [key in TKeyOut]?: TValue } {
+  return arrayToMap(
+    mapToArray(map)
+      .map(([key, value]) => [keyMapFn(key), value]),
+    entry => entry[0],
+    entry => entry[1]
+  )
 }
 
 export function mapToArray<TKey extends string, TValue> (map: { [key in TKey]?: TValue }) {

@@ -1,5 +1,5 @@
-import { ConditionConfig } from './config'
-import { HandlerContext, PullRequestInfo } from './models'
+import { ConditionConfig, Config } from './config'
+import { PullRequestInfo } from './models'
 import { ConditionResult, Condition } from './condition'
 
 import { Conditions, ConditionResults, ConditionName } from './conditions/'
@@ -29,7 +29,7 @@ export function getFirstSuccessfulResults (ruleConfigs: ConditionConfig[], condi
 }
 
 export function getPullRequestStatus (
-  context: HandlerContext,
+  context: { config: Config },
   conditions: Conditions,
   pullRequestInfo: PullRequestInfo
 ): PullRequestStatus {

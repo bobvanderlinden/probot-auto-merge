@@ -1,59 +1,67 @@
-query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
+query RepositoryQuery($owner: String!, $repo: String!) {
   repository(owner: $owner, name: $repo) {
-    pullRequest(number: $pullRequestNumber) {
-      number
-      state
-      mergeable
-      mergeStateStatus
-      potentialMergeCommit {
-        oid
+    configFile: object(expression: "master:.github/auto-merge.yml") {
+      ... on Blob {
+        __typename
+        text
       }
-      reviews(last: 100) {
-        nodes {
-          authorAssociation
-          author {
-            login
-          }
-          submittedAt
-          state
-        }
-      }
-      labels(last: 100) {
-        nodes {
-          name
-        }
-      }
-      title
-      authorAssociation
-      baseRef {
-        repository {
-          owner {
-            login
-          }
-          name
-        }
-        target{
+    }
+    pullRequests(states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}, first: 10) {
+      nodes {
+        number
+        state
+        mergeable
+        mergeStateStatus
+        potentialMergeCommit {
           oid
+          parents(first: 3) {
+            nodes {
+              oid
+            }
+          }
         }
-        name
-      }
-      baseRefOid
-      commits(last: 1) {
-        nodes {
-          commit {
-            checkSuites(last: 10) {
-              nodes {
-                app {
-                  id
-                }
-                status
-                conclusion
-                checkRuns(last: 10) {
-                  nodes {
+        reviews(last: 100) {
+          nodes {
+            authorAssociation
+            author {
+              login
+            }
+            submittedAt
+            state
+          }
+        }
+        labels(last: 100) {
+          nodes {
+            name
+          }
+        }
+        title
+        authorAssociation
+        baseRef {
+          ...refInfo
+        }
+        baseRefOid
+        headRef {
+          ...refInfo
+        }
+        headRefOid
+        commits(last: 1) {
+          nodes {
+            commit {
+              checkSuites(last: 10) {
+                nodes {
+                  app {
                     id
-                    name
-                    conclusion
-                    status
+                  }
+                  status
+                  conclusion
+                  checkRuns(last: 10) {
+                    nodes {
+                      id
+                      name
+                      conclusion
+                      status
+                    }
                   }
                 }
               }
@@ -61,29 +69,27 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
           }
         }
       }
-      headRef {
-        repository {
-          owner {
-            login
-          }
-          name
-        }
-        target{
-          oid
-        }
-        name
-      }
-      headRefOid
-      repository {
-        branchProtectionRules(last: 100) {
-          nodes {
-            pattern
-            restrictsPushes
-            requiresStrictStatusChecks
-            requiredStatusCheckContexts
-          }
-        }
+    }
+    branchProtectionRules(last: 100) {
+      nodes {
+        pattern
+        restrictsPushes
+        requiresStrictStatusChecks
+        requiredStatusCheckContexts
       }
     }
   }
+}
+
+fragment refInfo on Ref {
+  repository {
+    owner {
+      login
+    }
+    name
+  }
+  target {
+    oid
+  }
+  name
 }
