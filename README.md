@@ -256,6 +256,26 @@ See https://probot.github.io/docs/development/#configuring-a-github-app
 npm run build && npm run dev
 ```
 
+### Running on Docker
+
+This will build and run the app on a container called `probot-auto-merge`:
+
+```sh
+npm run docker
+```
+
+To just build the container image:
+
+```sh
+npm run docker:build
+```
+
+To run the built image:
+
+```sh
+npm run docker:run
+```
+
 ## Contributing
 
 If you have suggestions for how probot-auto-merge could be improved, or want to report a bug, open an issue! We'd love all and any contributions.

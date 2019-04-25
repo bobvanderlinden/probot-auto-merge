@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+
+coverage
+lib
+
+.vscode/
+*.code-workspace
+
+*.md
+.github/
+.git/
+.gitignore
