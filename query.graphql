@@ -44,13 +44,13 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
             checkSuites(last: 10) {
               nodes {
                 app {
-                  id
+                  databaseId
                 }
                 status
                 conclusion
                 checkRuns(last: 10) {
                   nodes {
-                    id
+                    databaseId
                     name
                     conclusion
                     status
