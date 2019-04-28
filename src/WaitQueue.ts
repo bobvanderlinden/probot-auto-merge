@@ -97,10 +97,11 @@ export class WaitQueue<T> {
   public queueLast (work: T, delay: number = 0) {
     this.queueTaskLast(this.createTasks(work, delay))
   }
-  public stopWaitingFor (id: string) {
+  public stopWaitingFor (work: T) {
+    const workId = this.getId(work)
     if (this.runningTask !== null &&
       this.runningTask.task.type === 'wait' &&
-      this.runningTask.task.id === id &&
+      this.runningTask.task.id === workId &&
       this.runningTask.promise.cancel) {
       this.runningTask.promise.cancel()
     }
