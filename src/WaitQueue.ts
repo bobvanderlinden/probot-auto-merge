@@ -106,6 +106,17 @@ export class WaitQueue<T> {
     }
   }
 
+  public queue (work: T) {
+    const workId = this.getId(work)
+    if (this.runningTask !== null &&
+      this.runningTask.task.id === workId) {
+      // Currently handling this task. Reschedule this work on top.
+      this.queueFirst(work)
+    } else {
+      this.queueLast(work)
+    }
+  }
+
   public currentTask (): WaitQueueTask<T> | null {
     return this.runningTask && this.runningTask.task
   }

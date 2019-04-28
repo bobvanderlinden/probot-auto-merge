@@ -49,7 +49,7 @@ export class RepositoryWorker {
 
   public queue (pullRequestNumber: number) {
     this.waitQueue.stopWaitingFor(`${pullRequestNumber}`)
-    this.waitQueue.queueLast(pullRequestNumber)
+    this.waitQueue.queue(pullRequestNumber)
     this.context.log.debug(`Queued ${pullRequestNumber}`, {
       current: this.waitQueue.currentTask(),
       queued: this.waitQueue.getQueuedTasks()
