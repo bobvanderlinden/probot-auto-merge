@@ -1,22 +1,27 @@
 import { Application, Context } from 'probot'
 import { loadConfig } from './config'
-import { HandlerContext } from './models'
+import { WorkerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
 
-async function getHandlerContext (options: {app: Application, context: Context}): Promise<HandlerContext> {
-  const config = await loadConfig(options.context)
+async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
+  const { app, context, installationId } = options
+  const config = await loadConfig(context)
+  const log = app.log
+  const createGitHubAPI = async () => {
+    return app.auth(installationId, log)
+  }
   return {
-    config,
-    github: options.context.github,
-    log: options.app.log
+    createGitHubAPI,
+    log,
+    config
   }
 }
 
-async function useHandlerContext (options: {app: Application, context: Context}, fn: (handlerContext: HandlerContext) => Promise<void>): Promise<void> {
+async function useWorkerContext (options: {app: Application, context: Context, installationId: number}, fn: (WorkerContext: WorkerContext) => Promise<void>): Promise<void> {
   await Raven.context({
     tags: {
       owner: options.context.payload.repository.owner.login,
@@ -26,8 +31,8 @@ async function useHandlerContext (options: {app: Application, context: Context},
       event: options.context.event
     }
   }, async () => {
-    const handlerContext = await getHandlerContext(options)
-    await fn(handlerContext)
+    const workerContext = await getWorkerContext(options)
+    await fn(workerContext)
   })
 }
 
@@ -73,10 +78,10 @@ export = (app: Application) => {
     console.error(`Error while processing pull request ${pullRequestName}:`, error)
   }
 
-  async function handlePullRequests (app: Application, context: Context, repository: RepositoryReference, headSha: string, pullRequestNumbers: number[]) {
-    await useHandlerContext({ app, context }, async (handlerContext) => {
+  async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, headSha: string, pullRequestNumbers: number[]) {
+    await useWorkerContext({ app, context, installationId }, async (workerContext) => {
       for (let pullRequestNumber of pullRequestNumbers) {
-        repositoryWorkers.queue(handlerContext, {
+        repositoryWorkers.queue(workerContext, {
           owner: repository.owner,
           repo: repository.repo,
           number: pullRequestNumber
@@ -97,7 +102,7 @@ export = (app: Application) => {
     'pull_request_review.edited',
     'pull_request_review.dismissed'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
     }, context.payload.pull_request.head_sha, [context.payload.pull_request.number])
@@ -111,7 +116,7 @@ export = (app: Application) => {
       return
     }
 
-    await handlePullRequests(app, context, {
+    await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
     }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
@@ -121,7 +126,7 @@ export = (app: Application) => {
     'check_run.rerequested',
     'check_run.requested_action'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
     }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
@@ -131,7 +136,7 @@ export = (app: Application) => {
     'check_suite.requested',
     'check_suite.rerequested'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
     }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
@@ -140,7 +145,7 @@ export = (app: Application) => {
   app.on([
     'check_suite.completed'
   ], async context => {
-    await handlePullRequests(app, context, {
+    await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
     }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))

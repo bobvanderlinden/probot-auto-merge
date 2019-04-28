@@ -122,7 +122,7 @@ export function flatMap<TInput, TOutput> (array: Array<TInput>, fn: (input: TInp
 export function getMyCheckSuite (pullRequestInfo: PullRequestInfo) {
   return pullRequestInfo.commits.nodes[0]
     .commit.checkSuites.nodes
-    .filter(checkSuite => (checkSuite.app && checkSuite.app.id) === myappid)[0]
+    .filter(checkSuite => (checkSuite.app && checkSuite.app.databaseId) === myappid)[0]
 }
 
 export function getOtherCheckRuns (pullRequestInfo: PullRequestInfo) {
@@ -134,5 +134,5 @@ export function getOtherCheckRuns (pullRequestInfo: PullRequestInfo) {
           checkSuite
         }))
     )
-  ).filter(checkRun => (checkRun.checkSuite.app && checkRun.checkSuite.app.id) !== myappid)
+  ).filter(checkRun => (checkRun.checkSuite.app && checkRun.checkSuite.app.databaseId) !== myappid)
 }

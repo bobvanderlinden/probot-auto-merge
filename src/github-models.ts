@@ -102,7 +102,10 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                         ...removeTypename(checkSuite),
                         app: checkSuite.app && removeTypename(checkSuite.app),
                         checkRuns: assertNotNullNodes(checkSuite.checkRuns, 'No permission to fetch checkRuns',
-                          checkRun => removeTypename(checkRun)
+                          checkRun => ({
+                            ...removeTypename(checkRun),
+                            databaseId: assertNotNull(checkRun.databaseId, 'No permission to fetch databaseId for checkRun', databaseId => databaseId)
+                          })
                         )
                       })
                     )
