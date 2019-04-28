@@ -2,12 +2,12 @@ import { CheckSuite } from './../src/github-models'
 import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig, createCheckSuite, createCommit } from './mock'
 import { updateStatusReportCheck } from '../src/status-report'
 
-const myappid = '1'
+const myappid = 1
 
 function createOtherAppCheckSuite (options?: Partial<CheckSuite>) {
   return createCheckSuite({
     app: {
-      id: '123'
+      databaseId: 123
     },
     checkRuns: {
       nodes: [createCheckRun()]
@@ -19,7 +19,7 @@ function createOtherAppCheckSuite (options?: Partial<CheckSuite>) {
 function createMyCheckSuite (options?: Partial<CheckSuite>) {
   return createCheckSuite({
     app: {
-      id: myappid
+      databaseId: myappid
     },
     checkRuns: {
       nodes: [createCheckRun()]
