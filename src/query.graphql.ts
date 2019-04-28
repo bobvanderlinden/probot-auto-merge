@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 // This file was automatically generated and should not be edited.
 
 // ====================================================
@@ -111,12 +112,18 @@ export interface PullRequestQuery_repository_pullRequest_baseRef {
 
 export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_app {
   __typename: "App";
-  id: string;
+  /**
+   * Identifies the primary key from the database.
+   */
+  databaseId: number | null;
 }
 
 export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_checkRuns_nodes {
   __typename: "CheckRun";
-  id: string;
+  /**
+   * Identifies the primary key from the database.
+   */
+  databaseId: number | null;
   /**
    * The name of the check for this check run.
    */
@@ -360,6 +367,7 @@ export interface PullRequestQueryVariables {
 }
 
 /* tslint:disable */
+/* eslint-disable */
 // This file was automatically generated and should not be edited.
 
 //==============================================================
