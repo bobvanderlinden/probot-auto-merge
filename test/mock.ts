@@ -147,7 +147,7 @@ export const changesRequestedReview = (options?: Partial<Review>) =>
 
 export function createCheckRun (options?: Partial<CheckRun>): CheckRun {
   return {
-    id: '123',
+    databaseId: 123,
     name: 'checka',
     status: CheckStatusState.COMPLETED,
     conclusion: CheckConclusionState.SUCCESS,
@@ -263,7 +263,7 @@ export function createCommit (options?: Partial<Commit>): { commit: Commit } {
 export function createCheckSuite (options?: Partial<CheckSuite>): CheckSuite {
   return {
     app: {
-      id: '123'
+      databaseId: 123
     },
     conclusion: CheckConclusionState.SUCCESS,
     status: CheckStatusState.COMPLETED,

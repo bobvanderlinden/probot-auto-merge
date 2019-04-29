@@ -1,4 +1,4 @@
-import { HandlerContext } from './models'
+import { WorkerContext } from './models'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import { RepositoryWorker } from './repository-worker'
 
@@ -15,10 +15,18 @@ export class RepositoryWorkers {
     }
   }
 
-  private createRepositoryWorker (repositoryReference: RepositoryReference, context: HandlerContext) {
+  private createRepositoryWorker (repositoryReference: RepositoryReference, context: WorkerContext) {
+    const createGitHubAPI = context.createGitHubAPI
+    const log = context.log
+    const config = context.config
+    const workerContext: WorkerContext = {
+      createGitHubAPI,
+      log,
+      config
+    }
     return new RepositoryWorker(
       repositoryReference,
-      context,
+      workerContext,
       this.onRepositoryWorkerDrained.bind(this, repositoryReference),
       this.onPullRequestError
     )
@@ -29,7 +37,7 @@ export class RepositoryWorkers {
     delete this.repositoryWorkerMap[queueName]
   }
 
-  queue (context: HandlerContext, pullRequestReference: PullRequestReference) {
+  queue (context: WorkerContext, pullRequestReference: PullRequestReference) {
     const queueName = getRepositoryKey(pullRequestReference)
     const repositoryWorker = this.repositoryWorkerMap[queueName] = this.repositoryWorkerMap[queueName] || this.createRepositoryWorker(pullRequestReference, context)
     repositoryWorker.queue(pullRequestReference.number)
