@@ -18,6 +18,10 @@ function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, error
   return fn(input)
 }
 
+function maybeNull<TInput, TOutput> (input: TInput | null | undefined, fn: (input: TInput) => TOutput): TOutput | null | undefined {
+  return input && fn(input)
+}
+
 function assertNotNullNodes<TNode, TNodeOutput> (input: { nodes: (TNode | null)[] | null } | null, errorMessage: string, fn: (input: TNode) => TNodeOutput): { nodes: TNodeOutput[] } {
   if (input === null) {
     throw new Error(errorMessage)
@@ -79,7 +83,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                 })
               ),
               baseRefOid: pullRequest.baseRefOid as string,
-              headRef: assertNotNull(pullRequest.headRef, 'No permission to fetch headRef',
+              headRef: maybeNull(pullRequest.headRef,
                 headRef => ({
                   ...removeTypename(headRef),
                   repository: {

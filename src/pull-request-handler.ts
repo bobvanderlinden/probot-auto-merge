@@ -185,10 +185,10 @@ export function getPullRequestPlan (
 }
 
 function isInFork (pullRequestInfo: PullRequestInfo): boolean {
-  return (
+  return pullRequestInfo.headRef && (
     pullRequestInfo.headRef.repository.owner.login !== pullRequestInfo.baseRef.repository.owner.login ||
     pullRequestInfo.headRef.repository.name !== pullRequestInfo.baseRef.repository.name
-  )
+  ) || false
 }
 
 /**
@@ -198,11 +198,15 @@ async function deleteBranch (
   context: HandlerContext,
   pullRequestInfo: PullRequestInfo
 ) {
+  const headRef = pullRequestInfo.headRef
+  if (!headRef) {
+    throw new Error('headRef was null or undefined while it is required')
+  }
   return result(
     await context.github.gitdata.deleteRef({
-      owner: pullRequestInfo.headRef.repository.owner.login,
-      repo: pullRequestInfo.headRef.repository.name,
-      ref: `heads/${pullRequestInfo.headRef.name}`
+      owner: headRef.repository.owner.login,
+      repo: headRef.repository.name,
+      ref: `heads/${headRef.name}`
     })
   )
 }
@@ -259,11 +263,15 @@ async function updateBranch (
   context: PullRequestContext,
   pullRequestInfo: PullRequestInfo
 ) {
+  const headRef = pullRequestInfo.headRef
+  if (!headRef) {
+    throw new Error('headRef was null or undefined while it is required')
+  }
   // This merges the baseRef on top of headRef of the PR.
   return result(await context.github.repos.merge({
-    owner: pullRequestInfo.headRef.repository.owner.login,
-    repo: pullRequestInfo.headRef.repository.name,
-    base: pullRequestInfo.headRef.name,
+    owner: headRef.repository.owner.login,
+    repo: headRef.repository.name,
+    base: headRef.name,
     head: pullRequestInfo.baseRef.name
   }))
 }
