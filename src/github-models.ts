@@ -18,7 +18,7 @@ function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, error
   return fn(input)
 }
 
-function maybeNull<TInput, TOutput> (input: TInput | null | undefined, fn: (input: TInput) => TOutput): TOutput | null | undefined {
+function maybeNull<TInput, TOutput> (input: TInput | null, fn: (input: TInput) => TOutput): TOutput | null {
   return input && fn(input)
 }
 
@@ -141,4 +141,4 @@ export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
 export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
 export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
 export type CheckRun = ElementOf<CheckSuite['checkRuns']['nodes']>
-export type Ref = PullRequestInfo['headRef']
+export type Ref = Exclude<PullRequestInfo['headRef'], null>
