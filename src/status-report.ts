@@ -38,6 +38,11 @@ export async function updateStatusReportCheck (
   }
 
   if (myCheckRun) {
+    context.log.info('Updating existing status check', {
+      check_run_id: myCheckRun.databaseId,
+      pullRequestInfo,
+      checkOptions
+    })
     // Whenever we find an existing check_run from this app,
     // we will update that check_run.
     await context.github.checks.update({
@@ -45,6 +50,12 @@ export async function updateStatusReportCheck (
       ...checkOptions
     })
   } else if (context.config.reportStatus) {
+
+    context.log.info('Creating status check', {
+      pullRequestInfo,
+      checkOptions
+    })
+
     // Whenever we did not find an existing check_run we will
     // only create a new one if reportStatus is enabled
     // in their repository.
