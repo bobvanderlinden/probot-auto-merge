@@ -7,7 +7,8 @@ export async function updateStatusReportCheck (
   context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   title: string,
-  summary: string
+  summary: string,
+  text: string
 ) {
   const myCheckSuite = getMyCheckSuite(pullRequestInfo)
   const myCheckRun = myCheckSuite && myCheckSuite.checkRuns.nodes[0]
@@ -29,7 +30,8 @@ export async function updateStatusReportCheck (
     completed_at: new Date().toISOString(),
     output: {
       title,
-      summary
+      summary,
+      text
     },
     owner: pullRequestInfo.baseRef.repository.owner.login,
     repo: pullRequestInfo.baseRef.repository.name

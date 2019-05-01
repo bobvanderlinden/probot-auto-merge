@@ -228,7 +228,7 @@ export async function executeActions (
     try {
       await executeAction(context, pullRequestInfo, action)
     } catch (err) {
-      await updateStatusReportCheck(context, pullRequestInfo, `Failed to ${getPullRequestActionName(action)}`, err.toString())
+      await updateStatusReportCheck(context, pullRequestInfo, `Failed to ${getPullRequestActionName(action)}`, err.toString(), err.toString())
       throw err
     }
   }
@@ -321,7 +321,12 @@ export async function handlePullRequestStatus (
       : plan.actions.some(action => action === 'reschedule')
       ? 'Waiting'
       : 'Not merging',
-    plan.message
+    plan.message,
+    `${plan.message}
+<!--
+${JSON.stringify(plan)}
+-->
+`
   )
 
   const { actions } = plan
