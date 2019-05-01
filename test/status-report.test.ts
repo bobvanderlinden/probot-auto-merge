@@ -92,7 +92,7 @@ describe('updateStatusReportCheck', () => {
       ]
     })
 
-    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary')
+    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary', 'mytext')
 
     expect(updateCheck).toBeCalled()
   })
@@ -109,7 +109,7 @@ describe('updateStatusReportCheck', () => {
       ]
     })
 
-    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary')
+    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary', 'mytext')
 
     expect(createCheck).toBeCalled()
   })
@@ -127,7 +127,7 @@ describe('updateStatusReportCheck', () => {
       ]
     })
 
-    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary')
+    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary', 'mytext')
 
     expect(createCheck).not.toBeCalled()
     expect(updateCheck).not.toBeCalled()
@@ -146,7 +146,7 @@ describe('updateStatusReportCheck', () => {
       ]
     })
 
-    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary')
+    await updateStatusReportCheck(context, pullRequestInfo, 'mytitle', 'mysummary', 'mytext')
 
     expect(createCheck).not.toBeCalled()
     expect(updateCheck).toBeCalled()
