@@ -63,6 +63,7 @@ export type PullRequestActions
 
 export type PullRequestPlanCode
   = 'mergeable_unknown'
+  | 'mergeable_not_supplied'
   | 'pending_condition'
   | 'failing_condition'
   | 'blocked'
@@ -180,6 +181,12 @@ export function getPullRequestPlan (
           message: 'Will merge the pull request',
           actions: ['merge']
         }
+      }
+    case null:
+      return {
+        code: 'mergeable_not_supplied',
+        message: 'GitHub did not provide merge state of PR',
+        actions: ['reschedule']
       }
   }
 }
