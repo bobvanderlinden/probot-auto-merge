@@ -1,4 +1,4 @@
-import { captureException } from 'raven'
+import { captureException, context } from 'raven'
 import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
 import { PullRequestQueryVariables, PullRequestQuery } from './query.graphql'
 import { Context } from 'probot'
@@ -64,7 +64,10 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
     'pullRequestNumber': pullRequestNumber
   })
 
-  const checkedResponse = validatePullRequestQuery(response)
-
-  return checkedResponse.repository.pullRequest
+  return context({
+    extras: { response }
+  }, () => {
+    const checkedResponse = validatePullRequestQuery(response)
+    return checkedResponse.repository.pullRequest
+  })
 }
