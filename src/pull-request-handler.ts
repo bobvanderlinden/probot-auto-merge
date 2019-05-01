@@ -188,6 +188,11 @@ export function getPullRequestPlan (
         message: 'GitHub did not provide merge state of PR',
         actions: ['reschedule']
       }
+    default:
+      Raven.mergeContext({
+        extras: { pullRequestInfo }
+      })
+      throw new Error(`Merge state (${pullRequestInfo.mergeStateStatus}) was not recognized`)
   }
 }
 
