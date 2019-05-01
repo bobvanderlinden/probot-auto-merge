@@ -1,4 +1,4 @@
-import { captureException } from 'raven'
+import Raven from 'raven'
 import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
 import { PullRequestQueryVariables, PullRequestQuery } from './query.graphql'
 import { Context } from 'probot'
@@ -47,7 +47,7 @@ async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVaria
       // Attemping to fetch other checkSuites, where auto-merge doesn't have permissions for, is an side-effect.
       const actualErrors = queryError.errors.filter(error => !(error.path && matchPath(appPath, error.path)))
       if (actualErrors.length > 0) {
-        captureException(queryError)
+        Raven.captureException(queryError)
       }
 
       return queryError.data as PullRequestQuery
@@ -64,7 +64,10 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
     'pullRequestNumber': pullRequestNumber
   })
 
-  const checkedResponse = validatePullRequestQuery(response)
-
-  return checkedResponse.repository.pullRequest
+  return Raven.context({
+    extras: { response }
+  }, () => {
+    const checkedResponse = validatePullRequestQuery(response)
+    return checkedResponse.repository.pullRequest
+  })
 }
