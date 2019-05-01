@@ -200,7 +200,7 @@ async function deleteBranch (
 ) {
   const headRef = pullRequestInfo.headRef
   if (!headRef) {
-    throw new Error('headRef was null or undefined while it is required')
+    throw new Error('headRef was null while it is required for deleting branches')
   }
   return result(
     await context.github.gitdata.deleteRef({
@@ -265,7 +265,7 @@ async function updateBranch (
 ) {
   const headRef = pullRequestInfo.headRef
   if (!headRef) {
-    throw new Error('headRef was null or undefined while it is required')
+    throw new Error('headRef was null while it is required for updating branches')
   }
   // This merges the baseRef on top of headRef of the PR.
   return result(await context.github.repos.merge({
