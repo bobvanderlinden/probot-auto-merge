@@ -18,6 +18,10 @@ function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, error
   return fn(input)
 }
 
+function maybeNull<TInput, TOutput> (input: TInput | null, fn: (input: TInput) => TOutput): TOutput | null {
+  return input && fn(input)
+}
+
 function assertNotNullNodes<TNode, TNodeOutput> (input: { nodes: (TNode | null)[] | null } | null, errorMessage: string, fn: (input: TNode) => TNodeOutput): { nodes: TNodeOutput[] } {
   if (input === null) {
     throw new Error(errorMessage)
@@ -79,7 +83,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                 })
               ),
               baseRefOid: pullRequest.baseRefOid as string,
-              headRef: assertNotNull(pullRequest.headRef, 'No permission to fetch headRef',
+              headRef: maybeNull(pullRequest.headRef,
                 headRef => ({
                   ...removeTypename(headRef),
                   repository: {
@@ -137,4 +141,4 @@ export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
 export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
 export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
 export type CheckRun = ElementOf<CheckSuite['checkRuns']['nodes']>
-export type Ref = PullRequestInfo['headRef']
+export type Ref = Exclude<PullRequestInfo['headRef'], null>
