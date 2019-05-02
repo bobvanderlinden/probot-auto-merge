@@ -34,6 +34,7 @@
   "dependencies": {
     "@mojotech/json-type-validation": "^3.1.0",
     "@types/express": "^4.16.1",
+    "bunyan": "^1.8.12",
     "bunyan-sentry-stream": "^1.2.1",
     "debug": "^4.1.1",
     "minimatch": "^3.0.4",
@@ -42,6 +43,7 @@
     "raven": "^2.6.4"
   },
   "devDependencies": {
+    "@types/bunyan": "^1.8.6",
     "@types/debug": "^4.1.1",
     "@types/jest": "^24.0.5",
     "@types/minimatch": "^3.0.3",
