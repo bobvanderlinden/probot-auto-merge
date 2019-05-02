@@ -208,7 +208,7 @@ describe('getPullRequestPlan', () => {
           }
         },
         headRef: {
-          ...defaultPullRequestInfo.headRef,
+          ...defaultPullRequestInfo.headRef!!,
           name: 'pr',
           repository: {
             owner: {
