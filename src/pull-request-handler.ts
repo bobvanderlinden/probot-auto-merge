@@ -167,7 +167,7 @@ export function getPullRequestPlan (
       return {
         code: 'blocked',
         message: 'The pull request is blocked by a failing or missing check.',
-        actions: []
+        actions: ['reschedule']
       }
     case MergeStateStatus.DIRTY:
       return {
