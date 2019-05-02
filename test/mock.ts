@@ -78,7 +78,15 @@ export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo
 
 export function createGithubApi (options?: DeepPartial<GitHubAPI>): GitHubAPI {
   return {
-    ...options
+    ...options,
+    hook: {
+      before: (when: string, cb: () => void) => {
+        return
+      },
+      after: (when: string, cb: () => void) => {
+        return
+      }
+    }
   } as GitHubAPI
 }
 

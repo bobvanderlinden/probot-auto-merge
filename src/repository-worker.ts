@@ -2,10 +2,12 @@ import { WaitQueue } from './WaitQueue'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import { handlePullRequest, PullRequestContext } from './pull-request-handler'
 import { WorkerContext } from './models'
+import { metricsReporter } from './metrics'
 
 export class RepositoryWorker {
   private waitQueue: WaitQueue<number>
   private context: WorkerContext
+  public sendMetricsInterval?: NodeJS.Timeout
 
   constructor (
     public repository: RepositoryReference,
@@ -17,7 +19,24 @@ export class RepositoryWorker {
     this.waitQueue = new WaitQueue<number>(
       (pullRequestNumber: number) => `${pullRequestNumber}`,
       this.handlePullRequestNumber.bind(this),
-      onDrain
+      () => {
+        this.sendMetricsInterval && clearInterval(this.sendMetricsInterval)
+        this.sendQueueSizeMetrics()
+        onDrain()
+      }
+    )
+
+    metricsReporter.enabled &&
+      (this.sendMetricsInterval = setInterval(
+        this.sendQueueSizeMetrics.bind(this),
+        1000
+      ))
+  }
+
+  private sendQueueSizeMetrics (): void {
+    metricsReporter.queueSizeGauge.set(
+      { owner: this.repository.owner, repo: this.repository.repo },
+      this.waitQueue.getQueuedTasks().length
     )
   }
 
