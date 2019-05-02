@@ -64,10 +64,9 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
     'pullRequestNumber': pullRequestNumber
   })
 
-  return Raven.context({
+  const checkedResponse = Raven.context({
     extra: { response }
-  }, () => {
-    const checkedResponse = validatePullRequestQuery(response)
-    return checkedResponse.repository.pullRequest
-  })
+  }, () => validatePullRequestQuery(response))
+
+  return checkedResponse.repository.pullRequest
 }
