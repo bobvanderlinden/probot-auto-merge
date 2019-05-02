@@ -62,7 +62,8 @@ export type PullRequestActions
 ) & Array<PullRequestAction>
 
 export type PullRequestPlanCode
-  = 'mergeable_unknown'
+  = 'closed'
+  | 'mergeable_unknown'
   | 'mergeable_not_supplied'
   | 'pending_condition'
   | 'failing_condition'
@@ -110,6 +111,14 @@ export function getPullRequestPlan (
     .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
   const failingConditions = Object.entries(pullRequestStatus)
     .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
+
+  if (pullRequestStatus.open.status === 'fail') {
+    return {
+      code: 'closed',
+      message: 'Pull request was closed',
+      actions: []
+    }
+  }
 
   if (pendingConditions.length > 0) {
     return {
