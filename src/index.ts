@@ -8,6 +8,7 @@ import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
 import { Router } from 'express'
 import { GitHubAPI } from 'probot/lib/github';
+import { queryPullRequest } from './pull-request-query';
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -200,7 +201,22 @@ export = (app: Application) => {
         res.json({ status: 'ok' })
       })
       .catch(err => {
-        res.json({ status: 'error', error: err.toString() })
+        res.status(500).json({ status: 'error', error: err.toString() })
+      })
+  })
+  router.get('/query', async (req, res) => {
+    const owner = req.query.owner
+    const repo = req.query.repo
+    const pullRequestNumber = parseInt(req.query.pullRequestNumber, 10)
+    app.auth()
+      .then(async (appOctokit: GitHubAPI) => {
+        const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
+        const repoOctokit = await app.auth(installation.id)
+        const result = await queryPullRequest(repoOctokit, { owner, repo, number: pullRequestNumber })
+        res.json(result)
+      })
+      .catch(err => {
+        res.status(500).json({ status: 'error', error: err.toString() })
       })
   })
 }
