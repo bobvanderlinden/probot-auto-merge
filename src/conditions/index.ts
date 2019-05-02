@@ -7,7 +7,7 @@ import maximumChangesRequested from './maximumChangesRequested'
 import mergeable from './mergeable'
 import minimumApprovals from './minimumApprovals'
 import open from './open'
-// import requiredChecks from './requiredChecks'
+import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
 
 export const conditions = {
@@ -18,7 +18,7 @@ export const conditions = {
   mergeable,
   minimumApprovals,
   open,
-  // requiredChecks,
+  requiredChecks,
   requiredLabels
 }
 
