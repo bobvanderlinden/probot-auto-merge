@@ -7,6 +7,7 @@ import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
 import { Router } from 'express'
+import { GitHubAPI } from 'probot/lib/github';
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -101,8 +102,10 @@ export = (app: Application) => {
     'pull_request.reopened',
     'pull_request_review.submitted',
     'pull_request_review.edited',
-    'pull_request_review.dismissed'
+    'pull_request_review.dismissed',
+    'pull_request.trigger'
   ], async context => {
+    console.log('hallo!')
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
@@ -170,5 +173,35 @@ export = (app: Application) => {
       })
       .reduce((result, [name, worker]) => ({ ...result, [name]: worker }), {})
     res.json(result)
+  })
+  router.get('/trigger', async (req, res) => {
+    const owner = req.query.owner
+    const repo = req.query.repo
+    const pullRequestNumber = parseInt(req.query.pullRequestNumber, 10)
+    app.auth()
+      .then(async (appOctokit: GitHubAPI) => {
+        const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
+        const event = {
+          name: 'pull_request',
+          payload: {
+            action: 'trigger',
+            installation,
+            repository: {
+              owner: {
+                login: owner
+              },
+              name: repo
+            },
+            pull_request: {
+              number: pullRequestNumber
+            }
+          }
+        }
+        await app.receive(event)
+        res.json({ status: 'ok' })
+      })
+      .catch(err => {
+        res.json({ status: 'error', error: err.toString() })
+      })
   })
 }
