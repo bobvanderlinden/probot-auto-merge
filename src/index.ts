@@ -6,6 +6,8 @@ import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
+import { Router } from 'express';
+import { mapToArray, arrayToMap } from './utils';
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -149,5 +151,25 @@ export = (app: Application) => {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
     }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
+  })
+
+  const router: Router = app.route('/api')
+  router.use((req, res, next) => {
+    if (req.query.token !== process.env.DEBUG_TOKEN) {
+      return res.status(403).send('')
+    }
+    return next()
+  })
+  router.get('/queue', (req, res) => {
+    const result = Object.entries(repositoryWorkers.repositoryWorkerMap)
+      .map(([name, worker]) => {
+        const workerQueue = {
+          current: worker.waitQueue.currentTask(),
+          queue: worker.waitQueue.getQueuedTasks()
+        }
+        return [name, workerQueue] as [string, typeof workerQueue]
+      })
+      .reduce((result, [name, worker]) => ({ ...result, [name]: worker }), {})
+    res.json(result)
   })
 }

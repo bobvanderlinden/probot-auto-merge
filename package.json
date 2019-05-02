@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@mojotech/json-type-validation": "^3.1.0",
+    "@types/express": "^4.16.1",
     "bunyan-sentry-stream": "^1.2.1",
     "debug": "^4.1.1",
     "minimatch": "^3.0.4",

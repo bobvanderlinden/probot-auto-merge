@@ -5,7 +5,7 @@ import { handlePullRequest, PullRequestContext } from './pull-request-handler'
 import { WorkerContext } from './models'
 
 export class RepositoryWorker {
-  private waitQueue: WaitQueue<number>
+  public waitQueue: WaitQueue<number>
   private context: WorkerContext
 
   constructor (

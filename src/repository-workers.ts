@@ -5,7 +5,7 @@ import { RepositoryWorker } from './repository-worker'
 export class RepositoryWorkers {
   constructor (
     private onPullRequestError: (pullRequest: PullRequestReference, error: any) => void,
-    private repositoryWorkerMap: { [key: string]: RepositoryWorker } = {}
+    public repositoryWorkerMap: { [key: string]: RepositoryWorker } = {}
   ) {
   }
 
