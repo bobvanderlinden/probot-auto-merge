@@ -105,7 +105,6 @@ export = (app: Application) => {
     'pull_request_review.dismissed',
     'pull_request.trigger'
   ], async context => {
-    console.log('hallo!')
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
