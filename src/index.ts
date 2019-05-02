@@ -9,6 +9,7 @@ import myAppId from './myappid'
 import { Router } from 'express'
 import { GitHubAPI } from 'probot/lib/github';
 import { queryPullRequest } from './pull-request-query';
+import bodyParser = require('body-parser');
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -162,6 +163,7 @@ export = (app: Application) => {
     }
     return next()
   })
+  router.use(bodyParser())
   router.get('/queue', (req, res) => {
     const result = Object.entries(repositoryWorkers.repositoryWorkerMap)
       .map(([name, worker]) => {
@@ -213,6 +215,20 @@ export = (app: Application) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
         const repoOctokit = await app.auth(installation.id)
         const result = await queryPullRequest(repoOctokit, { owner, repo, number: pullRequestNumber })
+        res.json(result)
+      })
+      .catch(err => {
+        res.status(500).json({ status: 'error', error: err.toString() })
+      })
+  })
+  router.post('/graphql', async (req, res) => {
+    const owner = req.query.owner
+    const repo = req.query.repo
+    app.auth()
+      .then(async (appOctokit: GitHubAPI) => {
+        const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
+        const repoOctokit = await app.auth(installation.id)
+        const result = await repoOctokit.query(req.body.query, req.body.variables, req.body.headers)
         res.json(result)
       })
       .catch(err => {
