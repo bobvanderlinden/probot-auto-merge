@@ -228,7 +228,7 @@ export = (app: Application) => {
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
         const repoOctokit = await app.auth(installation.id)
-        const result = await repoOctokit.query(req.body.query, req.body.variables, req.body.headers)
+        const result = await repoOctokit.query(req.body.query, req.body.variables, { 'Accept': req.headers.accept, ...req.body.headers })
         res.json(result)
       })
       .catch(err => {
