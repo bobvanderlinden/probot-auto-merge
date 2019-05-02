@@ -221,6 +221,7 @@ export = (app: Application) => {
         res.status(500).json({ status: 'error', error: err.toString() })
       })
   })
+
   router.post('/graphql', async (req, res) => {
     const owner = req.query.owner
     const repo = req.query.repo
@@ -228,8 +229,21 @@ export = (app: Application) => {
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
         const repoOctokit = await app.auth(installation.id)
-        const result = await repoOctokit.query(req.body.query, req.body.variables, { 'Accept': req.headers.accept, ...req.body.headers })
-        res.json(result)
+        try {
+          const data = await repoOctokit.query(req.body.query, req.body.variables, { 'Accept': req.headers.accept, ...req.body.headers })
+          return res.json({
+            data
+          })
+        } catch (e) {
+          if (e && e.name === 'GraphQLQueryError') {
+            return res.json({
+              errors: e.errors,
+              data: e.data
+            })
+          } else {
+            throw e
+          }
+        }
       })
       .catch(err => {
         res.status(500).json({ status: 'error', error: err.toString() })
