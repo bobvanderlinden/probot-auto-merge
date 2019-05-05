@@ -94,10 +94,9 @@ export function get<TKey extends string, TValue> (obj: { [key in TKey]: TValue }
 }
 
 export function getLatestReviews (pullRequestInfo: PullRequestInfo) {
-  const sortedReviews = pullRequestInfo.reviews.nodes.sort(
-    (a, b) =>
-      new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
-  )
+  const sortedReviews = pullRequestInfo.reviews.nodes
+    .filter(review => review.state !== 'COMMENTED')
+    .sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime())
   const latestReviewsByUser = groupByLast(
     review => review.author.login,
     sortedReviews
