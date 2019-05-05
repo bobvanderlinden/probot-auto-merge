@@ -1,6 +1,5 @@
 { pkgs ? import <nixpkgs> { } }:
 with pkgs;
-stdenv.mkDerivation {
-  name = "probot-auto-merge";
+mkShell {
   buildInputs = [ heroku nodejs-10_x python ];
 }
