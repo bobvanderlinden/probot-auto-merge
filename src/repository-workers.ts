@@ -2,10 +2,11 @@ import { WorkerContext } from './models'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import { RepositoryWorker } from './repository-worker'
 
+type RepositoryWorkerMap = { [key: string]: RepositoryWorker }
 export class RepositoryWorkers {
   constructor (
     private onPullRequestError: (pullRequest: PullRequestReference, error: any) => void,
-    private repositoryWorkerMap: { [key: string]: RepositoryWorker } = {}
+    private repositoryWorkerMap: RepositoryWorkerMap = {}
   ) {
   }
 
@@ -41,6 +42,10 @@ export class RepositoryWorkers {
     const queueName = getRepositoryKey(pullRequestReference)
     const repositoryWorker = this.repositoryWorkerMap[queueName] = this.repositoryWorkerMap[queueName] || this.createRepositoryWorker(pullRequestReference, context)
     repositoryWorker.queue(pullRequestReference.number)
+  }
+
+  public getRepositoryWorkers (): Readonly<RepositoryWorkerMap> {
+    return this.repositoryWorkerMap
   }
 }
 
