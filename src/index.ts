@@ -5,7 +5,9 @@ import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
+import { queryPullRequestsForBranch } from './pull-request-query'
 import myAppId from './myappid'
+import { flatten } from './utils'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -89,6 +91,25 @@ export = (app: Application) => {
       }
     })
   }
+
+  app.on([
+    'status'
+  ], async context => {
+    const repositoryReference = { owner: context.payload.repository.owner.login, repo: context.payload.repository.name }
+    const branches = context.payload.branches as { name: string }[]
+    const validBranches = branches.filter(branch => branch.name !== 'master')
+    const pullRequestResponses = await Promise.all(validBranches.map(branch =>
+      context.github.pullRequests.list({
+        owner: repositoryReference.owner,
+        repo: repositoryReference.repo,
+        base: branch.name
+      })
+    ))
+    const pullRequests = flatten(pullRequestResponses.map(response => response.data))
+    await Promise.all(pullRequests.map(pullRequest =>
+      handlePullRequests(app, context, context.payload.installation.id, repositoryReference, [pullRequest.number])
+    ))
+  })
 
   app.on([
     'pull_request.opened',
