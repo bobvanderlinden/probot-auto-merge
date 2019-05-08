@@ -1,0 +1,12 @@
+query PullRequestsForBranchQuery($owner:String!, $repo:String!, $branch:String!) {
+	repository(owner: $owner, name: $repo) {
+		ref(qualifiedName:$branch){
+      associatedPullRequests(first:10){
+        nodes{
+          number
+          headRefOid
+        }
+      }
+    }
+  }
+}

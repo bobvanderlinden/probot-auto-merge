@@ -5,7 +5,9 @@ import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
+import { queryPullRequestsForBranch } from './pull-request-query'
 import myAppId from './myappid'
+import { flatten } from './utils'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -78,7 +80,7 @@ export = (app: Application) => {
     console.error(`Error while processing pull request ${pullRequestName}:`, error)
   }
 
-  async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, headSha: string, pullRequestNumbers: number[]) {
+  async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, headSha: string | undefined, pullRequestNumbers: number[]) {
     await useWorkerContext({ app, context, installationId }, async (workerContext) => {
       for (let pullRequestNumber of pullRequestNumbers) {
         repositoryWorkers.queue(workerContext, {
@@ -89,6 +91,20 @@ export = (app: Application) => {
       }
     })
   }
+
+  app.on([
+    'status'
+  ], async context => {
+    const repositoryReference = { owner: context.payload.repository.owner.login, repo: context.payload.repository.name }
+    const branches = context.payload.branches as { name: string }[]
+    const validBranches = branches.filter(branch => branch.name !== 'master' && branch.name !== 'production')
+    const pullRequests = flatten(await Promise.all(validBranches.map(branch =>
+      queryPullRequestsForBranch(context.github, repositoryReference, branch.name)
+    )))
+    await Promise.all(pullRequests.map(pullRequest =>
+      handlePullRequests(app, context, context.payload.installation.id, repositoryReference, pullRequest.headRef, [pullRequest.number])
+    ))
+  })
 
   app.on([
     'pull_request.opened',

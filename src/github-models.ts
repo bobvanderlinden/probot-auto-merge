@@ -9,6 +9,7 @@ export interface RepositoryReference {
 
 export interface PullRequestReference extends RepositoryReference {
   number: number
+  headRef?: string
 }
 
 function assertNotNull<TInput, TOutput> (input: TInput | null | undefined, errorMessage: string, fn: (input: TInput) => TOutput): TOutput {

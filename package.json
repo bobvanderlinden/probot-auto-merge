@@ -18,6 +18,7 @@
     "dev": "nodemon --exec \"npm start\"",
     "docker:build": "docker build -t probot-auto-merge .",
     "docker:run": "docker run -p 0.0.0.0:3000:3000 probot-auto-merge",
+    "docker:test": "npm run docker:build && docker run -t probot-auto-merge npm run test",
     "docker": "npm run docker:build && npm run docker:run",
     "start": "probot run ./lib/index.js",
     "lint": "tslint --project . --fix",

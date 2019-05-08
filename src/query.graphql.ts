@@ -370,6 +370,63 @@ export interface PullRequestQueryVariables {
 /* eslint-disable */
 // This file was automatically generated and should not be edited.
 
+// ====================================================
+// GraphQL query operation: PullRequestsForBranchQuery
+// ====================================================
+
+export interface PullRequestsForBranchQuery_repository_ref_associatedPullRequests_nodes {
+  __typename: "PullRequest";
+  /**
+   * Identifies the pull request number.
+   */
+  number: number;
+  /**
+   * Identifies the oid of the head ref associated with the pull request, even if the ref has been deleted.
+   */
+  headRefOid: any;
+}
+
+export interface PullRequestsForBranchQuery_repository_ref_associatedPullRequests {
+  __typename: "PullRequestConnection";
+  /**
+   * A list of nodes.
+   */
+  nodes: (PullRequestsForBranchQuery_repository_ref_associatedPullRequests_nodes | null)[] | null;
+}
+
+export interface PullRequestsForBranchQuery_repository_ref {
+  __typename: "Ref";
+  /**
+   * A list of pull requests with this ref as the head ref.
+   */
+  associatedPullRequests: PullRequestsForBranchQuery_repository_ref_associatedPullRequests;
+}
+
+export interface PullRequestsForBranchQuery_repository {
+  __typename: "Repository";
+  /**
+   * Fetch a given ref from the repository
+   */
+  ref: PullRequestsForBranchQuery_repository_ref | null;
+}
+
+export interface PullRequestsForBranchQuery {
+  /**
+   * Lookup a given repository by the owner and repository name.
+   */
+  repository: PullRequestsForBranchQuery_repository | null;
+}
+
+export interface PullRequestsForBranchQueryVariables {
+  owner: string;
+  repo: string;
+  branch: string;
+}
+
+/* tslint:disable */
+/* eslint-disable */
+// This file was automatically generated and should not be edited.
+
 //==============================================================
 // START Enums and Input Objects
 //==============================================================

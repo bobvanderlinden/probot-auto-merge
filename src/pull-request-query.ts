@@ -1,11 +1,14 @@
 import Raven from 'raven'
-import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
-import { PullRequestQueryVariables, PullRequestQuery } from './query.graphql'
+import { PullRequestReference, PullRequestInfo, validatePullRequestQuery, RepositoryReference } from './github-models'
+import { PullRequestQueryVariables, PullRequestQuery, PullRequestsForBranchQuery, PullRequestsForBranchQueryVariables } from './query.graphql'
 import { Context } from 'probot'
 import { GitHubAPI, GraphQLQueryError } from 'probot/lib/github'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
+import { notEmpty } from './utils'
+
+const pullRequestsQuery = readFileSync(join(__dirname, '..', 'pullRequestQuery.graphql'), 'utf8')
+const pullRequestsForBranchQuery = readFileSync(join(__dirname, '..', 'pullRequestsForBranchQuery.graphql'), 'utf8')
 
 const isNumber = (v: string | number) => typeof v === 'number'
 type Matcher = string | number | ((v: string | number) => boolean)
@@ -33,9 +36,9 @@ const appPath = [
   'app'
 ]
 
-async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
+async function graphQLPullRequestQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
   try {
-    return await github.query(query, variables, {
+    return await github.query(pullRequestsQuery, variables, {
       'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
     })
   } catch (e) {
@@ -57,8 +60,28 @@ async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVaria
   }
 }
 
+async function graphQLPullRequestsForBranchQuery (github: GitHubAPI, variables: PullRequestsForBranchQueryVariables): Promise<PullRequestsForBranchQuery> {
+  try {
+    return await github.query(pullRequestsForBranchQuery, variables, {
+      'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+    })
+  } catch (e) {
+    if (e && e.name === 'GraphQLQueryError') {
+      const queryError = e as GraphQLQueryError
+
+      if (queryError.errors.length > 0) {
+        Raven.captureException(queryError)
+      }
+
+      return queryError.data as PullRequestsForBranchQuery
+    } else {
+      throw e
+    }
+  }
+}
+
 export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
-  const response = await graphQLQuery(github, {
+  const response = await graphQLPullRequestQuery(github, {
     'owner': owner,
     'repo': repo,
     'pullRequestNumber': pullRequestNumber
@@ -69,4 +92,25 @@ export async function queryPullRequest (github: Context['github'], { owner, repo
   }, () => validatePullRequestQuery(response))
 
   return checkedResponse.repository.pullRequest
+}
+
+export async function queryPullRequestsForBranch (github: Context['github'], { owner, repo }: RepositoryReference, branchName: string): Promise<PullRequestReference[]> {
+  const response = await graphQLPullRequestsForBranchQuery(github, {
+    'owner': owner,
+    'repo': repo,
+    'branch': branchName
+  })
+
+  const ref = response && response.repository && response.repository.ref
+
+  if (!ref || !ref.associatedPullRequests.nodes) {
+    return []
+  }
+
+  return ref.associatedPullRequests.nodes.filter(notEmpty).map(node => ({
+    repo,
+    owner,
+    number: node.number,
+    headRef: node.headRefOid
+  }))
 }
