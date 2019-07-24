@@ -4,15 +4,25 @@ import { WorkerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
+import { Headers } from 'probot/lib/github'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
+import { metricsReporter } from './metrics'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
   const config = await loadConfig(context)
   const log = app.log
   const createGitHubAPI = async () => {
-    return app.auth(installationId, log)
+    const github = await app.auth(installationId, log)
+    const { owner, repo } = options.context.repo()
+    github.hook.after('request', (response, requestOptions) => {
+      const responseHeaders = response.headers as Headers
+      const rateLimit = Number(responseHeaders['x-ratelimit-remaining'])
+      const apiVersion = requestOptions.query ? 'v4' : 'v3'
+      metricsReporter.rateLimitGauge.set({ owner, repo, apiVersion }, rateLimit)
+    })
+    return github
   }
   return {
     createGitHubAPI,
@@ -89,6 +99,14 @@ export = (app: Application) => {
       }
     })
   }
+
+  // Get an express router to expose new HTTP endpoints
+  const router = app.route('/')
+
+  // Add a new route
+  router.get('/metrics', (req: any, res: any) => {
+    res.send(metricsReporter.outputMetrics())
+  })
 
   app.on([
     'pull_request.opened',
