@@ -206,7 +206,8 @@ export = (app: Application) => {
     app.auth()
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
-        const event = {
+        const event: any = {
+          id: '1',
           name: 'pull_request',
           payload: {
             action: 'trigger',
@@ -238,7 +239,8 @@ export = (app: Application) => {
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
         const github = await app.auth(installation.id)
-        const event = {
+        const event: any = {
+          id: '1',
           name: 'pull_request',
           payload: {
             action: 'trigger',
@@ -271,7 +273,7 @@ export = (app: Application) => {
 
         const context = new Context(event, github, log)
 
-        await handlePullRequests(app, context, installation.id, { owner, repo }, '', [pullRequestNumber])
+        await handlePullRequests(app, context, installation.id, { owner, repo }, [pullRequestNumber])
 
         req.connection.once('close', () => {
           res.end()
@@ -305,21 +307,8 @@ export = (app: Application) => {
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
         const repoOctokit = await app.auth(installation.id)
-        try {
-          const data = await repoOctokit.query(req.body.query, req.body.variables, { 'Accept': req.headers.accept, ...req.body.headers })
-          return res.json({
-            data
-          })
-        } catch (e) {
-          if (e && e.name === 'GraphQLQueryError') {
-            return res.json({
-              errors: e.errors,
-              data: e.data
-            })
-          } else {
-            throw e
-          }
-        }
+        const response = await repoOctokit.query(req.body.query, req.body.variables, { 'Accept': req.headers.accept, ...req.body.headers })
+        return res.json(response)
       })
       .catch(err => {
         res.status(500).json({ status: 'error', error: err.toString() })
