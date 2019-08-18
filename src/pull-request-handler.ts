@@ -224,7 +224,7 @@ async function deleteBranch (
     throw new Error('headRef was null while it is required for deleting branches')
   }
   return result(
-    await context.github.gitdata.deleteRef({
+    await context.github.git.deleteRef({
       owner: headRef.repository.owner.login,
       repo: headRef.repository.name,
       ref: `heads/${headRef.name}`

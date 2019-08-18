@@ -13,12 +13,13 @@ import {
   createCheckRunCreatedEvent,
   createCommitsWithCheckSuiteWithCheckRun,
   createPullRequestQuery,
-  createStatusEvent
+  createStatusEvent,
+  createOkResponse
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
 import { CommentAuthorAssociation } from '../src/models'
-import { GraphQLQueryError, GitHubAPI } from 'probot/lib/github'
+import { GitHubAPI } from 'probot/lib/github'
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -185,8 +186,8 @@ it('merges when receiving status event', async () => {
     logger: createEmptyLogger(),
     github: {
       ...github,
-      pullRequests: {
-        ...github.pullRequests,
+      pulls: {
+        ...github.pulls,
         list: list as any
       }
     } as GitHubAPI
@@ -248,24 +249,26 @@ it('pending check run', async () => {
 
   await immediate()
 
-  expect(github.query).toHaveBeenCalled()
+  expect(github.graphql).toHaveBeenCalled()
   expect(setTimeout).toHaveBeenCalled()
   expect(github.pulls.merge).not.toHaveBeenCalled()
-  github.query = jest.fn(async () => {
+  github.graphql = jest.fn(async () => {
     return {
-      repository: {
-        pullRequest: {
-          ...pullRequestInfo,
-          commits: createCommitsWithCheckSuiteWithCheckRun({
-            checkRun: successCheckRun
-          })
+      data: {
+        repository: {
+          pullRequest: {
+            ...pullRequestInfo,
+            commits: createCommitsWithCheckSuiteWithCheckRun({
+              checkRun: successCheckRun
+            })
+          }
         }
       }
     }
   })
   jest.runAllTimers()
   await immediate()
-  expect(github.query).toHaveBeenCalled()
+  expect(github.graphql).toHaveBeenCalled()
   expect(github.pulls.merge).toHaveBeenCalled()
 
 })
@@ -388,14 +391,15 @@ it('to report error and continue when graphql query contained errors', async () 
         '.github/auto-merge.yml': () => Buffer.from(config)
       })
     },
-    pullRequests: {
-      merge: jest.fn()
+    pulls: {
+      merge: createOkResponse()
     },
-    query: jest.fn(async () => Promise.reject(
-      new GraphQLQueryError([{
+    graphql: jest.fn(async () => ({
+      errors: [{
         message: 'Some problem'
-      }], '', {}, pullRequestQuery)
-    ))
+      }],
+      data: pullRequestQuery
+    }))
   })
 
   const app = createApplication({
