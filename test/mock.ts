@@ -7,7 +7,7 @@ import { Config, defaultConfig } from '../src/config'
 import { Application, ApplicationFunction } from 'probot'
 import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
-import { Response } from '@octokit/rest'
+import { Response, Endpoint } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
 import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
 
@@ -371,7 +371,7 @@ export function createCheckSuiteCompletedEvent (pullRequest: PullRequestReferenc
   }
 }
 
-export function createResponse<T> (options: Partial<Response<T>>): Response<T> {
+export function createResponse<T> (options?: Partial<Response<T>>): Response<T> {
   return {
     data: null,
     status: 200,
@@ -380,8 +380,23 @@ export function createResponse<T> (options: Partial<Response<T>>): Response<T> {
   } as any as Response<T>
 }
 
-export function createOkResponse<T> (): (...args: any[]) => Response<T> {
-  return jest.fn(() => createResponse({ status: 200 }))
+export function createEndpoint<T> (responder: (...args: any[]) => Response<T>): { (...args: any[]): Response<T>, endpoint: Endpoint } {
+  return jest.fn(() => responder()) as any
+}
+
+export function createResponder<T> (options?: Partial<Response<T>>) {
+  return () => createResponse(options)
+}
+
+export function createOkEndpoint<T> (options?: Partial<Response<T>>) {
+  return createEndpoint(createResponder({
+    status: 200,
+    ...options
+  }))
+}
+
+export function createOkResponse<T> (): { (...args: any[]): Response<T>, endpoint: Endpoint } {
+  return jest.fn(() => createResponse({ status: 200 })) as any
 }
 
 export function createGithubApiFromPullRequestInfo (opts: {
@@ -406,14 +421,16 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
 }): DeepPartial<GitHubAPI> {
   const pullRequestQueryResult = createPullRequestQuery(opts.pullRequestInfo)
   return {
-    query: jest.fn(() => {
-      return pullRequestQueryResult
+    graphql: jest.fn(() => {
+      return {
+        data: pullRequestQueryResult
+      }
     }),
     checks: {
-      create: jest.fn(),
-      update: jest.fn()
+      create: createOkResponse(),
+      update: createOkResponse()
     },
-    pullRequests: {
+    pulls: {
       merge: createOkResponse(),
       list: createOkResponse()
     },
@@ -423,7 +440,7 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
         '.github/auto-merge.yml': () => Buffer.from(opts.config)
       })
     },
-    gitdata: {
+    git: {
       deleteRef: createOkResponse()
     }
   }

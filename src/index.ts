@@ -98,7 +98,7 @@ export = (app: Application) => {
     const branches = context.payload.branches as { name: string }[]
     const validBranches = branches.filter(branch => branch.name !== 'master')
     const pullRequestResponses = await Promise.all(validBranches.map(branch =>
-      context.github.pullRequests.list({
+      context.github.pulls.list({
         owner: repositoryReference.owner,
         repo: repositoryReference.repo,
         base: branch.name

@@ -4,7 +4,7 @@ import { conditions, ConditionName } from './../src/conditions/'
 import { ConditionResult } from './../src/condition'
 import { PullRequestInfo } from './../src/models'
 import { getPullRequestPlan, executeAction } from '../src/pull-request-handler'
-import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext } from './mock'
+import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext, createOkResponse } from './mock'
 import { mapObject } from '../src/utils'
 import { MergeStateStatus } from '../src/query.graphql'
 
@@ -244,11 +244,11 @@ describe('getPullRequestPlan', () => {
 
 describe('executeAction with action', () => {
   it('merge', async () => {
-    const merge = jest.fn(() => ({ status: 200 }))
+    const merge = createOkResponse()
     await executeAction(
       createPullRequestContext({
         github: createGithubApi({
-          pullRequests: {
+          pulls: {
             merge
           }
         })
@@ -281,11 +281,11 @@ describe('executeAction with action', () => {
   })
 
   it('delete_branch', async () => {
-    const deleteRef = jest.fn(() => ({ status: 200 }))
+    const deleteRef = createOkResponse()
     await executeAction(
       createPullRequestContext({
         github: createGithubApi({
-          gitdata: {
+          git: {
             deleteRef
           }
         })
@@ -316,7 +316,7 @@ describe('executeAction with action', () => {
   })
 
   it('update_branch', async () => {
-    const merge = jest.fn(() => ({ status: 200 }))
+    const merge = createOkResponse()
     await executeAction(
       createPullRequestContext({
         github: createGithubApi({

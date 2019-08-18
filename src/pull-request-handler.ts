@@ -224,7 +224,7 @@ async function deleteBranch (
     throw new Error('headRef was null while it is required for deleting branches')
   }
   return result(
-    await context.github.gitdata.deleteRef({
+    await context.github.git.deleteRef({
       owner: headRef.repository.owner.login,
       repo: headRef.repository.name,
       ref: `heads/${headRef.name}`
@@ -316,7 +316,7 @@ async function mergePullRequest (
   const pullRequestReference = getPullRequestReference(pullRequestInfo)
   // This presses the merge button.
   result(
-    await context.github.pullRequests.merge({
+    await context.github.pulls.merge({
       ...pullRequestReference,
       merge_method: config.mergeMethod
     })
