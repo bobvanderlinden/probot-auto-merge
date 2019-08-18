@@ -1,3 +1,4 @@
+import Raven from 'raven'
 import { WaitQueue } from './WaitQueue'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import { handlePullRequest, PullRequestContext } from './pull-request-handler'
@@ -40,11 +41,15 @@ export class RepositoryWorker {
       },
       startedAt: new Date()
     }
-    try {
-      await handlePullRequest(pullRequestContext, pullRequestReference)
-    } catch (err) {
-      this.onPullRequestError(pullRequestReference, err)
-    }
+    await Raven.context({
+      extra: { pullRequestReference }
+    }, async () => {
+      try {
+        await handlePullRequest(pullRequestContext, pullRequestReference)
+      } catch (err) {
+        this.onPullRequestError(pullRequestReference, err)
+      }
+    })
   }
 
   public queue (pullRequestNumber: number) {

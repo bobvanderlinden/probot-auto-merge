@@ -6,6 +6,7 @@ import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
+import { flatten } from './utils'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -78,7 +79,7 @@ export = (app: Application) => {
     console.error(`Error while processing pull request ${pullRequestName}:`, error)
   }
 
-  async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, headSha: string, pullRequestNumbers: number[]) {
+  async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, pullRequestNumbers: number[]) {
     await useWorkerContext({ app, context, installationId }, async (workerContext) => {
       for (let pullRequestNumber of pullRequestNumbers) {
         repositoryWorkers.queue(workerContext, {
@@ -89,6 +90,25 @@ export = (app: Application) => {
       }
     })
   }
+
+  app.on([
+    'status'
+  ], async context => {
+    const repositoryReference = { owner: context.payload.repository.owner.login, repo: context.payload.repository.name }
+    const branches = context.payload.branches as { name: string }[]
+    const validBranches = branches.filter(branch => branch.name !== 'master')
+    const pullRequestResponses = await Promise.all(validBranches.map(branch =>
+      context.github.pullRequests.list({
+        owner: repositoryReference.owner,
+        repo: repositoryReference.repo,
+        base: branch.name
+      })
+    ))
+    const pullRequests = flatten(pullRequestResponses.map(response => response.data))
+    await Promise.all(pullRequests.map(pullRequest =>
+      handlePullRequests(app, context, context.payload.installation.id, repositoryReference, [pullRequest.number])
+    ))
+  })
 
   app.on([
     'pull_request.opened',
@@ -105,7 +125,7 @@ export = (app: Application) => {
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.pull_request.head_sha, [context.payload.pull_request.number])
+    }, [context.payload.pull_request.number])
   })
 
   app.on([
@@ -119,7 +139,7 @@ export = (app: Application) => {
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
+    }, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
   })
 
   app.on([
@@ -129,7 +149,7 @@ export = (app: Application) => {
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_run.head_sha, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
+    }, context.payload.check_run.pull_requests.map((pullRequest: any) => pullRequest.number))
   })
 
   app.on([
@@ -139,7 +159,7 @@ export = (app: Application) => {
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
+    }, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
   })
 
   app.on([
@@ -148,6 +168,6 @@ export = (app: Application) => {
     await handlePullRequests(app, context, context.payload.installation.id, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name
-    }, context.payload.check_suite.head_sha, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
+    }, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
   })
 }

@@ -1,6 +1,6 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
-import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit } from './../src/github-models'
+import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit, RepositoryReference } from './../src/github-models'
 import { HandlerContext, PullRequestReference, PullRequestState, MergeableState, CommentAuthorAssociation } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
@@ -249,6 +249,31 @@ export function createPullRequestOpenedEvent (pullRequest: PullRequestReference)
   }
 }
 
+export function createStatusEvent (options: RepositoryReference & { sha: string, branchName: string }): any {
+  return {
+    name: 'status',
+    payload: {
+      installation: 1,
+      sha: options.sha,
+      state: 'success',
+      description: 'This is a status check',
+      branches: [{
+        name: options.branchName,
+        commit: {
+          sha: options.sha
+        },
+        protected: false
+      }],
+      repository: {
+        owner: {
+          login: options.owner
+        },
+        name: options.repo
+      }
+    }
+  }
+}
+
 export function createCommit (options?: Partial<Commit>): { commit: Commit } {
   return {
     commit: {
@@ -389,7 +414,8 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
       update: jest.fn()
     },
     pullRequests: {
-      merge: createOkResponse()
+      merge: createOkResponse(),
+      list: createOkResponse()
     },
     repos: {
       merge: createOkResponse(),
