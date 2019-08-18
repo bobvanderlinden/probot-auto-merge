@@ -64,7 +64,7 @@ describe('getPullRequestPlan', () => {
     expect(plan.actions).toEqual([])
   })
 
-  it('does not reschedule when requiredChecks are pending but the pull request was merged or closed', async () => {
+  it('does not reschedule when mergeable is pending but the pull request was merged or closed', async () => {
     const plan = getPullRequestPlan(
       createHandlerContext(),
       createPullRequestInfo(),
@@ -73,7 +73,7 @@ describe('getPullRequestPlan', () => {
           status: 'fail',
           message: ''
         },
-        requiredChecks: {
+        mergeable: {
           status: 'pending'
         }
       })
