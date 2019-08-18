@@ -63,6 +63,24 @@ describe('getPullRequestPlan', () => {
     )
     expect(plan.actions).toEqual([])
   })
+
+  it('does not reschedule when mergeable is pending but the pull request was merged or closed', async () => {
+    const plan = getPullRequestPlan(
+      createHandlerContext(),
+      createPullRequestInfo(),
+      createPullRequestStatus({
+        open: {
+          status: 'fail',
+          message: ''
+        },
+        mergeable: {
+          status: 'pending'
+        }
+      })
+    )
+    expect(plan.actions).toEqual([])
+  })
+
   it('schedules next run when one of the conditions is pending', async () => {
     const plan = getPullRequestPlan(
       createHandlerContext(),
