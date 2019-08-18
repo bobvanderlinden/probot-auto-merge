@@ -114,6 +114,8 @@ export function mapObject<TKey extends string, TValue, TMappedValue> (obj: { [ke
   return result
 }
 
+export function flatten<T> (arrays: T[][]): T[] { return ([] as T[]).concat.apply([], arrays) }
+
 export function flatMap<TInput, TOutput> (array: Array<TInput>, fn: (input: TInput) => Array<TOutput>): Array<TOutput> {
   return array.reduce<Array<TOutput>>((result, input) => [...result, ...fn(input)], [])
 }
