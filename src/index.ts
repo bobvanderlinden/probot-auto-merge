@@ -5,7 +5,6 @@ import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
-import { queryPullRequestsForBranch } from './pull-request-query'
 import myAppId from './myappid'
 import { flatten } from './utils'
 
