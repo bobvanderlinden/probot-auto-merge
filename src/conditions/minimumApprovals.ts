@@ -1,7 +1,7 @@
 import { ConditionConfig } from './../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
-import { getLatestReviews, arrayToMap, or, get, mapToArray } from '../utils'
+import { getLatestReviews, arrayToMap, or, mapToArray, tryGet } from '../utils'
 import { associations, getAssociationPriority } from '../association'
 
 export default function hasMinimumApprovals (
@@ -19,7 +19,7 @@ export default function hasMinimumApprovals (
       )
 
   return mapToArray(config.minApprovals)
-    .some(([association, minApproval]) => or(get(approvalCountByAssociation, association), 0) < minApproval)
+    .some(([association, minApproval]) => or(tryGet(approvalCountByAssociation, association), 0) < minApproval)
     ? {
       status: 'fail',
       message: 'There are not enough approvals by reviewers'
