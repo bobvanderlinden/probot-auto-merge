@@ -1,17 +1,17 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
-import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit } from './../src/github-models'
+import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit, RepositoryReference } from './../src/github-models'
 import { HandlerContext, PullRequestReference, PullRequestState, MergeableState, CommentAuthorAssociation } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
 import { Application, ApplicationFunction } from 'probot'
 import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
-import { Response } from '@octokit/rest'
+import { Response, Endpoint } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
 import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
 
-export const defaultPullRequestInfo: PullRequestInfo = {
+export const defaultPullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
   mergeable: MergeableState.MERGEABLE,
@@ -249,6 +249,31 @@ export function createPullRequestOpenedEvent (pullRequest: PullRequestReference)
   }
 }
 
+export function createStatusEvent (options: RepositoryReference & { sha: string, branchName: string }): any {
+  return {
+    name: 'status',
+    payload: {
+      installation: 1,
+      sha: options.sha,
+      state: 'success',
+      description: 'This is a status check',
+      branches: [{
+        name: options.branchName,
+        commit: {
+          sha: options.sha
+        },
+        protected: false
+      }],
+      repository: {
+        owner: {
+          login: options.owner
+        },
+        name: options.repo
+      }
+    }
+  }
+}
+
 export function createCommit (options?: Partial<Commit>): { commit: Commit } {
   return {
     commit: {
@@ -346,7 +371,7 @@ export function createCheckSuiteCompletedEvent (pullRequest: PullRequestReferenc
   }
 }
 
-export function createResponse<T> (options: Partial<Response<T>>): Response<T> {
+export function createResponse<T> (options?: Partial<Response<T>>): Response<T> {
   return {
     data: null,
     status: 200,
@@ -355,8 +380,23 @@ export function createResponse<T> (options: Partial<Response<T>>): Response<T> {
   } as any as Response<T>
 }
 
-export function createOkResponse<T> (): (...args: any[]) => Response<T> {
-  return jest.fn(() => createResponse({ status: 200 }))
+export function createEndpoint<T> (responder: (...args: any[]) => Response<T>): { (...args: any[]): Response<T>, endpoint: Endpoint } {
+  return jest.fn(() => responder()) as any
+}
+
+export function createResponder<T> (options?: Partial<Response<T>>) {
+  return () => createResponse(options)
+}
+
+export function createOkEndpoint<T> (options?: Partial<Response<T>>) {
+  return createEndpoint(createResponder({
+    status: 200,
+    ...options
+  }))
+}
+
+export function createOkResponse<T> (): { (...args: any[]): Response<T>, endpoint: Endpoint } {
+  return jest.fn(() => createResponse({ status: 200 })) as any
 }
 
 export function createGithubApiFromPullRequestInfo (opts: {
@@ -381,15 +421,18 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
 }): DeepPartial<GitHubAPI> {
   const pullRequestQueryResult = createPullRequestQuery(opts.pullRequestInfo)
   return {
-    query: jest.fn(() => {
-      return pullRequestQueryResult
+    graphql: jest.fn(() => {
+      return {
+        data: pullRequestQueryResult
+      }
     }),
     checks: {
-      create: jest.fn(),
-      update: jest.fn()
+      create: createOkResponse(),
+      update: createOkResponse()
     },
-    pullRequests: {
-      merge: createOkResponse()
+    pulls: {
+      merge: createOkResponse(),
+      list: createOkResponse()
     },
     repos: {
       merge: createOkResponse(),
@@ -397,7 +440,7 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
         '.github/auto-merge.yml': () => Buffer.from(opts.config)
       })
     },
-    gitdata: {
+    git: {
       deleteRef: createOkResponse()
     }
   }
