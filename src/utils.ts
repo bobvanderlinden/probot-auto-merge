@@ -85,11 +85,15 @@ export function groupByCount<TKey extends string, TItem> (
   }, {})
 }
 
-export function mapToArray<TKey extends string, TValue> (map: { [key in TKey]?: TValue }) {
-  return Object.entries(map)
+export function mapToArray<TKey extends string, TValue> (map: { [key in TKey]?: TValue }): [TKey, TValue][] {
+  return Object.entries(map) as any
 }
 
 export function get<TKey extends string, TValue> (obj: { [key in TKey]: TValue }, key: TKey): TValue {
+  return obj[key]
+}
+
+export function tryGet<TKey extends string, TValue> (obj: { [key in TKey]?: TValue }, key: TKey): TValue | undefined {
   return obj[key]
 }
 
