@@ -57,7 +57,7 @@ it('full happy path', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('not enough approval reviews', async () => {
@@ -103,7 +103,7 @@ it('not enough approval reviews', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).not.toHaveBeenCalled()
+  expect(github.pulls.merge).not.toHaveBeenCalled()
 
   pullRequestInfo.reviews.nodes = [
     approvedReview({
@@ -119,7 +119,7 @@ it('not enough approval reviews', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('no configuration should not schedule any pull request', async () => {
@@ -204,7 +204,7 @@ it('merges when receiving status event', async () => {
   await immediate()
 
   expect(list).toHaveBeenCalled()
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('pending check run', async () => {
@@ -250,7 +250,7 @@ it('pending check run', async () => {
 
   expect(github.query).toHaveBeenCalled()
   expect(setTimeout).toHaveBeenCalled()
-  expect(github.pullRequests.merge).not.toHaveBeenCalled()
+  expect(github.pulls.merge).not.toHaveBeenCalled()
   github.query = jest.fn(async () => {
     return {
       repository: {
@@ -266,7 +266,7 @@ it('pending check run', async () => {
   jest.runAllTimers()
   await immediate()
   expect(github.query).toHaveBeenCalled()
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 
 })
 
@@ -316,7 +316,7 @@ it('to merge when one rule and the global configuration passes', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('to report error when processing pull request results in error', async () => {
@@ -413,7 +413,7 @@ it('to report error and continue when graphql query contained errors', async () 
   )
 
   expect(captureException).toHaveBeenCalledTimes(1)
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('when no permission to source repository throw a no permission error', async () => {

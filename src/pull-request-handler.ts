@@ -316,7 +316,7 @@ async function mergePullRequest (
   const pullRequestReference = getPullRequestReference(pullRequestInfo)
   // This presses the merge button.
   result(
-    await context.github.pullRequests.merge({
+    await context.github.pulls.merge({
       ...pullRequestReference,
       merge_method: config.mergeMethod
     })
