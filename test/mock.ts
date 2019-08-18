@@ -11,7 +11,7 @@ import { Response } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
 import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
 
-export const defaultPullRequestInfo: PullRequestInfo = {
+export const defaultPullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
   mergeable: MergeableState.MERGEABLE,
