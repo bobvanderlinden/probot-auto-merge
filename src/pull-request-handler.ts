@@ -199,7 +199,7 @@ export function getPullRequestPlan (
       }
     default:
       Raven.mergeContext({
-        extras: { pullRequestInfo }
+        extra: { pullRequestInfo }
       })
       throw new Error(`Merge state (${pullRequestInfo.mergeStateStatus}) was not recognized`)
   }

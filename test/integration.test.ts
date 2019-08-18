@@ -12,12 +12,13 @@ import {
   createCheckSuiteCompletedEvent,
   createCheckRunCreatedEvent,
   createCommitsWithCheckSuiteWithCheckRun,
-  createPullRequestQuery
+  createPullRequestQuery,
+  createStatusEvent
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
 import { CommentAuthorAssociation } from '../src/models'
-import { GraphQLQueryError } from 'probot/lib/github'
+import { GraphQLQueryError, GitHubAPI } from 'probot/lib/github'
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -149,6 +150,61 @@ it('no configuration should not schedule any pull request', async () => {
       })
     )
   ).rejects.toHaveProperty('message', "Configuration file '.github/auto-merge.yml' not found")
+})
+
+it('merges when receiving status event', async () => {
+  const config = `
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    reviews: {
+      nodes: [
+        approvedReview({
+          authorAssociation: CommentAuthorAssociation.OWNER
+        })
+      ]
+    },
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    })
+  })
+
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
+
+  const list = jest.fn(() => ({
+    data: [
+      createPullRequestInfo({ number: 1 })
+    ]
+  }))
+
+  const app = createApplication({
+    appFn,
+    logger: createEmptyLogger(),
+    github: {
+      ...github,
+      pullRequests: {
+        ...github.pullRequests,
+        list: list as any
+      }
+    } as GitHubAPI
+  })
+
+  await app.receive(
+    createStatusEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      sha: '123',
+      branchName: 'pr-1'
+    })
+  )
+
+  await immediate()
+
+  expect(list).toHaveBeenCalled()
+  expect(github.pullRequests.merge).toHaveBeenCalled()
 })
 
 it('pending check run', async () => {
