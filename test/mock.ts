@@ -269,7 +269,7 @@ export function createStatusEvent (options: RepositoryReference & { sha: string,
           login: options.owner
         },
         name: options.repo
-      },
+      }
     }
   }
 }
