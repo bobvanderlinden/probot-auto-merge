@@ -34,8 +34,11 @@ const appPath = [
 ]
 
 async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
-  const response = await github.graphql(query, variables, {
-    'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+  const response = await github.graphql(query, {
+    ...variables,
+    headers: {
+      'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+    }
   })
   if (response.errors) {
     // Remove error related to permissions for fetching app id of checkSuites.
