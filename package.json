@@ -61,8 +61,8 @@
     "typescript": "^3.3.3"
   },
   "engines": {
-    "node": "10.15.0",
-    "npm": "5.7.1"
+    "node": "10.16.3",
+    "npm": "6.4.1"
   },
   "standard": {
     "env": [
