@@ -37,9 +37,10 @@
     "bunyan": "^1.8.12",
     "bunyan-sentry-stream": "^1.2.1",
     "debug": "^4.1.1",
+    "dotenv": "^8.1.0",
     "express": "^4.16.4",
     "minimatch": "^3.0.4",
-    "probot": "^7.4.0",
+    "probot": "^9.3.1",
     "probot-config": "^1.0.1",
     "raven": "^2.6.4"
   },
@@ -48,7 +49,7 @@
     "@types/debug": "^4.1.1",
     "@types/jest": "^24.0.5",
     "@types/minimatch": "^3.0.3",
-    "@types/node": "^11.9.4",
+    "@types/node": "^12.0.4",
     "@types/p-queue": "^3.0.0",
     "@types/raven": "^2.5.3",
     "apollo": "^2.5.1",
@@ -58,15 +59,15 @@
     "nodemon": "^1.18.10",
     "semantic-release": "^15.13.1",
     "smee-client": "^1.0.2",
-    "standard": "^12.0.1",
+    "standard": "^14.0.0",
     "ts-jest": "^24.0.0",
     "tslint": "^5.12.1",
     "tslint-config-standard": "^8.0.1",
     "typescript": "^3.3.3"
   },
   "engines": {
-    "node": "10.15.0",
-    "npm": "5.7.1"
+    "node": "10.16.3",
+    "npm": "6.4.1"
   },
   "standard": {
     "env": [

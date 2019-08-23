@@ -1,7 +1,8 @@
+import { CommentAuthorAssociation } from './../query.graphql'
 import { ConditionConfig } from './../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
-import { getLatestReviews, arrayToMap, mapToArray, or, get } from '../utils'
+import { getLatestReviews, arrayToMap, mapToArray, or, tryGet } from '../utils'
 import { associations, getAssociationPriority } from '../association'
 
 export default function doesNotHaveMaximumChangesRequested (
@@ -9,7 +10,7 @@ export default function doesNotHaveMaximumChangesRequested (
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
   const latestReviews = getLatestReviews(pullRequestInfo)
-  const changesRequestedCountByAssociation =
+  const changesRequestedCountByAssociation: { [key in CommentAuthorAssociation]?: number } =
     arrayToMap(associations,
       (association) => association,
       (association) => latestReviews
@@ -19,7 +20,7 @@ export default function doesNotHaveMaximumChangesRequested (
       )
 
   return mapToArray(config.maxRequestedChanges)
-    .some(([association, maxRequestedChanges]) => or(get(changesRequestedCountByAssociation, association), 0) > maxRequestedChanges)
+    .some(([association, maxRequestedChanges]) => or<number>(tryGet(changesRequestedCountByAssociation, association), 0) > maxRequestedChanges)
     ? {
       status: 'fail',
       message: `There are changes requested by a reviewer.`

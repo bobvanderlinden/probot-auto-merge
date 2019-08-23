@@ -12,12 +12,14 @@ import {
   createCheckSuiteCompletedEvent,
   createCheckRunCreatedEvent,
   createCommitsWithCheckSuiteWithCheckRun,
-  createPullRequestQuery
+  createPullRequestQuery,
+  createStatusEvent,
+  createOkResponse
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
 import { CommentAuthorAssociation } from '../src/models'
-import { GraphQLQueryError } from 'probot/lib/github'
+import { GitHubAPI } from 'probot/lib/github'
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -56,7 +58,7 @@ it('full happy path', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('not enough approval reviews', async () => {
@@ -102,7 +104,7 @@ it('not enough approval reviews', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).not.toHaveBeenCalled()
+  expect(github.pulls.merge).not.toHaveBeenCalled()
 
   pullRequestInfo.reviews.nodes = [
     approvedReview({
@@ -118,7 +120,7 @@ it('not enough approval reviews', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('no configuration should not schedule any pull request', async () => {
@@ -149,6 +151,61 @@ it('no configuration should not schedule any pull request', async () => {
       })
     )
   ).rejects.toHaveProperty('message', "Configuration file '.github/auto-merge.yml' not found")
+})
+
+it('merges when receiving status event', async () => {
+  const config = `
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    reviews: {
+      nodes: [
+        approvedReview({
+          authorAssociation: CommentAuthorAssociation.OWNER
+        })
+      ]
+    },
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    })
+  })
+
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
+
+  const list = jest.fn(() => ({
+    data: [
+      createPullRequestInfo({ number: 1 })
+    ]
+  }))
+
+  const app = createApplication({
+    appFn,
+    logger: createEmptyLogger(),
+    github: {
+      ...github,
+      pulls: {
+        ...github.pulls,
+        list: list as any
+      }
+    } as GitHubAPI
+  })
+
+  await app.receive(
+    createStatusEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      sha: '123',
+      branchName: 'pr-1'
+    })
+  )
+
+  await immediate()
+
+  expect(list).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('pending check run', async () => {
@@ -192,25 +249,27 @@ it('pending check run', async () => {
 
   await immediate()
 
-  expect(github.query).toHaveBeenCalled()
+  expect(github.graphql).toHaveBeenCalled()
   expect(setTimeout).toHaveBeenCalled()
-  expect(github.pullRequests.merge).not.toHaveBeenCalled()
-  github.query = jest.fn(async () => {
+  expect(github.pulls.merge).not.toHaveBeenCalled()
+  github.graphql = jest.fn(async () => {
     return {
-      repository: {
-        pullRequest: {
-          ...pullRequestInfo,
-          commits: createCommitsWithCheckSuiteWithCheckRun({
-            checkRun: successCheckRun
-          })
+      data: {
+        repository: {
+          pullRequest: {
+            ...pullRequestInfo,
+            commits: createCommitsWithCheckSuiteWithCheckRun({
+              checkRun: successCheckRun
+            })
+          }
         }
       }
     }
   })
   jest.runAllTimers()
   await immediate()
-  expect(github.query).toHaveBeenCalled()
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.graphql).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 
 })
 
@@ -260,7 +319,7 @@ it('to merge when one rule and the global configuration passes', async () => {
     })
   )
 
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('to report error when processing pull request results in error', async () => {
@@ -332,14 +391,15 @@ it('to report error and continue when graphql query contained errors', async () 
         '.github/auto-merge.yml': () => Buffer.from(config)
       })
     },
-    pullRequests: {
-      merge: jest.fn()
+    pulls: {
+      merge: createOkResponse()
     },
-    query: jest.fn(async () => Promise.reject(
-      new GraphQLQueryError([{
+    graphql: jest.fn(async () => ({
+      errors: [{
         message: 'Some problem'
-      }], '', {}, pullRequestQuery)
-    ))
+      }],
+      data: pullRequestQuery
+    }))
   })
 
   const app = createApplication({
@@ -357,7 +417,7 @@ it('to report error and continue when graphql query contained errors', async () 
   )
 
   expect(captureException).toHaveBeenCalledTimes(1)
-  expect(github.pullRequests.merge).toHaveBeenCalled()
+  expect(github.pulls.merge).toHaveBeenCalled()
 })
 
 it('when no permission to source repository throw a no permission error', async () => {

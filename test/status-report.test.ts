@@ -1,5 +1,5 @@
 import { CheckSuite } from './../src/github-models'
-import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig, createCheckSuite, createCommit } from './mock'
+import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig, createCheckSuite, createCommit, createOkResponse } from './mock'
 import { updateStatusReportCheck } from '../src/status-report'
 
 const myappid = 1
@@ -32,8 +32,8 @@ function mock (options: {
   reportStatus: boolean,
   checkSuites: CheckSuite[]
 }) {
-  const updateCheck = jest.fn()
-  const createCheck = jest.fn()
+  const updateCheck = createOkResponse()
+  const createCheck = createOkResponse()
 
   const config = createConfig({
     reportStatus: options.reportStatus
