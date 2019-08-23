@@ -11,6 +11,17 @@ import { Response, Endpoint } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
 import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
 
+export class GraphqlError {
+  name: string
+  errors?: any
+  data?: any
+  constructor (options: { errors?: any, data?: any }) {
+    this.name = 'GraphqlError'
+    this.errors = options.errors
+    this.data = options.data
+  }
+}
+
 export const defaultPullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
@@ -422,9 +433,7 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
   const pullRequestQueryResult = createPullRequestQuery(opts.pullRequestInfo)
   return {
     graphql: jest.fn(() => {
-      return {
-        data: pullRequestQueryResult
-      }
+      return pullRequestQueryResult
     }),
     checks: {
       create: createOkResponse(),

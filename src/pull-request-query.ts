@@ -2,7 +2,7 @@ import Raven from 'raven'
 import { PullRequestReference, PullRequestInfo, validatePullRequestQuery } from './github-models'
 import { PullRequestQueryVariables, PullRequestQuery } from './query.graphql'
 import { Context } from 'probot'
-import { GitHubAPI } from 'probot/lib/github'
+import { GitHubAPI, GraphQlQueryResponse } from 'probot/lib/github'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
@@ -33,13 +33,35 @@ const appPath = [
   'app'
 ]
 
-async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
-  const response = await github.graphql(query, {
-    ...variables,
-    headers: {
-      'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+export async function rawGraphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<GraphQlQueryResponse> {
+  try {
+    // Warning: The type signature of the graphql call is incorrect. It actually returns the data of the graphql response.
+    // the errors are passed by throwing an exception.
+    const data = await github.graphql(query, {
+      ...variables,
+      headers: {
+        'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+      }
+    }) as any
+    return {
+      data
     }
-  })
+  } catch (e) {
+    if (e && e.name === 'GraphqlError') {
+      const errors = e.errors
+      const data = e.data
+      return {
+        data,
+        errors
+      }
+    } else {
+      throw e
+    }
+  }
+}
+
+export async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
+  const response = await rawGraphQLQuery(github, variables)
   if (response.errors) {
     // Remove error related to permissions for fetching app id of checkSuites.
     // These errors cannot be  avoided, as auto-merge wants to fetch which checkSuites are its own.
