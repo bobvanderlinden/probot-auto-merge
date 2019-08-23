@@ -342,6 +342,6 @@ export async function handlePullRequestStatus (
   )
 
   const { actions } = plan
-  context.log.debug('Actions:', actions)
+  context.log.debug('Plan:', plan)
   await executeActions(context, pullRequestInfo, actions)
 }
