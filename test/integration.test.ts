@@ -14,12 +14,14 @@ import {
   createCommitsWithCheckSuiteWithCheckRun,
   createPullRequestQuery,
   createStatusEvent,
-  createOkResponse
+  createOkResponse,
+  GraphqlError
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
 import { CommentAuthorAssociation } from '../src/models'
 import { GitHubAPI } from 'probot/lib/github'
+
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -254,17 +256,15 @@ it('pending check run', async () => {
   expect(github.pulls.merge).not.toHaveBeenCalled()
   github.graphql = jest.fn(async () => {
     return {
-      data: {
-        repository: {
-          pullRequest: {
-            ...pullRequestInfo,
-            commits: createCommitsWithCheckSuiteWithCheckRun({
-              checkRun: successCheckRun
-            })
-          }
+      repository: {
+        pullRequest: {
+          ...pullRequestInfo,
+          commits: createCommitsWithCheckSuiteWithCheckRun({
+            checkRun: successCheckRun
+          })
         }
       }
-    }
+    } as any
   })
   jest.runAllTimers()
   await immediate()
@@ -394,12 +394,14 @@ it('to report error and continue when graphql query contained errors', async () 
     pulls: {
       merge: createOkResponse()
     },
-    graphql: jest.fn(async () => ({
-      errors: [{
-        message: 'Some problem'
-      }],
-      data: pullRequestQuery
-    }))
+    graphql: jest.fn(async () => {
+      throw new GraphqlError({
+        errors: [{
+          message: 'Some problem'
+        }],
+        data: pullRequestQuery
+      })
+    })
   })
 
   const app = createApplication({

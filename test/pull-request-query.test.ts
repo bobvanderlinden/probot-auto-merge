@@ -1,15 +1,13 @@
 import { queryPullRequest } from '../src/pull-request-query'
-import { createGithubApi, createPullRequestInfo, createPullRequestQuery, createOkEndpoint } from './mock'
+import { createGithubApi, createPullRequestInfo, createPullRequestQuery, createOkEndpoint, GraphqlError } from './mock'
 
 describe('queryPullRequest', () => {
   it('should do a single graphql query', async () => {
     const pullRequestInfo = createPullRequestInfo()
     const graphql = jest.fn(() => ({
-      data: {
-        repository: {
-          pullRequest: {
-            ...pullRequestInfo
-          }
+      repository: {
+        pullRequest: {
+          ...pullRequestInfo
         }
       }
     }))
@@ -31,9 +29,7 @@ describe('queryPullRequest', () => {
   })
 
   it('should throw error when no query response', async () => {
-    const graphql = jest.fn(() => ({
-      data: null
-    }))
+    const graphql = jest.fn(() => null)
     expect(queryPullRequest(
       createGithubApi({
         graphql
@@ -43,9 +39,7 @@ describe('queryPullRequest', () => {
   })
 
   it('should throw error when empty query response', async () => {
-    const graphql = jest.fn(() => ({
-      data: {}
-    }))
+    const graphql = jest.fn(() => ({}))
     expect(queryPullRequest(
       createGithubApi({
         graphql
@@ -77,7 +71,7 @@ describe('queryPullRequest', () => {
     Raven.captureException = captureException
     const queryResult = createPullRequestQuery(createPullRequestInfo())
     const graphql = jest.fn(() => {
-      return {
+      throw new GraphqlError({
         errors: [{
           extensions: [],
           locations: [],
@@ -85,7 +79,7 @@ describe('queryPullRequest', () => {
           path: ['repository', 'some', 'field']
         }],
         data: queryResult
-      }
+      })
     })
     await queryPullRequest(
       createGithubApi({
@@ -102,7 +96,7 @@ describe('queryPullRequest', () => {
     Raven.captureException = captureException
     const queryResult = createPullRequestQuery(createPullRequestInfo())
     const graphql = jest.fn(() => {
-      return {
+      throw new GraphqlError({
         errors: [{
           extensions: [],
           locations: [],
@@ -121,7 +115,7 @@ describe('queryPullRequest', () => {
           ]
         }],
         data: queryResult
-      }
+      })
     })
     await queryPullRequest(
       createGithubApi({
