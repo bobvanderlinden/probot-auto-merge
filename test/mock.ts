@@ -22,7 +22,7 @@ export class GraphqlError {
   }
 }
 
-export const defaultPullRequestInfo = {
+export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
   mergeable: MergeableState.MERGEABLE,
@@ -66,6 +66,9 @@ export const defaultPullRequestInfo = {
   commits: {
     nodes: [{
       commit: {
+        status: {
+          contexts: []
+        },
         checkSuites: {
           nodes: []
         }
@@ -288,6 +291,9 @@ export function createStatusEvent (options: RepositoryReference & { sha: string,
 export function createCommit (options?: Partial<Commit>): { commit: Commit } {
   return {
     commit: {
+      status: {
+        contexts: []
+      },
       checkSuites: {
         nodes: []
       },
