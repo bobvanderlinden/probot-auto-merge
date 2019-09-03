@@ -41,6 +41,12 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
       commits(last: 1) {
         nodes {
           commit {
+            status {
+              contexts {
+                context
+                state
+              }
+            }
             checkSuites(last: 10) {
               nodes {
                 app {
