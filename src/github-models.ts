@@ -101,6 +101,18 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                   ...removeTypename(commit),
                   commit: {
                     ...removeTypename(commit.commit),
+                    status: assertNotNull(commit.commit.status, 'No permission to fetch status',
+                      status => ({
+                        ...removeTypename(status),
+                        contexts: assertNotNull(status.contexts, 'No permission to fetch contexts',
+                          contexts => contexts.map(context => ({
+                            ...removeTypename(context),
+                            context: context.context,
+                            state: context.state
+                          }))
+                        )
+                      })
+                    ),
                     checkSuites: assertNotNullNodes(commit.commit.checkSuites, 'No permission to fetch checkSuites',
                       checkSuite => ({
                         ...removeTypename(checkSuite),
