@@ -237,7 +237,7 @@ it('merges when receiving status event', async () => {
   )
   expect(github.pulls.merge).toHaveBeenCalledWith({
     merge_method: 'merge',
-    number: 1,
+    pull_number: 1,
     owner: 'bobvanderlinden',
     repo: 'probot-auto-merge'
   })
