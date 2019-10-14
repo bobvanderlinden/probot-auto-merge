@@ -101,7 +101,7 @@ export = (app: Application) => {
       context.github.pulls.list({
         owner: repositoryReference.owner,
         repo: repositoryReference.repo,
-        base: branch.name
+        head: `${repositoryReference.owner}:${branch.name}`
       })
     ))
     const pullRequests = flatten(pullRequestResponses.map(response => response.data))
