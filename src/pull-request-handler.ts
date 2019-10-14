@@ -317,7 +317,9 @@ async function mergePullRequest (
   // This presses the merge button.
   result(
     await context.github.pulls.merge({
-      ...pullRequestReference,
+      owner: pullRequestReference.owner,
+      repo: pullRequestReference.repo,
+      pull_number: pullRequestReference.number,
       merge_method: config.mergeMethod
     })
   )
