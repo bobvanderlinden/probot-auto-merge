@@ -7,6 +7,8 @@ import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
 import { flatten } from './utils'
+import { GitHubAPI } from 'probot/lib/github'
+import { rawGraphQLQuery } from './github-utils'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -91,23 +93,59 @@ export = (app: Application) => {
     })
   }
 
+  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, branchName }: { owner: String, repo: string, branchName: string }): Promise<{ owner: string, repo: string, number: number }[]> {
+    const result = await rawGraphQLQuery(github, `
+      query {
+        repository(owner: $owner, name: $repo) {
+          ref(qualifiedName: $refQualifiedName) {
+            associatedPullRequests(first: 10) {
+              nodes {
+                number
+                repository {
+                  name
+                  owner {
+                    login
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `, {
+      owner: owner,
+      repo: repo,
+      refQualifiedName: `refs/heads/${branchName}`
+    }, {})
+    if (!result.data) { return [] }
+    return result.data.repository.ref.associatedPullRequests.nodes.map((node: any) => ({
+      number: node.number,
+      repo: node.repository.name,
+      owner: node.repository.owner.login
+    }))
+  }
+
   app.on([
     'status'
   ], async context => {
-    const repositoryReference = { owner: context.payload.repository.owner.login, repo: context.payload.repository.name }
     const branches = context.payload.branches as { name: string }[]
     const validBranches = branches.filter(branch => branch.name !== 'master')
     const pullRequestResponses = await Promise.all(validBranches.map(branch =>
-      context.github.pulls.list({
-        owner: repositoryReference.owner,
-        repo: repositoryReference.repo,
-        head: `${repositoryReference.owner}:${branch.name}`
+      getAssociatedPullRequests(context.github, {
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        branchName: branch.name
       })
     ))
-    const pullRequests = flatten(pullRequestResponses.map(response => response.data))
-    await Promise.all(pullRequests.map(pullRequest =>
-      handlePullRequests(app, context, context.payload.installation.id, repositoryReference, [pullRequest.number])
-    ))
+
+    const pullRequests = flatten(pullRequestResponses)
+    await Promise.all(pullRequests.map(pullRequest => {
+      const repositoryReference = {
+        owner: pullRequest.owner,
+        repo: pullRequest.repo
+      }
+      return handlePullRequests(app, context, context.payload.installation.id, repositoryReference, [pullRequest.number])
+    }))
   })
 
   app.on([
