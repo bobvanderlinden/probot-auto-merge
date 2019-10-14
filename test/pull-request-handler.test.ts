@@ -225,7 +225,7 @@ describe('getPullRequestPlan', () => {
             name: 'probot-auto-merge'
           }
         },
-        headRef: {
+        headRef: defaultPullRequestInfo.headRef && {
           ...defaultPullRequestInfo.headRef,
           name: 'pr',
           repository: {
