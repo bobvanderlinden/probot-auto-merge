@@ -276,6 +276,33 @@ To run the built image:
 npm run docker:run
 ```
 
+## Deployment
+
+To deploy `probot-auto-merge` yourself, please follow [the guidelines defined by probot on deploying GitHub applications](https://probot.github.io/docs/deployment/).
+
+The permissions and events needed for the app to function can be found below.
+
+### Permissions
+
+* Administration: Read-only
+* Checks: Read & write
+* Contents: Read & write
+* Issues: Read & write
+* Metadata: Read-only
+* Pull requests: Read & write
+* Commit statuses: Read-only
+* Members: Read-only
+
+### Events
+
+* Check run
+* Check suite
+* Label
+* Pull request
+* Pull request review
+* Pull request review comment
+* Status
+
 ## Contributing
 
 If you have suggestions for how probot-auto-merge could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
