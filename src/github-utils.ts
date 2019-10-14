@@ -1,5 +1,5 @@
-import { GitHubAPI } from "probot/lib/github"
-import { GraphQlQueryResponse } from "@octokit/graphql/dist-types/types"
+import { GitHubAPI } from 'probot/lib/github'
+import { GraphQlQueryResponse } from '@octokit/graphql/dist-types/types'
 
 export async function rawGraphQLQuery (github: GitHubAPI, query: string, variables: { [key in string]: any }, headers: { [key in string]: string }): Promise<GraphQlQueryResponse> {
   try {
