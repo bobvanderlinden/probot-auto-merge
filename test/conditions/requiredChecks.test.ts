@@ -1,6 +1,7 @@
 import requiredChecks from '../../src/conditions/requiredChecks'
 import { createConditionConfig, createPullRequestInfo, createCheckRun, createMasterRef, createCommitsWithCheckSuiteWithCheckRun, createCommit, createCheckSuite } from '../mock'
 import { CheckConclusionState, CheckStatusState } from '../../src/models'
+import { StatusState } from '../../src/query.graphql'
 
 describe('requiredChecks', () => {
   it('returns success when there are no required check runs', () => {
@@ -35,6 +36,10 @@ describe('requiredChecks', () => {
       createConditionConfig(),
       createPullRequestInfo({
         commits: createCommitsWithCheckSuiteWithCheckRun({
+          statusContext: {
+            context: 'mycheckrun',
+            state: StatusState.SUCCESS
+          },
           checkRun: {
             name: 'mycheckrun',
             status: CheckStatusState.COMPLETED,
@@ -121,6 +126,10 @@ describe('requiredChecks', () => {
       createConditionConfig(),
       createPullRequestInfo({
         commits: createCommitsWithCheckSuiteWithCheckRun({
+          statusContext: {
+            context: 'mycheckrun',
+            state: StatusState.FAILURE
+          },
           checkRun: {
             name: 'mycheckrun',
             status: CheckStatusState.COMPLETED,
@@ -151,6 +160,15 @@ describe('requiredChecks', () => {
       createPullRequestInfo({
         commits: {
           nodes: [createCommit({
+            status: {
+              contexts: [{
+                context: 'mycheckrun1',
+                state: StatusState.SUCCESS
+              }, {
+                context: 'mycheckrun1',
+                state: StatusState.FAILURE
+              }]
+            },
             checkSuites: {
               nodes: [createCheckSuite({
                 checkRuns: {
