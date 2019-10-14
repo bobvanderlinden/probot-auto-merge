@@ -276,7 +276,7 @@ describe('executeAction with action', () => {
       merge_method: 'merge',
       owner: 'bobvanderlinden',
       repo: 'probot-auto-merge',
-      number: 2
+      pull_number: 2
     })
   })
 
