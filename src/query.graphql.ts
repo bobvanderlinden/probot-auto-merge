@@ -110,6 +110,26 @@ export interface PullRequestQuery_repository_pullRequest_baseRef {
   name: string;
 }
 
+export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_status_contexts {
+  __typename: "StatusContext";
+  /**
+   * The name of this status context.
+   */
+  context: string;
+  /**
+   * The state of this status context.
+   */
+  state: StatusState;
+}
+
+export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_status {
+  __typename: "Status";
+  /**
+   * The individual status contexts for this commit.
+   */
+  contexts: PullRequestQuery_repository_pullRequest_commits_nodes_commit_status_contexts[];
+}
+
 export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_checkSuites_nodes_app {
   __typename: "App";
   /**
@@ -176,6 +196,10 @@ export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit_ch
 
 export interface PullRequestQuery_repository_pullRequest_commits_nodes_commit {
   __typename: "Commit";
+  /**
+   * Status information for this commit
+   */
+  status: PullRequestQuery_repository_pullRequest_commits_nodes_commit_status | null;
   /**
    * The check suites associated with a commit.
    */
@@ -449,6 +473,17 @@ export enum PullRequestState {
   CLOSED = "CLOSED",
   MERGED = "MERGED",
   OPEN = "OPEN",
+}
+
+/**
+ * The possible commit status states.
+ */
+export enum StatusState {
+  ERROR = "ERROR",
+  EXPECTED = "EXPECTED",
+  FAILURE = "FAILURE",
+  PENDING = "PENDING",
+  SUCCESS = "SUCCESS",
 }
 
 //==============================================================
