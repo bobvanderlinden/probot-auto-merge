@@ -15,6 +15,7 @@ import { PassThrough } from 'stream'
 import { flatten } from './utils'
 import { GitHubAPI } from 'probot/lib/github'
 import { rawGraphQLQuery } from './github-utils'
+import express from 'express'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -216,7 +217,8 @@ export = (app: Application) => {
     }, context.payload.check_suite.pull_requests.map((pullRequest: any) => pullRequest.number))
   })
 
-  const router: Router = app.route('/api')
+  const router = express.Router()
+  app.router.use('/api', router)
   router.use((req, res, next) => {
     if (req.query.token !== process.env.DEBUG_TOKEN) {
       return res.status(403).send('')
