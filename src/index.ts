@@ -349,7 +349,7 @@ export = (app: Application) => {
         return res.json(response)
       })
       .catch(err => {
-        res.status(500).json({ status: 'error', error: err.toString() })
+        res.status(500).json({ status: 'error', error: err.toString(), request: req.body })
       })
   })
 }
