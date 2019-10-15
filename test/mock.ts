@@ -1,6 +1,6 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
-import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit, RepositoryReference } from './../src/github-models'
+import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit, RepositoryReference, CommitStatus, CommitStatusContext } from './../src/github-models'
 import { HandlerContext, PullRequestReference, PullRequestState, MergeableState, CommentAuthorAssociation } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
@@ -9,9 +9,20 @@ import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
 import { Response, Endpoint } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
-import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
+import { PullRequestQuery, MergeStateStatus, StatusState } from '../src/query.graphql'
 
-export const defaultPullRequestInfo = {
+export class GraphqlError {
+  name: string
+  errors?: any
+  data?: any
+  constructor (options: { errors?: any, data?: any }) {
+    this.name = 'GraphqlError'
+    this.errors = options.errors
+    this.data = options.data
+  }
+}
+
+export const defaultPullRequestInfo: PullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
   mergeable: MergeableState.MERGEABLE,
@@ -55,6 +66,9 @@ export const defaultPullRequestInfo = {
   commits: {
     nodes: [{
       commit: {
+        status: {
+          contexts: []
+        },
         checkSuites: {
           nodes: []
         }
@@ -277,6 +291,9 @@ export function createStatusEvent (options: RepositoryReference & { sha: string,
 export function createCommit (options?: Partial<Commit>): { commit: Commit } {
   return {
     commit: {
+      status: {
+        contexts: []
+      },
       checkSuites: {
         nodes: []
       },
@@ -300,6 +317,8 @@ export function createCheckSuite (options?: Partial<CheckSuite>): CheckSuite {
 }
 
 export function createCommitsWithCheckSuiteWithCheckRun (options?: {
+  status?: Partial<CommitStatus>,
+  statusContext?: Partial<CommitStatusContext>,
   commit?: Partial<Omit<Commit, 'checkSuites'>>,
   checkSuite?: Partial<Omit<CheckSuite, 'checkRuns'>>,
   checkRun?: Partial<CheckRun>
@@ -308,6 +327,10 @@ export function createCommitsWithCheckSuiteWithCheckRun (options?: {
   return {
     nodes: [
       createCommit({
+        status: createCommitStatus({
+          contexts: [createCommitStatusContext(options.statusContext)],
+          ...options.status
+        }),
         checkSuites: {
           nodes: [createCheckSuite({
             conclusion: options.checkSuite && options.checkSuite.conclusion || options.checkRun && options.checkRun.conclusion,
@@ -321,6 +344,21 @@ export function createCommitsWithCheckSuiteWithCheckRun (options?: {
         ...options.commit
       })
     ]
+  }
+}
+
+export function createCommitStatus (options?: Partial<CommitStatus>): CommitStatus {
+  return {
+    contexts: [],
+    ...options
+  }
+}
+
+export function createCommitStatusContext (options?: Partial<CommitStatusContext>): CommitStatusContext {
+  return {
+    context: 'checka',
+    state: StatusState.SUCCESS,
+    ...options
   }
 }
 
@@ -422,9 +460,7 @@ function createPartialGithubApiFromPullRequestInfo (opts: {
   const pullRequestQueryResult = createPullRequestQuery(opts.pullRequestInfo)
   return {
     graphql: jest.fn(() => {
-      return {
-        data: pullRequestQueryResult
-      }
+      return pullRequestQueryResult
     }),
     checks: {
       create: createOkResponse(),

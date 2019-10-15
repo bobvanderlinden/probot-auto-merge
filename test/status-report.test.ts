@@ -2,8 +2,6 @@ import { CheckSuite } from './../src/github-models'
 import { createPullRequestInfo, createPullRequestContext, createGithubApi, createCheckRun, createConfig, createCheckSuite, createCommit, createOkResponse } from './mock'
 import { updateStatusReportCheck } from '../src/status-report'
 
-const myappid = 1
-
 function createOtherAppCheckSuite (options?: Partial<CheckSuite>) {
   return createCheckSuite({
     app: {
@@ -19,7 +17,7 @@ function createOtherAppCheckSuite (options?: Partial<CheckSuite>) {
 function createMyCheckSuite (options?: Partial<CheckSuite>) {
   return createCheckSuite({
     app: {
-      databaseId: myappid
+      databaseId: 1
     },
     checkRuns: {
       nodes: [createCheckRun()]
@@ -72,14 +70,6 @@ function mock (options: {
 }
 
 describe('updateStatusReportCheck', () => {
-  beforeAll(() => {
-    jest.mock('../src/myappid', () => myappid)
-  })
-
-  afterAll(() => {
-    jest.unmock('../src/myappid')
-  })
-
   it('when reportStatus is enabled and a check of this app is in pull request, update existing check', async () => {
     const {
       context,

@@ -101,6 +101,18 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                   ...removeTypename(commit),
                   commit: {
                     ...removeTypename(commit.commit),
+                    status: assertNotNull(commit.commit.status, 'No permission to fetch status',
+                      status => ({
+                        ...removeTypename(status),
+                        contexts: assertNotNull(status.contexts, 'No permission to fetch contexts',
+                          contexts => contexts.map(context => ({
+                            ...removeTypename(context),
+                            context: context.context,
+                            state: context.state
+                          }))
+                        )
+                      })
+                    ),
                     checkSuites: assertNotNullNodes(commit.commit.checkSuites, 'No permission to fetch checkSuites',
                       checkSuite => ({
                         ...removeTypename(checkSuite),
@@ -139,6 +151,8 @@ export type PullRequestQueryResult_Validated = ReturnType<typeof validatePullReq
 export type PullRequestInfo = PullRequestQueryResult_Validated['repository']['pullRequest']
 export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
 export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
+export type CommitStatus = Commit['status']
+export type CommitStatusContext = ElementOf<CommitStatus['contexts']>
 export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
 export type CheckRun = ElementOf<CheckSuite['checkRuns']['nodes']>
 export type Ref = Exclude<PullRequestInfo['headRef'], null>

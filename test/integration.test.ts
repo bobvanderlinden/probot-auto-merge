@@ -14,12 +14,14 @@ import {
   createCommitsWithCheckSuiteWithCheckRun,
   createPullRequestQuery,
   createStatusEvent,
-  createOkResponse
+  createOkResponse,
+  GraphqlError
 } from './mock'
 import { immediate } from '../src/delay'
 import appFn from '../src/index'
 import { CommentAuthorAssociation } from '../src/models'
 import { GitHubAPI } from 'probot/lib/github'
+
 it('full happy path', async () => {
   const config = `
   minApprovals:
@@ -175,27 +177,42 @@ it('merges when receiving status event', async () => {
     config
   })
 
-  const list = jest.fn(() => ({
-    data: [
-      createPullRequestInfo({ number: 1 })
-    ]
-  }))
+  const graphql = jest.fn(async (query, variables) => {
+    if (variables.refQualifiedName) {
+      return {
+        repository: {
+          ref: {
+            associatedPullRequests: {
+              nodes: [{
+                number: 1,
+                repository: {
+                  name: 'probot-auto-merge',
+                  owner: {
+                    login: 'bobvanderlinden'
+                  }
+                }
+              }]
+            }
+          }
+        }
+      }
+    } else {
+      return github.graphql(query, variables)
+    }
+  }) as any
 
   const app = createApplication({
     appFn,
     logger: createEmptyLogger(),
     github: {
       ...github,
-      pulls: {
-        ...github.pulls,
-        list: list as any
-      }
+      graphql
     } as GitHubAPI
   })
 
   await app.receive(
     createStatusEvent({
-      owner: 'bobvanderlinden',
+      owner: 'owner-of-fork',
       repo: 'probot-auto-merge',
       sha: '123',
       branchName: 'pr-1'
@@ -204,8 +221,26 @@ it('merges when receiving status event', async () => {
 
   await immediate()
 
-  expect(list).toHaveBeenCalled()
-  expect(github.pulls.merge).toHaveBeenCalled()
+  expect(graphql).toHaveBeenCalledWith(
+    expect.anything(), expect.objectContaining({
+      owner: 'owner-of-fork',
+      repo: 'probot-auto-merge',
+      refQualifiedName: 'refs/heads/pr-1'
+    })
+  )
+  expect(graphql).toHaveBeenCalledWith(
+    expect.anything(), expect.objectContaining({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      pullRequestNumber: 1
+    })
+  )
+  expect(github.pulls.merge).toHaveBeenCalledWith({
+    merge_method: 'merge',
+    pull_number: 1,
+    owner: 'bobvanderlinden',
+    repo: 'probot-auto-merge'
+  })
 })
 
 it('pending check run', async () => {
@@ -254,17 +289,15 @@ it('pending check run', async () => {
   expect(github.pulls.merge).not.toHaveBeenCalled()
   github.graphql = jest.fn(async () => {
     return {
-      data: {
-        repository: {
-          pullRequest: {
-            ...pullRequestInfo,
-            commits: createCommitsWithCheckSuiteWithCheckRun({
-              checkRun: successCheckRun
-            })
-          }
+      repository: {
+        pullRequest: {
+          ...pullRequestInfo,
+          commits: createCommitsWithCheckSuiteWithCheckRun({
+            checkRun: successCheckRun
+          })
         }
       }
-    }
+    } as any
   })
   jest.runAllTimers()
   await immediate()
@@ -394,12 +427,14 @@ it('to report error and continue when graphql query contained errors', async () 
     pulls: {
       merge: createOkResponse()
     },
-    graphql: jest.fn(async () => ({
-      errors: [{
-        message: 'Some problem'
-      }],
-      data: pullRequestQuery
-    }))
+    graphql: jest.fn(async () => {
+      throw new GraphqlError({
+        errors: [{
+          message: 'Some problem'
+        }],
+        data: pullRequestQuery
+      })
+    })
   })
 
   const app = createApplication({

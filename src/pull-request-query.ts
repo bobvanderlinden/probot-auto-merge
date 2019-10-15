@@ -5,6 +5,7 @@ import { Context } from 'probot'
 import { GitHubAPI } from 'probot/lib/github'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { rawGraphQLQuery } from './github-utils'
 const query = readFileSync(join(__dirname, '..', 'query.graphql'), 'utf8')
 
 const isNumber = (v: string | number) => typeof v === 'number'
@@ -33,12 +34,9 @@ const appPath = [
   'app'
 ]
 
-async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
-  const response = await github.graphql(query, {
-    ...variables,
-    headers: {
-      'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
-    }
+export async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
+  const response = await rawGraphQLQuery(github, query, variables, {
+    'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
   })
   if (response.errors) {
     // Remove error related to permissions for fetching app id of checkSuites.
