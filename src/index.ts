@@ -6,7 +6,6 @@ import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
-import { Router } from 'express'
 import { queryPullRequest } from './pull-request-query'
 import bunyan from 'bunyan'
 import bodyParser = require('body-parser')
