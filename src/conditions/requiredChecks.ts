@@ -1,8 +1,23 @@
+import { CheckRun } from './../github-models'
 import { ConditionConfig } from './../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 import minimatch from 'minimatch'
-import { StatusState } from '../query.graphql'
+import { CheckConclusionState, CheckStatusState } from '../github-models'
+import { getOtherCheckRuns } from '../utils'
+
+const positiveCheckRunConclusions: Array<CheckRun['conclusion']> = [
+  CheckConclusionState.SUCCESS, CheckConclusionState.NEUTRAL
+]
+
+function isPositiveCheckRun (checkRun: CheckRun): boolean {
+  return checkRun.status === CheckStatusState.COMPLETED
+    && positiveCheckRunConclusions.indexOf(checkRun.conclusion) > -1
+}
+
+function isPendingCheckRun (checkRun: CheckRun): boolean {
+  return checkRun.status !== CheckStatusState.COMPLETED
+}
 
 function flatMap<TIn, TOut> (list: TIn[], fn: (item: TIn) => TOut[]): TOut[] {
   return list.reduce((result: TOut[], item: TIn) => {
@@ -18,32 +33,16 @@ export default function areRequiredChecksPositive (
   const matchingBranchProtectionRules = branchProtectionRules
     .filter(rule => minimatch(pullRequestInfo.baseRef.name, rule.pattern))
 
-  const requiredStatusCheckContextNames = new Set(
+  const requiredStatusCheckContexts = new Set(
     flatMap(matchingBranchProtectionRules, rule =>
       rule.requiredStatusCheckContexts
     )
   )
 
-  if (requiredStatusCheckContextNames.size === 0) {
-    // There are no required status checks, so this condition passes.
-    return { status: 'success' }
-  }
-
-  const head = pullRequestInfo.commits.nodes[0]
-
-  if (!head) {
-    return {
-      status: 'fail',
-      message: 'Could not fetch any commit, but there are required checks'
-    }
-  }
-
-  const requiredStatusCheckContexts = Array.from(requiredStatusCheckContextNames)
-    .map(requiredStatusCheckContextName =>
-      head.commit.status.contexts
-        .filter(context => context.context === requiredStatusCheckContextName)[0]
+  const allRequiredChecksExist = Array.from(requiredStatusCheckContexts)
+    .every(requiredCheck => getOtherCheckRuns(pullRequestInfo)
+      .some(checkRun => checkRun.name === requiredCheck)
     )
-  const allRequiredChecksExist = requiredStatusCheckContexts.every(requiredStatusCheckContext => requiredStatusCheckContext)
 
   if (!allRequiredChecksExist) {
     return {
@@ -52,8 +51,11 @@ export default function areRequiredChecksPositive (
     }
   }
 
-  const arePendingCheckRuns = requiredStatusCheckContexts.some(statusCheck => statusCheck.state === StatusState.PENDING)
-  const allSucceedingCheckRuns = requiredStatusCheckContexts.every(statusCheck => statusCheck.state === StatusState.SUCCESS)
+  const requiredCheckRuns = getOtherCheckRuns(pullRequestInfo)
+    .filter(checkRun => requiredStatusCheckContexts.has(checkRun.name))
+
+  const arePendingCheckRuns = requiredCheckRuns.some(isPendingCheckRun)
+  const allSucceedingCheckRuns = requiredCheckRuns.length === 0 || requiredCheckRuns.every(isPositiveCheckRun)
 
   if (arePendingCheckRuns) {
     return {
