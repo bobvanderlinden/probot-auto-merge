@@ -1,0 +1,79 @@
+version: v1.0
+name: probot-auto-merge
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+  containers:
+    - name: main
+      image: 'semaphoreci/ubuntu:18.04'
+blocks:
+  - name: Installing
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore
+      jobs:
+        - name: install nodejs
+          commands:
+            - nvm install $NODE_VERSION
+            - sem-version node $NODE_VERSION
+        - name: install packages
+          commands:
+            - npm install
+      epilogue:
+        on_pass:
+          commands:
+            - cache store
+    dependencies: []
+  - name: Testing
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore
+      jobs:
+        - name: test
+          commands:
+            - npm run test
+    dependencies:
+      - Installing
+  - name: Releasing
+    dependencies:
+      - Building
+      - Linting
+      - Testing
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore
+      jobs:
+        - name: Release
+          commands:
+            - npm run semantic-release
+  - name: Building
+    dependencies:
+      - Installing
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore
+      jobs:
+        - name: build
+          commands:
+            - npm run build
+  - name: Linting
+    dependencies:
+      - Installing
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore
+      jobs:
+        - name: lint
+          commands:
+            - npm run lint
