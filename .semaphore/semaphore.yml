@@ -14,8 +14,7 @@ blocks:
       jobs:
         - name: install
           commands:
-            - nvm install v$NODE_VERSION
-            - sem-version node $NODE_VERSION
+            - nvm install
             - npm install -g npm
             - npm install
       epilogue:
