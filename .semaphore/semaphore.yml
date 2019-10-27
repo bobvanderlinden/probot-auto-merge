@@ -12,17 +12,18 @@ blocks:
           - checkout
           - cache restore
       jobs:
-        - name: install nodejs
+        - name: install
           commands:
-            - nvm install $NODE_VERSION
+            - nvm install v$NODE_VERSION
             - sem-version node $NODE_VERSION
-        - name: install packages
-          commands:
             - npm install
       epilogue:
         on_pass:
           commands:
             - cache store
+      env_vars:
+        - name: NODE_VERSION
+          value: 10.16.3
     dependencies: []
   - name: Testing
     task:
