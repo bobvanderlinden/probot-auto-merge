@@ -95,7 +95,7 @@ export = (app: Application) => {
 
   async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, branchName }: { owner: String, repo: string, branchName: string }): Promise<{ owner: string, repo: string, number: number }[]> {
     const result = await rawGraphQLQuery(github, `
-      query {
+      query($owner: String!, $repo: String!, $refQualifiedName: String!) {
         repository(owner: $owner, name: $repo) {
           ref(qualifiedName: $refQualifiedName) {
             associatedPullRequests(first: 10) {
