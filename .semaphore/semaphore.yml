@@ -31,6 +31,7 @@ blocks:
         commands:
           - checkout
           - cache restore
+          - nvm use
       jobs:
         - name: test
           commands:
@@ -52,6 +53,7 @@ blocks:
           - checkout
           - cache restore
           - artifact pull workflow lib
+          - nvm use
       jobs:
         - name: release
           commands:
@@ -59,6 +61,8 @@ blocks:
       secrets:
         - name: Github Public Repository
         - name: Npm Publish Token
+    skip:
+      when: branch != 'master'
   - name: Building
     dependencies:
       - Installing
@@ -67,6 +71,7 @@ blocks:
         commands:
           - checkout
           - cache restore
+          - nvm use
       jobs:
         - name: build
           commands:
@@ -83,6 +88,7 @@ blocks:
         commands:
           - checkout
           - cache restore
+          - nvm use
       jobs:
         - name: lint
           commands:
