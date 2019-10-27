@@ -54,7 +54,7 @@ blocks:
           - cache restore
           - artifact pull workflow lib
       jobs:
-        - name: Release
+        - name: release
           commands:
             - npm run semantic-release
       secrets:
