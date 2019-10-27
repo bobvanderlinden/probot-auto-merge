@@ -56,6 +56,9 @@ blocks:
         - name: Release
           commands:
             - npm run semantic-release
+      secrets:
+        - name: Github Public Repository
+        - name: Npm Publish Token
   - name: Building
     dependencies:
       - Installing
