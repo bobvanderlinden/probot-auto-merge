@@ -34,7 +34,11 @@ blocks:
       jobs:
         - name: test
           commands:
-            - npm run test
+            - 'npm run test:ci'
+      epilogue:
+        on_pass:
+          commands:
+            - artifact push workflow coverage
     dependencies:
       - Installing
   - name: Releasing
@@ -47,6 +51,7 @@ blocks:
         commands:
           - checkout
           - cache restore
+          - artifact pull workflow lib
       jobs:
         - name: Release
           commands:
@@ -63,6 +68,10 @@ blocks:
         - name: build
           commands:
             - npm run build
+      epilogue:
+        on_pass:
+          commands:
+            - artifact push workflow lib
   - name: Linting
     dependencies:
       - Installing
