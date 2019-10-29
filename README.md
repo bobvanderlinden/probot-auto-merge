@@ -194,7 +194,7 @@ For more information see https://help.github.com/articles/about-pull-request-mer
 mergeMethod: merge
 ```
 
-### `mergeCommitMessage` (default: `null`)
+### `mergeCommitMessage` (default: none)
 
 Optionally specify the merge commit message format. The following template tags
 are supported:
@@ -204,8 +204,9 @@ are supported:
   it is merged
 * `{number}`: The pull request number
 * `{branch}`: The name of the source branch
+* `{commits}`: A list of merged commits
 
-When set to `null` (also the default value) the merge commit message is set by
+When this option is not set, the merge commit message is controlled by
 GitHub and uses a combination of the title of the pull request when it was
 opened (note that later changes to the title are ignored) and a list of
 commits.
