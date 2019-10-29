@@ -6,6 +6,8 @@ import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { updateStatusReportCheck } from './status-report'
 import { MergeStateStatus } from './query.graphql'
+import { Config } from './config'
+import { previewCommitMesage } from './commit-message'
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void,
@@ -98,8 +100,11 @@ function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
     .join('\n')
 }
 
-function getCommitMessageMarkdown (pullRequestInfo: PullRequestInfo) {
-  return 'Will merge using this commit message:\n\n' + JSON.stringify(pullRequestInfo, undefined, 2)
+function getCommitMessageMarkdown (pullRequestInfo: PullRequestInfo, config: Config) {
+  const commitMessage = previewCommitMesage(pullRequestInfo, config)
+  const quotedCommitMessage = commitMessage.split('\n').map(line => `> ${line}`).join('\n')
+
+  return `Will merge using this commit message:\n\n${quotedCommitMessage}`
 }
 
 /**
@@ -127,7 +132,7 @@ export function getPullRequestPlan (
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
-      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
+      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}\n\n${getCommitMessageMarkdown(pullRequestInfo, config)}`,
       actions: ['reschedule']
     }
   }
@@ -135,7 +140,7 @@ export function getPullRequestPlan (
   if (failingConditions.length > 0) {
     return {
       code: 'failing_condition',
-      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
+      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}\n\n${getCommitMessageMarkdown(pullRequestInfo, config)}`,
       actions: []
     }
   }
@@ -185,13 +190,13 @@ export function getPullRequestPlan (
       if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
         return {
           code: 'merge_and_delete',
-          message: `Will merge the pull request and delete its branch.\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
+          message: `Will merge the pull request and delete its branch.\n\n${getCommitMessageMarkdown(pullRequestInfo, config)}`,
           actions: ['merge', 'delete_branch']
         }
       } else {
         return {
           code: 'merge',
-          message: `Will merge the pull request.\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
+          message: `Will merge the pull request.\n\n${getCommitMessageMarkdown(pullRequestInfo, config)}`,
           actions: ['merge']
         }
       }
