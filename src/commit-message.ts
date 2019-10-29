@@ -29,7 +29,7 @@ function getCustomCommitMessage (
   pullRequestInfo: PullRequestInfo,
   template: string
 ) {
-  const tagReplacers: Tags = {
+  const tagResolvers: Tags = {
     title: pullRequestInfo => pullRequestInfo.title,
     body: pullRequestInfo => pullRequestInfo.body,
     number: pullRequestInfo => pullRequestInfo.number.toString(),
@@ -39,7 +39,12 @@ function getCustomCommitMessage (
     }).join('\n\n')
   }
 
-  return (Object.keys(tagReplacers) as Tag[]).reduce((message, tagName) => {
-    return message.replace(`{${tagName}}`, tagReplacers[tagName](pullRequestInfo))
-  }, template)
+  return template.replace(/\{(\w+)\}/g, (match, tagName: Tag) => {
+    const tagResolver = tagResolvers[tagName]
+    if (tagResolver) {
+      return tagResolver(pullRequestInfo)
+    } else {
+      return match
+    }
+  })
 }

@@ -115,4 +115,15 @@ describe('getCommitMessage', () => {
     })
     expect(getCommitMessage(pullRequestInfo, config)).toEqual('merged: pr title')
   })
+
+  it(`doesn't replace template tag recursively`, () => {
+    const pullRequestInfo = createPullRequestInfo({
+      title: 'pr title containing template tag {body}',
+      body: 'pr body'
+    })
+    const config = createConfig({
+      mergeCommitMessage: '{title}'
+    })
+    expect(getCommitMessage(pullRequestInfo, config)).toEqual('pr title containing template tag {body}')
+  })
 })
