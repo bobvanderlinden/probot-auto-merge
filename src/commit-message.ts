@@ -11,11 +11,11 @@ export function getCommitMessage (
 }
 
 export function splitCommitMessage (message: string) {
-  const [title, ...body] = message.split('\n')
+  const [title, ...body] = message.trim().split('\n')
 
   return {
-    title,
-    body: body.join('\n')
+    title: title.trim(),
+    body: body.join('\n').trim()
   }
 }
 
