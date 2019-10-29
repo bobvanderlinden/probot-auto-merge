@@ -43,8 +43,9 @@ mergeMethod: merge
 # * {body}: The pull request body at the moment it is merged
 # * {number}: The pull request number
 # * {branch}: The name of the source branch
-# When set to `null` (also the default value) the merge commit message is set
-# by GitHub and uses a combination of the title of the pull request when it was
+# * {commits}: A list of merged commits
+# When this option is not set, the merge commit message is controlled by
+# GitHub and uses a combination of the title of the pull request when it was
 # opened (note that later changes to the title are ignored) and a list of
 # commits.
 # This settings is ignored when `mergeMethod` is set to `rebase`.
