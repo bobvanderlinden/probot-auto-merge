@@ -98,7 +98,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                 })
               ),
               headRefOid: pullRequest.headRefOid as string,
-              headRefName: pullRequest.headRefOid as string,
+              headRefName: pullRequest.headRefName,
               commits: assertNotNullNodes(pullRequest.commits, 'No permission to fetch commits',
                 commit => ({
                   ...removeTypename(commit),

@@ -83,6 +83,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
         name
       }
       headRefOid
+      headRefName
       repository {
         branchProtectionRules(last: 100) {
           nodes {

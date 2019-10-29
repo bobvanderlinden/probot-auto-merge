@@ -376,6 +376,10 @@ export interface PullRequestQuery_repository_pullRequest {
    */
   headRefOid: any;
   /**
+   * Identifies the name of the head Ref associated with the pull request, even if the ref has been deleted.
+   */
+  headRefName: string;
+  /**
    * The repository associated with this node.
    */
   repository: PullRequestQuery_repository_pullRequest_repository;

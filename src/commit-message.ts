@@ -33,7 +33,7 @@ function getCustomCommitMessage (
     title: pullRequestInfo => pullRequestInfo.title,
     body: pullRequestInfo => pullRequestInfo.body,
     number: pullRequestInfo => pullRequestInfo.number.toString(),
-    branch: pullRequestInfo => pullRequestInfo.headRef ? pullRequestInfo.headRef.name : '',
+    branch: pullRequestInfo => pullRequestInfo.headRefName,
     commits: pullRequestInfo => pullRequestInfo.allCommits.nodes.map(node => {
       return `* ${node.commit.messageHeadline} (${node.commit.abbreviatedOid})`
     }).join('\n\n')
