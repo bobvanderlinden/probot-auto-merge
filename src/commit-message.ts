@@ -1,22 +1,45 @@
 import { PullRequestInfo } from './models'
 import { Config } from './config'
 
-export function previewCommitMesage (
+export function getCommitMessage (
   pullRequestInfo: PullRequestInfo,
   config: Config
 ) {
   return config.mergeCommitMessage
     ? getCustomCommitMessage(pullRequestInfo, config.mergeCommitMessage)
-    : getPotentialCommitMessage(pullRequestInfo)
+    : null
 }
 
-function getPotentialCommitMessage (pullRequestInfo: PullRequestInfo) {
-  return 'potential commit message'
+export function splitCommitMessage (message: string) {
+  const [title, ...body] = message.split('\n')
+
+  return {
+    title,
+    body: body.join('\n')
+  }
+}
+
+type Tag = 'title' | 'body' | 'number' | 'branch' | 'commits'
+
+type Tags = {
+  [key in Tag]: (pullRequestInfo: PullRequestInfo) => string
 }
 
 function getCustomCommitMessage (
   pullRequestInfo: PullRequestInfo,
   template: string
 ) {
-  return 'custom commit message'
+  const tagReplacers: Tags = {
+    title: pullRequestInfo => pullRequestInfo.title,
+    body: pullRequestInfo => pullRequestInfo.body,
+    number: pullRequestInfo => pullRequestInfo.number.toString(),
+    branch: pullRequestInfo => pullRequestInfo.headRef ? pullRequestInfo.headRef.name : '',
+    commits: pullRequestInfo => pullRequestInfo.allCommits.nodes.map(node => {
+      return `* ${node.commit.messageHeadline} (${node.commit.abbreviatedOid})`
+    }).join('\n\n')
+  }
+
+  return (Object.keys(tagReplacers) as Tag[]).reduce((message, tagName) => {
+    return message.replace(`{${tagName}}`, tagReplacers[tagName](pullRequestInfo))
+  }, template)
 }

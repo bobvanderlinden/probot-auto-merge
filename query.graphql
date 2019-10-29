@@ -24,6 +24,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
         }
       }
       title
+      body
       authorAssociation
       baseRef {
         repository {
@@ -58,6 +59,14 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
                 }
               }
             }
+          }
+        }
+      }
+      allCommits: commits(last: 100) {
+        nodes {
+          commit {
+            abbreviatedOid
+            messageHeadline
           }
         }
       }

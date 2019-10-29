@@ -198,6 +198,34 @@ export interface PullRequestQuery_repository_pullRequest_commits {
   nodes: (PullRequestQuery_repository_pullRequest_commits_nodes | null)[] | null;
 }
 
+export interface PullRequestQuery_repository_pullRequest_allCommits_nodes_commit {
+  __typename: "Commit";
+  /**
+   * An abbreviated version of the Git object ID
+   */
+  abbreviatedOid: string;
+  /**
+   * The Git commit message headline
+   */
+  messageHeadline: string;
+}
+
+export interface PullRequestQuery_repository_pullRequest_allCommits_nodes {
+  __typename: "PullRequestCommit";
+  /**
+   * The Git commit object
+   */
+  commit: PullRequestQuery_repository_pullRequest_allCommits_nodes_commit;
+}
+
+export interface PullRequestQuery_repository_pullRequest_allCommits {
+  __typename: "PullRequestCommitConnection";
+  /**
+   * A list of nodes.
+   */
+  nodes: (PullRequestQuery_repository_pullRequest_allCommits_nodes | null)[] | null;
+}
+
 export interface PullRequestQuery_repository_pullRequest_headRef_repository_owner {
   __typename: "Organization" | "User";
   /**
@@ -316,6 +344,10 @@ export interface PullRequestQuery_repository_pullRequest {
    */
   title: string;
   /**
+   * The body as Markdown.
+   */
+  body: string;
+  /**
    * Author's association with the subject of the comment.
    */
   authorAssociation: CommentAuthorAssociation;
@@ -331,6 +363,10 @@ export interface PullRequestQuery_repository_pullRequest {
    * A list of commits present in this pull request's head branch not present in the base branch.
    */
   commits: PullRequestQuery_repository_pullRequest_commits;
+  /**
+   * A list of commits present in this pull request's head branch not present in the base branch.
+   */
+  allCommits: PullRequestQuery_repository_pullRequest_allCommits;
   /**
    * Identifies the head Ref associated with the pull request.
    */
