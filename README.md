@@ -200,8 +200,8 @@ Optionally specify the merge commit message format. The following template tags
 are supported:
 
 * `{title}`: The pull request title at the moment it is merged
-* `{description}`: The pull request description (first comment) at the moment
-  it is merged
+* `{body}`: The pull request description (first comment) at the moment it is
+  merged
 * `{number}`: The pull request number
 * `{branch}`: The name of the source branch
 * `{commits}`: A list of merged commits

@@ -55,11 +55,11 @@ export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'dele
 export type PullRequestActions
   = (
     []
-  | ['reschedule']
-  | ['update_branch', 'reschedule']
-  | ['merge']
-  | ['merge', 'delete_branch']
-) & Array<PullRequestAction>
+    | ['reschedule']
+    | ['update_branch', 'reschedule']
+    | ['merge']
+    | ['merge', 'delete_branch']
+  ) & Array<PullRequestAction>
 
 export type PullRequestPlanCode
   = 'closed'
@@ -98,6 +98,10 @@ function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
     .join('\n')
 }
 
+function getCommitMessageMarkdown (pullRequestInfo: PullRequestInfo) {
+  return 'Will merge using this commit message:\n\n' + JSON.stringify(pullRequestInfo, undefined, 2)
+}
+
 /**
  * Determines which actions to take based on the pull request and the condition results
  */
@@ -123,7 +127,7 @@ export function getPullRequestPlan (
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
-      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
       actions: ['reschedule']
     }
   }
@@ -131,7 +135,7 @@ export function getPullRequestPlan (
   if (failingConditions.length > 0) {
     return {
       code: 'failing_condition',
-      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
       actions: []
     }
   }
@@ -181,13 +185,13 @@ export function getPullRequestPlan (
       if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
         return {
           code: 'merge_and_delete',
-          message: 'Will merge the pull request and delete its branch',
+          message: `Will merge the pull request and delete its branch.\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
           actions: ['merge', 'delete_branch']
         }
       } else {
         return {
           code: 'merge',
-          message: 'Will merge the pull request',
+          message: `Will merge the pull request.\n\n${getCommitMessageMarkdown(pullRequestInfo)}`,
           actions: ['merge']
         }
       }
@@ -325,23 +329,25 @@ async function mergePullRequest (
   )
 }
 
+function getPlanTitle (plan: PullRequestPlan) {
+  return plan.actions.some(action => action === 'merge')
+    ? 'Merging'
+    : plan.actions.some(action => action === 'update_branch')
+      ? 'Updating branch'
+      : plan.actions.some(action => action === 'reschedule')
+        ? 'Waiting'
+        : 'Not merging'
+}
+
 export async function handlePullRequestStatus (
   context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   pullRequestStatus: PullRequestStatus
 ) {
   const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
+  const title = getPlanTitle(plan)
 
-  await updateStatusReportCheck(context, pullRequestInfo,
-    plan.actions.some(action => action === 'merge')
-      ? 'Merging'
-      : plan.actions.some(action => action === 'update_branch')
-      ? 'Updating branch'
-      : plan.actions.some(action => action === 'reschedule')
-      ? 'Waiting'
-      : 'Not merging',
-    plan.message
-  )
+  await updateStatusReportCheck(context, pullRequestInfo, title, plan.message)
 
   const { actions } = plan
   context.log.debug('Actions:', actions)

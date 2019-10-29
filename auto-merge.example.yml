@@ -40,8 +40,7 @@ mergeMethod: merge
 # Optionally specify the merge commit message format. The following template
 # tags are supported:
 # * {title}: The pull request title at the moment it is merged
-# * {description}: The pull request description (first comment) at the moment
-#   it is merged
+# * {body}: The pull request body at the moment it is merged
 # * {number}: The pull request number
 # * {branch}: The name of the source branch
 # When set to `null` (also the default value) the merge commit message is set
@@ -52,7 +51,7 @@ mergeMethod: merge
 mergeCommitMessage: |
   {title} (#{number})
 
-  {description}
+  {body}
 
 # Blocking labels are the labels that can be attached to a pull request to make sure the pull request
 # is not being automatically merged.
