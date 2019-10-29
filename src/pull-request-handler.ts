@@ -332,7 +332,7 @@ async function mergePullRequest (
   pullRequestInfo: PullRequestInfo
 ) {
   const { config } = context
-  const extraParams = {} as ExtraMergeParams
+  const extraParams: ExtraMergeParams = {}
   const pullRequestReference = getPullRequestReference(pullRequestInfo)
   const commitMessage = getCommitMessage(pullRequestInfo, config)
 
