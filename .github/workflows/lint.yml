@@ -1,0 +1,21 @@
+name: build
+
+on: push
+
+jobs:
+  build:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - name: npm install
+        run: npm ci
+      - name: lint
+        run: npm run lint
+      - name: test
+        run: npm run test
