@@ -1,6 +1,6 @@
 import { PullRequestQuery } from './query.graphql'
-export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from './query.graphql'
 import { ElementOf, Omit } from './type-utils'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from './query.graphql'
 
 export interface RepositoryReference {
   owner: string
@@ -41,7 +41,7 @@ function assertNotNullNodes<TNode, TNodeOutput> (input: { nodes: (TNode | null)[
 
 function removeTypename<T extends { __typename: any }> (obj: T): Omit<T, '__typename'> {
   const result = obj
-  delete result['__typename']
+  delete result.__typename
   return result
 }
 

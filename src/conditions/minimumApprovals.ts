@@ -16,7 +16,7 @@ export default function hasMinimumApprovals (
         .filter(review => getAssociationPriority(review.authorAssociation) >= getAssociationPriority(association))
         .filter(review => review.state === 'APPROVED')
         .length
-      )
+    )
 
   return mapToArray(config.minApprovals)
     .some(([association, minApproval]) => or(tryGet(approvalCountByAssociation, association), 0) < minApproval)

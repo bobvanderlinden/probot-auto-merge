@@ -10,7 +10,7 @@ export class RepositoryWorkers {
   }
 
   clear () {
-    for (let key in this.repositoryWorkerMap) {
+    for (const key in this.repositoryWorkerMap) {
       delete this.repositoryWorkerMap[key]
     }
   }
