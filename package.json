@@ -55,10 +55,7 @@
     "nodemon": "^1.18.10",
     "semantic-release": "^15.13.1",
     "smee-client": "^1.0.2",
-    "standard": "^14.0.0",
     "ts-jest": "^24.0.0",
-    "tslint": "^5.12.1",
-    "tslint-config-standard": "^8.0.1",
     "typescript": "^3.3.3"
   },
   "engines": {
