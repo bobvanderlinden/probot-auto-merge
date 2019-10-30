@@ -7,7 +7,9 @@ type CheckOptions = {
   conclusion: 'neutral',
   status: 'completed',
   name: string,
+  // eslint-disable-next-line camelcase
   started_at: string,
+  // eslint-disable-next-line camelcase
   completed_at: string,
   output: ChecksCreateParams['output'],
   owner: string,

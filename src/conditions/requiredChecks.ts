@@ -11,8 +11,8 @@ const positiveCheckRunConclusions: Array<CheckRun['conclusion']> = [
 ]
 
 function isPositiveCheckRun (checkRun: CheckRun): boolean {
-  return checkRun.status === CheckStatusState.COMPLETED
-    && positiveCheckRunConclusions.indexOf(checkRun.conclusion) > -1
+  return checkRun.status === CheckStatusState.COMPLETED &&
+    positiveCheckRunConclusions.indexOf(checkRun.conclusion) > -1
 }
 
 function isPendingCheckRun (checkRun: CheckRun): boolean {
@@ -67,7 +67,7 @@ export default function areRequiredChecksPositive (
   } else {
     return {
       status: 'fail',
-      message: `Required checks did not succeed for the protected branch`
+      message: 'Required checks did not succeed for the protected branch'
     }
   }
 }

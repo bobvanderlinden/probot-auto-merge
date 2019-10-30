@@ -19,7 +19,7 @@ export function getConditionResults (
 }
 
 export function getFirstSuccessfulResults (ruleConfigs: ConditionConfig[], conditions: Conditions, pullRequestInfo: PullRequestInfo): ConditionResults | undefined {
-  for (let ruleConfig of ruleConfigs) {
+  for (const ruleConfig of ruleConfigs) {
     const ruleResult = getConditionResults(ruleConfig, conditions, pullRequestInfo)
     if (areSuccessfulResults(ruleResult)) {
       return ruleResult
@@ -43,8 +43,8 @@ export function getPullRequestStatus (
     return globalResults
   }
 
-  let fallbackNonSuccessfulResult = undefined
-  for (let ruleConfig of globalConfig.rules) {
+  let fallbackNonSuccessfulResult
+  for (const ruleConfig of globalConfig.rules) {
     const ruleResult = getConditionResults(ruleConfig, conditions, pullRequestInfo)
     if (areSuccessfulResults(ruleResult)) {
       return ruleResult

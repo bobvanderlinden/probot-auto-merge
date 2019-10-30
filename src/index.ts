@@ -51,8 +51,8 @@ function setupSentry (app: Application) {
     release: process.env.SOURCE_VERSION,
     environment: process.env.NODE_ENV || 'development',
     autoBreadcrumbs: {
-      'console': true,
-      'http': true
+      console: true,
+      http: true
     }
   }).install()
 
@@ -83,7 +83,7 @@ export = (app: Application) => {
 
   async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, pullRequestNumbers: number[]) {
     await useWorkerContext({ app, context, installationId }, async (workerContext) => {
-      for (let pullRequestNumber of pullRequestNumbers) {
+      for (const pullRequestNumber of pullRequestNumbers) {
         repositoryWorkers.queue(workerContext, {
           owner: repository.owner,
           repo: repository.repo,

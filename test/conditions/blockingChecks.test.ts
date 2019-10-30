@@ -114,5 +114,4 @@ describe('blockingChecks', () => {
     )
     expect(result.status).toBe('success')
   })
-
 })

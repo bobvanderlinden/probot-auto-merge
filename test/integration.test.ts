@@ -303,7 +303,6 @@ it('pending check run', async () => {
   await immediate()
   expect(github.graphql).toHaveBeenCalled()
   expect(github.pulls.merge).toHaveBeenCalled()
-
 })
 
 it('to merge when one rule and the global configuration passes', async () => {

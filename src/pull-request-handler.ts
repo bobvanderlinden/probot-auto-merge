@@ -159,7 +159,7 @@ export function getPullRequestPlan (
     case MergeStateStatus.UNKNOWN:
       return {
         code: 'mergeable_unknown',
-        message: `GitHub is determining whether the pull request is mergeable`,
+        message: 'GitHub is determining whether the pull request is mergeable',
         actions: ['reschedule']
       }
     case MergeStateStatus.BEHIND:
@@ -256,7 +256,7 @@ export async function executeActions (
   pullRequestInfo: PullRequestInfo,
   actions: PullRequestAction[]
 ) {
-  for (let action of actions) {
+  for (const action of actions) {
     try {
       await executeAction(context, pullRequestInfo, action)
     } catch (err) {
@@ -268,10 +268,10 @@ export async function executeActions (
 
 export function getPullRequestActionName (action: PullRequestAction) {
   return ({
-    'delete_branch': 'delete branch',
-    'merge': 'merge',
-    'reschedule': 'reschedule',
-    'update_branch': 'update branch'
+    delete_branch: 'delete branch',
+    merge: 'merge',
+    reschedule: 'reschedule',
+    update_branch: 'update branch'
   })[action]
 }
 
