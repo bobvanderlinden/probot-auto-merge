@@ -92,7 +92,7 @@ describe('getCommitMessage', () => {
     const config = createConfig({
       mergeCommitMessage: '{commits}'
     })
-    expect(getCommitMessage(pullRequestInfo, config)).toEqual('* commit-1 (1111111)\n\n* commit-2 (2222222)')
+    expect(getCommitMessage(pullRequestInfo, config)).toEqual('* commit-1 (1111111)\n* commit-2 (2222222)')
   })
 
   it('returns multiple template tags', () => {
