@@ -20,7 +20,7 @@
     "docker:run": "docker run -p 0.0.0.0:3000:3000 probot-auto-merge",
     "docker": "npm run docker:build && npm run docker:run",
     "start": "probot run ./lib/index.js",
-    "lint": "eslint **/*.ts",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
     "lint:fix": "npm run lint -- --fix",
     "test": "jest && npm run lint",
     "test:travis": "npm run test:ci",

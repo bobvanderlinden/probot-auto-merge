@@ -20,7 +20,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/*.ts', '**/*.tsx'],
+      files: ['src/**/*.ts', 'test/**/*.ts'],
       rules: {
         'no-unused-vars': ['off'],
         'no-undef': ['off']
