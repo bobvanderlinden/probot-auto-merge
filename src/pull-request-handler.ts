@@ -105,6 +105,12 @@ function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
     .join('\n')
 }
 
+function markdownParagraphs (paragraphs: string[]) {
+  return paragraphs
+    .filter(paragraph => paragraph)
+    .join('\n\n')
+}
+
 function getCommitMessageMarkdown (pullRequestInfo: PullRequestInfo, config: Config) {
   const commitMessage = getCommitMessage(pullRequestInfo, config)
 
@@ -114,7 +120,10 @@ function getCommitMessageMarkdown (pullRequestInfo: PullRequestInfo, config: Con
 
   const quotedCommitMessage = commitMessage.split('\n').map(line => `> ${line}`).join('\n')
 
-  return `\n\nCommit message preview:\n\n${quotedCommitMessage}`
+  return markdownParagraphs([
+    'Commit message preview:',
+    quotedCommitMessage
+  ])
 }
 
 /**
@@ -142,7 +151,11 @@ export function getPullRequestPlan (
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
-      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}${getCommitMessageMarkdown(pullRequestInfo, config)}`,
+      message: markdownParagraphs([
+        'There are pending conditions:',
+        getChecksMarkdown(pullRequestStatus),
+        getCommitMessageMarkdown(pullRequestInfo, config)
+      ]),
       actions: ['reschedule']
     }
   }
@@ -150,7 +163,11 @@ export function getPullRequestPlan (
   if (failingConditions.length > 0) {
     return {
       code: 'failing_condition',
-      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}${getCommitMessageMarkdown(pullRequestInfo, config)}`,
+      message: markdownParagraphs([
+        'There are failing conditions:',
+        getChecksMarkdown(pullRequestStatus),
+        getCommitMessageMarkdown(pullRequestInfo, config)
+      ]),
       actions: []
     }
   }
@@ -200,13 +217,19 @@ export function getPullRequestPlan (
       if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
         return {
           code: 'merge_and_delete',
-          message: `Will merge the pull request and delete its branch.${getCommitMessageMarkdown(pullRequestInfo, config)}`,
+          message: markdownParagraphs([
+            'Will merge the pull request and delete its branch.',
+            getCommitMessageMarkdown(pullRequestInfo, config)
+          ]),
           actions: ['merge', 'delete_branch']
         }
       } else {
         return {
           code: 'merge',
-          message: `Will merge the pull request.${getCommitMessageMarkdown(pullRequestInfo, config)}`,
+          message: markdownParagraphs([
+            'Will merge the pull request.',
+            getCommitMessageMarkdown(pullRequestInfo, config)
+          ]),
           actions: ['merge']
         }
       }
