@@ -63,6 +63,8 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
               labels: assertNotNullNodes(pullRequest.labels, 'No permission to labels of pull request',
                 labels => removeTypename(labels)
               ),
+              title: pullRequest.title,
+              body: pullRequest.body,
               reviews: assertNotNullNodes(pullRequest.reviews, 'No permission to fetch reviews',
                 review => ({
                   ...removeTypename(review),
@@ -96,6 +98,7 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                 })
               ),
               headRefOid: pullRequest.headRefOid as string,
+              headRefName: pullRequest.headRefName,
               commits: assertNotNullNodes(pullRequest.commits, 'No permission to fetch commits',
                 commit => ({
                   ...removeTypename(commit),
@@ -113,6 +116,16 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                         )
                       })
                     )
+                  }
+                })
+              ),
+              allCommits: assertNotNullNodes(pullRequest.allCommits, 'No permission to fetch commits',
+                commit => ({
+                  ...removeTypename(commit),
+                  commit: {
+                    ...removeTypename(commit.commit),
+                    abbreviatedOid: commit.commit.abbreviatedOid,
+                    messageHeadline: commit.commit.messageHeadline
                   }
                 })
               ),

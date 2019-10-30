@@ -56,6 +56,7 @@ export const defaultPullRequestInfo = {
     }
   },
   headRefOid: 'c2a6b03f190dfb2b4aa91f8af8d477a9bc3401dc',
+  headRefName: 'pr-some-change',
   authorAssociation: CommentAuthorAssociation.OWNER,
   labels: {
     nodes: []
@@ -72,12 +73,26 @@ export const defaultPullRequestInfo = {
       }
     }]
   },
+  allCommits: {
+    nodes: [{
+      commit: {
+        abbreviatedOid: 'fqb8pzaox4lqxkh3xxeivv73btukwgm50qvx9avd',
+        messageHeadline: 'First commit'
+      }
+    }, {
+      commit: {
+        abbreviatedOid: '0d5dg3l14ak7knizjj7kog1rh7i166ml8rl36x4h',
+        messageHeadline: 'Second commit'
+      }
+    }]
+  },
   repository: {
     branchProtectionRules: {
       nodes: []
     }
   },
-  title: 'Add some feature'
+  title: 'Add some feature',
+  body: 'This is a description of this PR.\n\nCloses #1'
 }
 
 export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {
