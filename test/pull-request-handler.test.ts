@@ -280,6 +280,50 @@ describe('executeAction with action', () => {
     })
   })
 
+  it('merge with commit message', async () => {
+    const merge = createOkResponse()
+    await executeAction(
+      createPullRequestContext({
+        github: createGithubApi({
+          pulls: {
+            merge
+          }
+        }),
+        config: createConfig({
+          mergeCommitMessage: '{title} (#{number})\n{body}'
+        })
+      }),
+      createPullRequestInfo({
+        baseRef: {
+          name: 'master',
+          target: {
+            oid: '0'
+          },
+          repository: {
+            name: 'probot-auto-merge',
+            owner: {
+              login: 'bobvanderlinden'
+            }
+          }
+        },
+        number: 2,
+        title: 'pr title',
+        body: 'pr body'
+      }),
+      'merge'
+    )
+
+    expect(merge).toHaveBeenCalledTimes(1)
+    expect(merge).toBeCalledWith({
+      merge_method: 'merge',
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      pull_number: 2,
+      commit_message: 'pr body',
+      commit_title: 'pr title (#2)'
+    })
+  })
+
   it('delete_branch', async () => {
     const deleteRef = createOkResponse()
     await executeAction(
