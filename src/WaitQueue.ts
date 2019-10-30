@@ -94,9 +94,11 @@ export class WaitQueue<T> {
   public queueFirst (work: T, delay: number = 0) {
     this.queueTaskFirst(this.createTasks(work, delay))
   }
+
   public queueLast (work: T, delay: number = 0) {
     this.queueTaskLast(this.createTasks(work, delay))
   }
+
   public stopWaitingFor (work: T) {
     const workId = this.getId(work)
     if (this.runningTask !== null &&

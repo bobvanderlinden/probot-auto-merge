@@ -112,7 +112,7 @@ export function getLatestReviews (pullRequestInfo: PullRequestInfo) {
 
 export function mapObject<TKey extends string, TValue, TMappedValue> (obj: { [key in TKey]: TValue }, mapper: (value: TValue) => TMappedValue): { [key in TKey]: TMappedValue } {
   const result: any = {}
-  for (let key in obj) {
+  for (const key in obj) {
     result[key] = mapper(obj[key])
   }
   return result

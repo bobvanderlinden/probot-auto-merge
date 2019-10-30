@@ -26,7 +26,7 @@ describe('pull request status', () => {
       successConditions,
       createPullRequestInfo()
     )
-    for (let conditionFn of Object.values(successConditions)) {
+    for (const conditionFn of Object.values(successConditions)) {
       expect(conditionFn).toHaveBeenCalledTimes(1)
     }
   })

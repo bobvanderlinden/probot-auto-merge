@@ -17,7 +17,7 @@ export default function doesNotHaveBlockingTitle (
   if (regexObj.test(pullRequestInfo.title)) {
     return {
       status: 'fail',
-      message: `Blocking words are found in title (${ pullRequestInfo.title })`
+      message: `Blocking words are found in title (${pullRequestInfo.title})`
     }
   }
   return {

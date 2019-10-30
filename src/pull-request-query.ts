@@ -16,8 +16,8 @@ function matchPath (expected: Matcher[], actual: (string | number)[]): boolean {
   const expectedWithEOP = [...expected, endOfPath]
   const actualWithEOP = [...actual, endOfPath]
   return expectedWithEOP.every((expectedMatch, index) => {
-    return (typeof expectedMatch === 'function' && expectedMatch(actual[index]))
-      || (expectedMatch === actualWithEOP[index])
+    return (typeof expectedMatch === 'function' && expectedMatch(actual[index])) ||
+      (expectedMatch === actualWithEOP[index])
   })
 }
 
@@ -36,7 +36,7 @@ const appPath = [
 
 export async function graphQLQuery (github: GitHubAPI, variables: PullRequestQueryVariables): Promise<PullRequestQuery> {
   const response = await rawGraphQLQuery(github, query, variables, {
-    'Accept': 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
+    Accept: 'application/vnd.github.antiope-preview+json, application/vnd.github.merge-info-preview+json'
   })
   if (response.errors) {
     // Remove error related to permissions for fetching app id of checkSuites.
@@ -56,9 +56,9 @@ export async function graphQLQuery (github: GitHubAPI, variables: PullRequestQue
 
 export async function queryPullRequest (github: Context['github'], { owner, repo, number: pullRequestNumber }: PullRequestReference): Promise<PullRequestInfo> {
   const response = await graphQLQuery(github, {
-    'owner': owner,
-    'repo': repo,
-    'pullRequestNumber': pullRequestNumber
+    owner: owner,
+    repo: repo,
+    pullRequestNumber: pullRequestNumber
   })
 
   return Raven.context({

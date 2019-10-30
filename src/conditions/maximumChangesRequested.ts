@@ -17,13 +17,13 @@ export default function doesNotHaveMaximumChangesRequested (
         .filter(review => getAssociationPriority(review.authorAssociation) >= getAssociationPriority(association))
         .filter(review => review.state === 'CHANGES_REQUESTED')
         .length
-      )
+    )
 
   return mapToArray(config.maxRequestedChanges)
     .some(([association, maxRequestedChanges]) => or<number>(tryGet(changesRequestedCountByAssociation, association), 0) > maxRequestedChanges)
     ? {
       status: 'fail',
-      message: `There are changes requested by a reviewer.`
+      message: 'There are changes requested by a reviewer.'
     }
     : {
       status: 'success'
