@@ -16,14 +16,14 @@ module.exports = {
     '@typescript-eslint',
     'jest'
   ],
-  rules: {
-  },
   overrides: [
     {
       files: ['src/**/*.ts', 'test/**/*.ts'],
       rules: {
         'no-unused-vars': ['off'],
-        'no-undef': ['off']
+        'no-undef': ['off'],
+        'no-mixed-operators': ['off'],
+        'no-useless-constructor': ['off']
       }
     }
   ]
