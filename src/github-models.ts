@@ -135,8 +135,8 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
   )
 }
 
-export type PullRequestQueryResult_Validated = ReturnType<typeof validatePullRequestQuery>
-export type PullRequestInfo = PullRequestQueryResult_Validated['repository']['pullRequest']
+export type PullRequestQueryResultValidated = ReturnType<typeof validatePullRequestQuery>
+export type PullRequestInfo = PullRequestQueryResultValidated['repository']['pullRequest']
 export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
 export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
 export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
