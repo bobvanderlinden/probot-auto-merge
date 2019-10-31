@@ -38,6 +38,7 @@ export type Config = {
   updateBranch: boolean,
   deleteBranchAfterMerge: boolean,
   mergeMethod: 'merge' | 'rebase' | 'squash'
+  mergeCommitMessage?: string
   reportStatus: boolean
 } & ConditionConfig
 
@@ -93,7 +94,8 @@ const configDecoder: Decoder<Config> = object({
     constant<'merge'>('merge'),
     constant<'rebase'>('rebase'),
     constant<'squash'>('squash')
-  )
+  ),
+  mergeCommitMessage: optional(string())
 })
 
 export function validateConfig (config: any) {
