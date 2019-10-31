@@ -3,6 +3,19 @@ import { PullRequestInfo } from './models'
 import { ChecksCreateParams } from '@octokit/rest'
 import { getMyCheckSuite } from './utils'
 
+type CheckOptions = {
+  conclusion: 'neutral',
+  status: 'completed',
+  name: string,
+  // eslint-disable-next-line camelcase
+  started_at: string,
+  // eslint-disable-next-line camelcase
+  completed_at: string,
+  output: ChecksCreateParams['output'],
+  owner: string,
+  repo: string
+}
+
 export async function updateStatusReportCheck (
   context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
@@ -12,18 +25,7 @@ export async function updateStatusReportCheck (
   const myCheckSuite = getMyCheckSuite(pullRequestInfo)
   const myCheckRun = myCheckSuite && myCheckSuite.checkRuns.nodes[0]
 
-  const checkOptions: {
-    conclusion: 'neutral',
-    status: 'completed',
-    name: string,
-    // eslint-disable-next-line camelcase
-    started_at: string,
-    // eslint-disable-next-line camelcase
-    completed_at: string,
-    output: ChecksCreateParams['output'],
-    owner: string,
-    repo: string
-  } = {
+  const checkOptions: CheckOptions = {
     conclusion: 'neutral',
     status: 'completed',
     name: 'auto-merge',

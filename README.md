@@ -194,6 +194,24 @@ For more information see https://help.github.com/articles/about-pull-request-mer
 mergeMethod: merge
 ```
 
+### `mergeCommitMessage` (default: none)
+
+Optionally specify the merge commit message format. The following template tags
+are supported:
+
+* `{title}`: The pull request title at the moment it is merged
+* `{body}`: The pull request body at the moment it is merged
+* `{number}`: The pull request number
+* `{branch}`: The name of the source branch
+* `{commits}`: A list of merged commits
+
+When this option is not set, the merge commit message is controlled by
+GitHub and uses a combination of the title of the pull request when it was
+opened (note that later changes to the title are ignored) and a list of
+commits.
+
+This settings is ignored when `mergeMethod` is set to `rebase`.
+
 ### `rules` (default: none)
 
 Rules allow more flexiblity configuring conditions for automatically merging. Each rule is defined by
