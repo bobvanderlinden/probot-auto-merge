@@ -9,6 +9,7 @@ import minimumApprovals from './minimumApprovals'
 import open from './open'
 // import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
+import requiredBody from './requiredBody'
 
 export const conditions = {
   blockingChecks,
@@ -19,6 +20,7 @@ export const conditions = {
   minimumApprovals,
   open,
   // requiredChecks,
+  requiredBody,
   requiredLabels
 }
 
