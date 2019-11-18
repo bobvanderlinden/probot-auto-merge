@@ -30,6 +30,7 @@ export type ConditionConfig = {
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
   requiredLabels: string[],
   blockingLabels: string[],
+  requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
 }
 
@@ -50,7 +51,8 @@ export const defaultRuleConfig: ConditionConfig = {
   },
   blockingLabels: [],
   requiredLabels: [],
-  blockingTitleRegex: undefined
+  blockingTitleRegex: undefined,
+  requiredBodyRegex: undefined
 }
 
 export const defaultConfig: Config = {
@@ -77,7 +79,8 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(string()),
   blockingLabels: array(string()),
-  blockingTitleRegex: optional(string())
+  blockingTitleRegex: optional(string()),
+  requiredBodyRegex: optional(string())
 })
 
 const configDecoder: Decoder<Config> = object({
@@ -87,6 +90,7 @@ const configDecoder: Decoder<Config> = object({
   requiredLabels: array(string()),
   blockingLabels: array(string()),
   blockingTitleRegex: optional(string()),
+  requiredBodyRegex: optional(string()),
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
   reportStatus: boolean(),
