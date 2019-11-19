@@ -146,7 +146,7 @@ In the example below, pull requests with the body containing `ok-to-merge` will 
 automatically merged. This also includes `labels: ok-to-merge`, `LABELS: OK-TO-MERGE` or `some more text, but ok-to-merge`, but not `not-ok-to-merge`:
 
 ```yaml
-requiredBodyRegex: ' ok-to-merge'
+requiredBodyRegex: '(^|\s)ok-to-merge($|\s)'
 ```
 
 ### `reportStatus` (default: `false`)
