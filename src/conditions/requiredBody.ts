@@ -2,7 +2,7 @@ import { ConditionConfig } from '../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
 
-export default function hasRequiredLabels (
+export default function hasRequiredBody (
   config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
