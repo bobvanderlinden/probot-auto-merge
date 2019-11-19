@@ -1,7 +1,7 @@
 import requiredBody from '../../src/conditions/requiredBody'
 import { createPullRequestInfo, createConditionConfig } from '../mock'
 
-describe('open', () => {
+describe('requiredBody', () => {
   it('returns success with empty body and no configuration', async () => {
     const result = requiredBody(
       createConditionConfig(),
