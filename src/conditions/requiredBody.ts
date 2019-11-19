@@ -22,6 +22,6 @@ export default function hasRequiredBody (
 
   return {
     status: 'fail',
-    message: `Required words were not found in body (${pullRequestInfo.body})`
+    message: 'Required regular expression did not match body'
   }
 }

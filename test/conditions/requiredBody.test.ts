@@ -49,4 +49,21 @@ labels: required-body`
     )
     expect(result.status).toBe('success')
   })
+  it('returns success with longer body with body regex in configuration', async () => {
+    const result = requiredBody(
+      createConditionConfig({
+        requiredBodyRegex: '\\w+:\\s`required-body`$'
+      }),
+      createPullRequestInfo({
+        body: `This is a long multi-line pull request description
+that includes \`escaped-characters\`
+with multiline codeblock:
+\`\`\`
+  echo "hello"
+\`\`\`
+labels: \`required-body\``
+      })
+    )
+    expect(result.status).toBe('success')
+  })
 })
