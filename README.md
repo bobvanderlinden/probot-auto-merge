@@ -135,6 +135,20 @@ automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swi
 blockingTitleRegex: '\bWIP\b'
 ```
 
+### `requiredBodyRegex` (condition, default: none)
+
+Whenever a required body regular expression is configured, only pull requests that have a body
+matching the configured expression will automatically be merged.
+
+This is useful for forks, that can only create pull request text, no labels.
+
+In the example below, pull requests with the body containing `ok-to-merge` will be
+automatically merged. This also includes `labels: ok-to-merge`, `LABELS: OK-TO-MERGE` or `some more text, but ok-to-merge`, but not `not-ok-to-merge`:
+
+```yaml
+requiredBodyRegex: '(^|\s)ok-to-merge($|\s)'
+```
+
 ### `reportStatus` (default: `false`)
 
 The status of the auto-merge process will be shown in each PR as a [check](https://help.github.com/articles/about-status-checks/). This can be especially useful to find out why a PR is not being merged automatically.
