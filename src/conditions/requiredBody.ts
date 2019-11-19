@@ -6,7 +6,7 @@ export default function hasRequiredLabels (
   config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
-  if (config.requiredBodyRegex === undefined) {
+  if (!config.requiredBodyRegex) {
     return {
       status: 'success'
     }
