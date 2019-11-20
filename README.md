@@ -226,6 +226,12 @@ commits.
 
 This settings is ignored when `mergeMethod` is set to `rebase`.
 
+```yaml
+mergeCommitMessage: |
+  {title} (#{number})
+  {body}
+```
+
 ### `rules` (default: none)
 
 Rules allow more flexiblity configuring conditions for automatically merging. Each rule is defined by
