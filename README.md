@@ -149,6 +149,21 @@ automatically merged. This also includes `labels: ok-to-merge`, `LABELS: OK-TO-M
 requiredBodyRegex: '(^|\\s)ok-to-merge($|\\s)'
 ```
 
+### `requiredPathRegex` (condition, default: none)
+
+Whenever a required path regular expression is configured, only pull requests that have changed files
+matching the configured expression will automatically be merged.
+
+This is useful for repositories with strict and permissive code parts.
+
+In the example below, pull requests with changes in `allowed_path/` directory will be
+automatically merged. 
+
+```yaml
+requiredPathRegex: '^allowed_path/'
+```
+
+
 ### `reportStatus` (default: `false`)
 
 The status of the auto-merge process will be shown in each PR as a [check](https://help.github.com/articles/about-status-checks/). This can be especially useful to find out why a PR is not being merged automatically.

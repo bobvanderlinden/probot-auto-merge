@@ -31,6 +31,7 @@ export type ConditionConfig = {
   requiredLabels: string[],
   blockingLabels: string[],
   requiredBodyRegex: string | undefined
+  requiredPathRegex: string | undefined
   blockingTitleRegex: string | undefined
 }
 
@@ -52,6 +53,7 @@ export const defaultRuleConfig: ConditionConfig = {
   blockingLabels: [],
   requiredLabels: [],
   blockingTitleRegex: undefined,
+  requiredPathRegex: undefined,
   requiredBodyRegex: undefined
 }
 
@@ -80,6 +82,7 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   requiredLabels: array(string()),
   blockingLabels: array(string()),
   blockingTitleRegex: optional(string()),
+  requiredPathRegex: optional(string()),
   requiredBodyRegex: optional(string())
 })
 
@@ -89,6 +92,7 @@ const configDecoder: Decoder<Config> = object({
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(string()),
   blockingLabels: array(string()),
+  requiredPathRegex: optional(string()),
   blockingTitleRegex: optional(string()),
   requiredBodyRegex: optional(string()),
   updateBranch: boolean(),

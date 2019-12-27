@@ -61,6 +61,10 @@ export const defaultPullRequestInfo = {
   labels: {
     nodes: []
   },
+  files: {
+    nodes: []
+  },
+  changedFiles: 1,
   reviews: {
     nodes: []
   },

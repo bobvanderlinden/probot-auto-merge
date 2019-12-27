@@ -5,6 +5,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
       state
       mergeable
       mergeStateStatus
+      changedFiles
       potentialMergeCommit {
         oid
       }
@@ -21,6 +22,11 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
       labels(last: 100) {
         nodes {
           name
+        }
+      }
+      files(last: 100) {
+        nodes {
+          path
         }
       }
       title

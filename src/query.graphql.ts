@@ -15,7 +15,7 @@ export interface PullRequestQuery_repository_pullRequest_potentialMergeCommit {
 }
 
 export interface PullRequestQuery_repository_pullRequest_reviews_nodes_author {
-  __typename: "Organization" | "User" | "Bot";
+  __typename: "EnterpriseUserAccount" | "Organization" | "User" | "Mannequin" | "Bot";
   /**
    * The username of the actor.
    */
@@ -64,6 +64,22 @@ export interface PullRequestQuery_repository_pullRequest_labels {
    * A list of nodes.
    */
   nodes: (PullRequestQuery_repository_pullRequest_labels_nodes | null)[] | null;
+}
+
+export interface PullRequestQuery_repository_pullRequest_files_nodes {
+  __typename: "PullRequestChangedFile";
+  /**
+   * The path of the file.
+   */
+  path: string;
+}
+
+export interface PullRequestQuery_repository_pullRequest_files {
+  __typename: "PullRequestChangedFileConnection";
+  /**
+   * A list of nodes.
+   */
+  nodes: (PullRequestQuery_repository_pullRequest_files_nodes | null)[] | null;
 }
 
 export interface PullRequestQuery_repository_pullRequest_baseRef_repository_owner {
@@ -325,6 +341,10 @@ export interface PullRequestQuery_repository_pullRequest {
    */
   mergeStateStatus: MergeStateStatus;
   /**
+   * The number of changed files in this pull request.
+   */
+  changedFiles: number;
+  /**
    * The commit that GitHub automatically generated to test if this pull request
    * could be merged. This field will not return a value if the pull request is
    * merged, or if the test merge commit is still being generated. See the
@@ -339,6 +359,10 @@ export interface PullRequestQuery_repository_pullRequest {
    * A list of labels associated with the object.
    */
   labels: PullRequestQuery_repository_pullRequest_labels | null;
+  /**
+   * Lists the files changed within this pull request.
+   */
+  files: PullRequestQuery_repository_pullRequest_files | null;
   /**
    * Identifies the pull request title.
    */
@@ -457,6 +481,7 @@ export enum MergeStateStatus {
   BLOCKED = "BLOCKED",
   CLEAN = "CLEAN",
   DIRTY = "DIRTY",
+  DRAFT = "DRAFT",
   HAS_HOOKS = "HAS_HOOKS",
   UNKNOWN = "UNKNOWN",
   UNSTABLE = "UNSTABLE",
