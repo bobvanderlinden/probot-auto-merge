@@ -63,6 +63,10 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
               labels: assertNotNullNodes(pullRequest.labels, 'No permission to labels of pull request',
                 labels => removeTypename(labels)
               ),
+              files: assertNotNullNodes(pullRequest.files, 'No permission to files of pull request?',
+                files => removeTypename(files)
+              ),
+              changedFiles: pullRequest.changedFiles,
               title: pullRequest.title,
               body: pullRequest.body,
               reviews: assertNotNullNodes(pullRequest.reviews, 'No permission to fetch reviews',

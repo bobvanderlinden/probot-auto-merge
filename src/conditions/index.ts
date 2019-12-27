@@ -10,6 +10,7 @@ import open from './open'
 // import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
 import requiredBody from './requiredBody'
+import requiredPath from './requiredPath'
 
 export const conditions = {
   blockingChecks,
@@ -21,6 +22,7 @@ export const conditions = {
   open,
   // requiredChecks,
   requiredBody,
+  requiredPath,
   requiredLabels
 }
 
