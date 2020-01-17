@@ -165,7 +165,7 @@ Whether an out-of-date pull request is automatically updated.
 It does so by merging its base on top of the head of the pull request.
 This is similar to the behavior of the 'Update branch' button.
 
-`updateBranch`` is useful for repositories where protected branches are used
+`updateBranch` is useful for repositories where protected branches are used
 and the option *Require branches to be up to date before merging* is enabled.
 
 Note that this only works when the branch of the pull request resides in the same
