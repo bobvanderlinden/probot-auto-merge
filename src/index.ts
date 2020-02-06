@@ -93,18 +93,22 @@ export = (app: Application) => {
     })
   }
 
-  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, branchName }: { owner: String, repo: string, branchName: string }): Promise<{ owner: string, repo: string, number: number }[]> {
+  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, sha }: { owner: String, repo: string, sha: string }): Promise<{ owner: string, repo: string, number: number, state: string }[]> {
+    app.log.debug('Querying results...............')
     const result = await rawGraphQLQuery(github, `
-      query($owner: String!, $repo: String!, $refQualifiedName: String!) {
+      query($owner: String!, $repo: String!, $sha: GitObjectID!) {
         repository(owner: $owner, name: $repo) {
-          ref(qualifiedName: $refQualifiedName) {
-            associatedPullRequests(first: 10) {
-              nodes {
-                number
-                repository {
-                  name
-                  owner {
-                    login
+          object(oid: $sha) {
+            ... on Commit {
+              associatedPullRequests(first: 10) {
+                nodes {
+                  number
+                  state
+                  repository {
+                    name
+                    owner {
+                      login
+                    }
                   }
                 }
               }
@@ -115,26 +119,38 @@ export = (app: Application) => {
     `, {
       owner: owner,
       repo: repo,
-      refQualifiedName: `refs/heads/${branchName}`
+      sha: sha
     }, {})
     if (!result.data) { return [] }
-    return result.data.repository.ref.associatedPullRequests.nodes.map((node: any) => ({
+    app.log.debug('Query result:')
+    app.log.debug(result)
+    return result.data.repository.object.associatedPullRequests.nodes.map((node: any) => ({
       number: node.number,
       repo: node.repository.name,
-      owner: node.repository.owner.login
+      owner: node.repository.owner.login,
+      state: node.state
     }))
   }
 
   app.on([
     'status'
   ], async context => {
+    app.log.debug('Payload content:')
+    app.log.debug(context)
     const branches = context.payload.branches as { name: string }[]
-    const validBranches = branches.filter(branch => branch.name !== 'master')
-    const pullRequestResponses = await Promise.all(validBranches.map(branch =>
+    const sha = context.payload.sha as string
+    let iter = [1]
+    if (typeof branches[0] !== 'undefined') {
+      iter = (branches[0].name === 'master') ? [] : [1]
+    }
+    const owner = (Object(branches).length === 0)
+      ? context.payload.commit.author.login
+      : context.payload.repository.owner.login
+    const pullRequestResponses = await Promise.all(iter.map(i =>
       getAssociatedPullRequests(context.github, {
-        owner: context.payload.repository.owner.login,
+        owner: owner,
         repo: context.payload.repository.name,
-        branchName: branch.name
+        sha: sha
       })
     ))
 
@@ -144,7 +160,14 @@ export = (app: Application) => {
         owner: pullRequest.owner,
         repo: pullRequest.repo
       }
-      return handlePullRequests(app, context, context.payload.installation.id, repositoryReference, [pullRequest.number])
+      app.log.debug('PR state:', pullRequest.state)
+      if (pullRequest.state === 'OPEN') {
+        app.log.debug('handling PR')
+        return handlePullRequests(app, context, context.payload.installation.id, repositoryReference, [pullRequest.number])
+      } else {
+        app.log.debug('PR is not in OPEN state, skipping')
+        return null
+      }
     }))
   })
 
