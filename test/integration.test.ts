@@ -178,13 +178,14 @@ it('merges when receiving status event', async () => {
   })
 
   const graphql = jest.fn(async (query, variables) => {
-    if (variables.refQualifiedName) {
+    if (variables.sha) {
       return {
         repository: {
-          ref: {
+          object: {
             associatedPullRequests: {
               nodes: [{
                 number: 1,
+                state: 'OPEN',
                 repository: {
                   name: 'probot-auto-merge',
                   owner: {
@@ -214,7 +215,7 @@ it('merges when receiving status event', async () => {
     createStatusEvent({
       owner: 'owner-of-fork',
       repo: 'probot-auto-merge',
-      sha: '123',
+      sha: '916200ea5344364220b57fa6412f0f99a3638356',
       branchName: 'pr-1'
     })
   )
@@ -225,7 +226,7 @@ it('merges when receiving status event', async () => {
     expect.anything(), expect.objectContaining({
       owner: 'owner-of-fork',
       repo: 'probot-auto-merge',
-      refQualifiedName: 'refs/heads/pr-1'
+      sha: '916200ea5344364220b57fa6412f0f99a3638356'
     })
   )
   expect(graphql).toHaveBeenCalledWith(
