@@ -6,7 +6,6 @@ import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
-import { flatten } from './utils'
 import { GitHubAPI } from 'probot/lib/github'
 import { rawGraphQLQuery } from './github-utils'
 
@@ -93,14 +92,15 @@ export = (app: Application) => {
     })
   }
 
-  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, branchName }: { owner: String, repo: string, branchName: string }): Promise<{ owner: string, repo: string, number: number }[]> {
+  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, commitId }: { owner: String, repo: string, commitId: string }): Promise<{ owner: string, repo: string, number: number }[]> {
     const result = await rawGraphQLQuery(github, `
-      query($owner: String!, $repo: String!, $refQualifiedName: String!) {
+      query($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
-          ref(qualifiedName: $refQualifiedName) {
-            associatedPullRequests(first: 10) {
-              nodes {
+          pullRequests(first: 100, states: OPEN, baseRefName: "master", orderBy: { field: UPDATED_AT, direction: DESC}) {
+            edges {
+              node {
                 number
+                headRefOid
                 repository {
                   name
                   owner {
@@ -113,32 +113,33 @@ export = (app: Application) => {
         }
       }
     `, {
-      owner: owner,
-      repo: repo,
-      refQualifiedName: `refs/heads/${branchName}`
+      owner,
+      repo
     }, {})
     if (!result.data) { return [] }
-    return result.data.repository.ref.associatedPullRequests.nodes.map((node: any) => ({
-      number: node.number,
-      repo: node.repository.name,
-      owner: node.repository.owner.login
-    }))
+    const allPullRequests = result.data.repository.pullRequests.edges.map((edge: any) => {
+      const node = edge.node
+      return {
+        number: node.number,
+        commitId: node.headRefOid,
+        repo: node.repository.name,
+        owner: node.repository.owner.login
+      }
+    })
+
+    return allPullRequests.filter((pr: any) => pr.commitId === commitId)
   }
 
   app.on([
     'status'
   ], async context => {
-    const branches = context.payload.branches as { name: string }[]
-    const validBranches = branches.filter(branch => branch.name !== 'master')
-    const pullRequestResponses = await Promise.all(validBranches.map(branch =>
-      getAssociatedPullRequests(context.github, {
-        owner: context.payload.repository.owner.login,
-        repo: context.payload.repository.name,
-        branchName: branch.name
-      })
-    ))
+    const pullRequests = await
+    getAssociatedPullRequests(context.github, {
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      commitId: context.payload.sha
+    })
 
-    const pullRequests = flatten(pullRequestResponses)
     await Promise.all(pullRequests.map(pullRequest => {
       const repositoryReference = {
         owner: pullRequest.owner,
