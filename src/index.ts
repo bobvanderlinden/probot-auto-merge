@@ -92,11 +92,11 @@ export = (app: Application) => {
     })
   }
 
-  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, commitId }: { owner: String, repo: string, commitId: string }): Promise<{ owner: string, repo: string, number: number }[]> {
+  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, headRefOid }: { owner: String, repo: string, headRefOid: string }): Promise<{ owner: string, repo: string, number: number }[]> {
     const result = await rawGraphQLQuery(github, `
       query($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
-          pullRequests(first: 100, states: OPEN, baseRefName: "master", orderBy: { field: UPDATED_AT, direction: DESC}) {
+          pullRequests(first: 10, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC}) {
             edges {
               node {
                 number
@@ -117,27 +117,24 @@ export = (app: Application) => {
       repo
     }, {})
     if (!result.data) { return [] }
-    const allPullRequests = result.data.repository.pullRequests.edges.map((edge: any) => {
-      const node = edge.node
-      return {
+    const allPullRequests = result.data.repository.pullRequests.edges
+      .filter(({ node }: any) => node.headRefOid === headRefOid)
+      .map(({ node }: any) => ({
         number: node.number,
-        commitId: node.headRefOid,
         repo: node.repository.name,
         owner: node.repository.owner.login
-      }
-    })
+      }))
 
-    return allPullRequests.filter((pr: any) => pr.commitId === commitId)
+    return allPullRequests
   }
 
   app.on([
     'status'
   ], async context => {
-    const pullRequests = await
-    getAssociatedPullRequests(context.github, {
+    const pullRequests = await getAssociatedPullRequests(context.github, {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
-      commitId: context.payload.sha
+      headRefOid: context.payload.sha
     })
 
     await Promise.all(pullRequests.map(pullRequest => {

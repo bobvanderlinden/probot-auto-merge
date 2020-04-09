@@ -177,26 +177,27 @@ it('merges when receiving status event', async () => {
     config
   })
 
-  const graphql = jest.fn(async (query, variables) => github.graphql(query, variables)).mockResolvedValueOnce({
-    repository: {
-      pullRequests: {
-        edges: [
-          {
-            node: {
-              number: 1,
-              headRefOid: '123',
-              repository: {
-                name: 'probot-auto-merge',
-                owner: {
-                  login: 'bobvanderlinden'
+  const graphql = jest.fn(async (query, variables) => github.graphql(query, variables))
+    .mockResolvedValueOnce({
+      repository: {
+        pullRequests: {
+          edges: [
+            {
+              node: {
+                number: 1,
+                headRefOid: '123',
+                repository: {
+                  name: 'probot-auto-merge',
+                  owner: {
+                    login: 'bobvanderlinden'
+                  }
                 }
               }
             }
-          }
-        ]
+          ]
+        }
       }
-    }
-  }) as any
+    }) as any
 
   const app = createApplication({
     appFn,
