@@ -36,6 +36,7 @@ export type ConditionConfig = {
   requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
   requiredTitleRegex: string | undefined
+  pullRequestAuthorRole: string
 }
 
 export type Config = {
@@ -59,7 +60,8 @@ export const defaultRuleConfig: ConditionConfig = {
   blockingTitleRegex: undefined,
   blockingBodyRegex: undefined,
   requiredTitleRegex: undefined,
-  requiredBodyRegex: undefined
+  requiredBodyRegex: undefined,
+  pullRequestAuthorRole: 'NONE'
 }
 
 export const defaultConfig: Config = {
@@ -90,7 +92,8 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   blockingTitleRegex: optional(string()),
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
-  requiredBodyRegex: optional(string())
+  requiredBodyRegex: optional(string()),
+  pullRequestAuthorRole: string()
 })
 
 const configDecoder: Decoder<Config> = object({
@@ -104,6 +107,7 @@ const configDecoder: Decoder<Config> = object({
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
   requiredBodyRegex: optional(string()),
+  pullRequestAuthorRole: string(),
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
   reportStatus: boolean(),
