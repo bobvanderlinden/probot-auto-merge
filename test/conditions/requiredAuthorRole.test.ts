@@ -1,12 +1,12 @@
-import hasPullRequestAuthority from '../../src/conditions/pullRequestAuthorRole'
+import hasRequiredAuthorRole from '../../src/conditions/requiredAuthorRole'
 import { createConditionConfig, createPullRequestInfo } from '../mock'
 import { CommentAuthorAssociation } from '../../src/models'
 
-describe('pullRequestAuthorRole', () => {
+describe('requiredAuthorRole', () => {
   it('returns success when pull request author is owner and role was configured for owner', async () => {
-    const result = hasPullRequestAuthority(
+    const result = hasRequiredAuthorRole(
       createConditionConfig({
-        pullRequestAuthorRole: 'OWNER'
+        requiredAuthorRole: 'OWNER'
       }),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.OWNER
@@ -16,9 +16,9 @@ describe('pullRequestAuthorRole', () => {
   })
 
   it('returns fail when pull request author is member and role was configured for owner', async () => {
-    const result = hasPullRequestAuthority(
+    const result = hasRequiredAuthorRole(
       createConditionConfig({
-        pullRequestAuthorRole: 'OWNER'
+        requiredAuthorRole: 'OWNER'
       }),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.MEMBER
@@ -28,9 +28,9 @@ describe('pullRequestAuthorRole', () => {
   })
 
   it('returns success when pull request author is member and role was not configured for collaborator', async () => {
-    const result = hasPullRequestAuthority(
+    const result = hasRequiredAuthorRole(
       createConditionConfig({
-        pullRequestAuthorRole: 'COLLABORATOR'
+        requiredAuthorRole: 'COLLABORATOR'
       }),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.MEMBER
@@ -40,7 +40,7 @@ describe('pullRequestAuthorRole', () => {
   })
 
   it('returns success when pull request author is member and role was not configured', async () => {
-    const result = hasPullRequestAuthority(
+    const result = hasRequiredAuthorRole(
       createConditionConfig(),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.MEMBER
