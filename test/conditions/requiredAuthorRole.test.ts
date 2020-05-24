@@ -6,7 +6,7 @@ describe('requiredAuthorRole', () => {
   it('returns success when pull request author is owner and role was configured for owner', async () => {
     const result = hasRequiredAuthorRole(
       createConditionConfig({
-        requiredAuthorRole: 'OWNER'
+        requiredAuthorRole: CommentAuthorAssociation.OWNER
       }),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.OWNER
@@ -18,7 +18,7 @@ describe('requiredAuthorRole', () => {
   it('returns fail when pull request author is member and role was configured for owner', async () => {
     const result = hasRequiredAuthorRole(
       createConditionConfig({
-        requiredAuthorRole: 'OWNER'
+        requiredAuthorRole: CommentAuthorAssociation.OWNER
       }),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.MEMBER
@@ -30,7 +30,7 @@ describe('requiredAuthorRole', () => {
   it('returns success when pull request author is member and role was not configured for collaborator', async () => {
     const result = hasRequiredAuthorRole(
       createConditionConfig({
-        requiredAuthorRole: 'COLLABORATOR'
+        requiredAuthorRole: CommentAuthorAssociation.COLLABORATOR
       }),
       createPullRequestInfo({
         authorAssociation: CommentAuthorAssociation.MEMBER
