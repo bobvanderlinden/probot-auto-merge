@@ -13,7 +13,7 @@ export default function doesNotHaveBlockingLabels (
   if (foundBlockingLabels.length > 0) {
     return {
       status: 'fail',
-      message: `Blocking labels are missing (${
+      message: `Blocking labels are present (${
         foundBlockingLabels.join(', ')
       })`
     }
