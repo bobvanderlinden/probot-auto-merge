@@ -54,6 +54,17 @@ mergeCommitMessage: |
 
   {body}
 
+# Whenever blocking base branches are configured, pull requests will only be automatically merged whenever
+# their base branch (into which the PR would be merged) is not matching any regular expression listed.
+blockingBaseBranches:
+- ^develop$
+- ^trunk$
+
+# Whenever required base branches are configured, pull requests will only be automatically merged whenever
+# their base branch (into which the PR would be merged) is matching any regular expression listed.
+requiredBaseBranches:
+- ^master$
+
 # Blocking labels are the labels that can be attached to a pull request to make sure the pull request
 # is not being automatically merged.
 blockingLabels:
