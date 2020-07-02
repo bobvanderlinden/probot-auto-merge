@@ -135,6 +135,21 @@ automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swi
 blockingTitleRegex: '\bWIP\b'
 ```
 
+### `blockingBodyRegex` (condition, default: none)
+
+Whenever a blocking body regular expression is configured, pull requests that have a body
+matching the configured expression will not be automatically merged.
+
+This is useful whenever pull requests with a certain string in their body need to be skipped.
+
+In the example below, pull requests with the body containing `do-not-merge` will not be
+automatically merged. This also includes `labels: do-not-merge`, `LABELS: DO-NOT-MERGE` or `some more text, but do-not-merge`,
+but not `do-not-merge-just-kidding`:
+
+```yaml
+blockingBodyRegex: '(^|\\s)do-not-merge($|\\s)'
+```
+
 ### `requiredBodyRegex` (condition, default: none)
 
 Whenever a required body regular expression is configured, only pull requests that have a body
