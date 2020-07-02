@@ -64,6 +64,10 @@ blockingLabels:
 requiredLabels:
 - merge
 
+# Pull requests will only be automatically merged if there is a match between the regular expression
+# and its title
+requiredTitleRegex: '\bmerge\b'
+
 # Automatic merges will be blocked if there is a match between the regular expression and title
 blockingTitleRegex: '\bwip\b'
 
