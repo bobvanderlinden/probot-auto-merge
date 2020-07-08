@@ -1,5 +1,6 @@
 import { ConditionResult } from './../condition'
 import { keysOf } from '../utils'
+import blockingBody from './blockingBody'
 import blockingChecks from './blockingChecks'
 import blockingLabels from './blockingLabels'
 import blockingTitle from './blockingTitle'
@@ -12,6 +13,7 @@ import requiredLabels from './requiredLabels'
 import requiredBody from './requiredBody'
 
 export const conditions = {
+  blockingBody,
   blockingChecks,
   blockingLabels,
   blockingTitle,
