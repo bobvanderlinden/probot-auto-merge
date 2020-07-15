@@ -8,8 +8,8 @@ export default function blockingBaseBranches (
 ): ConditionResult {
   const pullRequestBaseBranch = pullRequestInfo.baseRef.name
   const foundBlockingBranches = config.blockingBaseBranches
-    .map(blockedBaseBranch => new RegExp(blockedBaseBranch))
-    .filter(blockedBaseBranch => blockedBaseBranch.test(pullRequestBaseBranch))
+    .map(blockingBaseBranch => new RegExp(blockingBaseBranch))
+    .filter(blockingBaseBranch => blockingBaseBranch.test(pullRequestBaseBranch))
 
   if (foundBlockingBranches.length > 0) {
     return {
