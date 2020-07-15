@@ -105,7 +105,7 @@ blockingBaseBranches:
 - ^blocked$
 ```
 
-Note: remove the whole section when you're not using blocking labels.
+Note: remove the whole section when you're not using blocking base branches.
 
 ### `requiredBaseBranches` (condition, default: none)
 
