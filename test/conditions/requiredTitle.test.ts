@@ -37,7 +37,7 @@ describe('requiredTitle', () => {
     expect(result.status).toBe('success')
   })
 
-  it('returns success if there is a partial match in title', async () => {
+  it('returns success if there is a regex match in title', async () => {
     const result = requiredTitle(
       createConditionConfig({
         requiredTitleRegex: 'mer.+shiny'
