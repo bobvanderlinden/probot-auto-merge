@@ -135,6 +135,20 @@ automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swi
 blockingTitleRegex: '\bWIP\b'
 ```
 
+### `requiredTitleRegex` (condition, default: none)
+
+Whenever a required title regular expression is configured, only pull requests that have a title
+matching the configured expression will automatically be merged.
+
+This is useful for forks, that can only create pull request text, no labels.
+
+In the example below, pull requests with the title containing `MERGE` will be
+automatically merged. This also includes This also includes `[merge]`, `MERGE` or `[MERGE]`, but not `submerge`:
+
+```yaml
+requiredTitleRegex: '\bMERGE\b'
+```
+
 ### `blockingBodyRegex` (condition, default: none)
 
 Whenever a blocking body regular expression is configured, pull requests that have a body

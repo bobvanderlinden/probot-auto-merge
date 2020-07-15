@@ -11,6 +11,7 @@ import open from './open'
 // import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
 import requiredBody from './requiredBody'
+import requiredTitle from './requiredTitle'
 
 export const conditions = {
   blockingBody,
@@ -23,7 +24,8 @@ export const conditions = {
   open,
   // requiredChecks,
   requiredBody,
-  requiredLabels
+  requiredLabels,
+  requiredTitle
 }
 
 export type Conditions = typeof conditions
