@@ -215,7 +215,9 @@ export = (app: Application) => {
   })
 
   const router = express.Router()
-  app.router.use('/api', router)
+  if (process.env.DEBUG_TOKEN) {
+    app.router.use('/api', router)
+  }
   router.use((req, res, next) => {
     if (req.query.token !== process.env.DEBUG_TOKEN) {
       return res.status(403).send('')
