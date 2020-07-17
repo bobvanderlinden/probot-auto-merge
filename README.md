@@ -135,6 +135,49 @@ automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swi
 blockingTitleRegex: '\bWIP\b'
 ```
 
+### `requiredTitleRegex` (condition, default: none)
+
+Whenever a required title regular expression is configured, only pull requests that have a title
+matching the configured expression will automatically be merged.
+
+This is useful for forks, that can only create pull request text, no labels.
+
+In the example below, pull requests with the title containing `MERGE` will be
+automatically merged. This also includes This also includes `[merge]`, `MERGE` or `[MERGE]`, but not `submerge`:
+
+```yaml
+requiredTitleRegex: '\bMERGE\b'
+```
+
+### `blockingBodyRegex` (condition, default: none)
+
+Whenever a blocking body regular expression is configured, pull requests that have a body
+matching the configured expression will not be automatically merged.
+
+This is useful whenever pull requests with a certain string in their body need to be skipped.
+
+In the example below, pull requests with the body containing `do-not-merge` will not be
+automatically merged. This also includes `labels: do-not-merge`, `LABELS: DO-NOT-MERGE` or `some more text, but do-not-merge`,
+but not `do-not-merge-just-kidding`:
+
+```yaml
+blockingBodyRegex: '(^|\\s)do-not-merge($|\\s)'
+```
+
+### `requiredBodyRegex` (condition, default: none)
+
+Whenever a required body regular expression is configured, only pull requests that have a body
+matching the configured expression will automatically be merged.
+
+This is useful for forks, that can only create pull request text, no labels.
+
+In the example below, pull requests with the body containing `ok-to-merge` will be
+automatically merged. This also includes `labels: ok-to-merge`, `LABELS: OK-TO-MERGE` or `some more text, but ok-to-merge`, but not `not-ok-to-merge`:
+
+```yaml
+requiredBodyRegex: '(^|\\s)ok-to-merge($|\\s)'
+```
+
 ### `reportStatus` (default: `false`)
 
 The status of the auto-merge process will be shown in each PR as a [check](https://help.github.com/articles/about-status-checks/). This can be especially useful to find out why a PR is not being merged automatically.
@@ -151,7 +194,7 @@ Whether an out-of-date pull request is automatically updated.
 It does so by merging its base on top of the head of the pull request.
 This is similar to the behavior of the 'Update branch' button.
 
-`updateBranch`` is useful for repositories where protected branches are used
+`updateBranch` is useful for repositories where protected branches are used
 and the option *Require branches to be up to date before merging* is enabled.
 
 Note that this only works when the branch of the pull request resides in the same
@@ -192,6 +235,30 @@ For more information see https://help.github.com/articles/about-pull-request-mer
 
 ```yaml
 mergeMethod: merge
+```
+
+### `mergeCommitMessage` (default: none)
+
+Optionally specify the merge commit message format. The following template tags
+are supported:
+
+* `{title}`: The pull request title at the moment it is merged
+* `{body}`: The pull request body at the moment it is merged
+* `{number}`: The pull request number
+* `{branch}`: The name of the source branch
+* `{commits}`: A list of merged commits
+
+When this option is not set, the merge commit message is controlled by
+GitHub and uses a combination of the title of the pull request when it was
+opened (note that later changes to the title are ignored) and a list of
+commits.
+
+This settings is ignored when `mergeMethod` is set to `rebase`.
+
+```yaml
+mergeCommitMessage: |
+  {title} (#{number})
+  {body}
 ```
 
 ### `rules` (default: none)

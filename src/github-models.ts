@@ -1,6 +1,6 @@
 import { PullRequestQuery } from './query.graphql'
-export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from './query.graphql'
 import { ElementOf, Omit } from './type-utils'
+export { PullRequestState, MergeableState, CommentAuthorAssociation, PullRequestReviewState, CheckStatusState, CheckConclusionState } from './query.graphql'
 
 export interface RepositoryReference {
   owner: string
@@ -41,7 +41,7 @@ function assertNotNullNodes<TNode, TNodeOutput> (input: { nodes: (TNode | null)[
 
 function removeTypename<T extends { __typename: any }> (obj: T): Omit<T, '__typename'> {
   const result = obj
-  delete result['__typename']
+  delete result.__typename
   return result
 }
 
@@ -63,6 +63,8 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
               labels: assertNotNullNodes(pullRequest.labels, 'No permission to labels of pull request',
                 labels => removeTypename(labels)
               ),
+              title: pullRequest.title,
+              body: pullRequest.body,
               reviews: assertNotNullNodes(pullRequest.reviews, 'No permission to fetch reviews',
                 review => ({
                   ...removeTypename(review),
@@ -96,23 +98,12 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                 })
               ),
               headRefOid: pullRequest.headRefOid as string,
+              headRefName: pullRequest.headRefName,
               commits: assertNotNullNodes(pullRequest.commits, 'No permission to fetch commits',
                 commit => ({
                   ...removeTypename(commit),
                   commit: {
                     ...removeTypename(commit.commit),
-                    status: assertNotNull(commit.commit.status, 'No permission to fetch status',
-                      status => ({
-                        ...removeTypename(status),
-                        contexts: assertNotNull(status.contexts, 'No permission to fetch contexts',
-                          contexts => contexts.map(context => ({
-                            ...removeTypename(context),
-                            context: context.context,
-                            state: context.state
-                          }))
-                        )
-                      })
-                    ),
                     checkSuites: assertNotNullNodes(commit.commit.checkSuites, 'No permission to fetch checkSuites',
                       checkSuite => ({
                         ...removeTypename(checkSuite),
@@ -125,6 +116,16 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                         )
                       })
                     )
+                  }
+                })
+              ),
+              allCommits: assertNotNullNodes(pullRequest.allCommits, 'No permission to fetch commits',
+                commit => ({
+                  ...removeTypename(commit),
+                  commit: {
+                    ...removeTypename(commit.commit),
+                    abbreviatedOid: commit.commit.abbreviatedOid,
+                    messageHeadline: commit.commit.messageHeadline
                   }
                 })
               ),
@@ -147,12 +148,10 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
   )
 }
 
-export type PullRequestQueryResult_Validated = ReturnType<typeof validatePullRequestQuery>
-export type PullRequestInfo = PullRequestQueryResult_Validated['repository']['pullRequest']
+export type PullRequestQueryResultValidated = ReturnType<typeof validatePullRequestQuery>
+export type PullRequestInfo = PullRequestQueryResultValidated['repository']['pullRequest']
 export type Review = ElementOf<PullRequestInfo['reviews']['nodes']>
 export type Commit = ElementOf<PullRequestInfo['commits']['nodes']>['commit']
-export type CommitStatus = Commit['status']
-export type CommitStatusContext = ElementOf<CommitStatus['contexts']>
 export type CheckSuite = ElementOf<Commit['checkSuites']['nodes']>
 export type CheckRun = ElementOf<CheckSuite['checkRuns']['nodes']>
 export type Ref = Exclude<PullRequestInfo['headRef'], null>

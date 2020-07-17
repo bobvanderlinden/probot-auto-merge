@@ -1,6 +1,6 @@
 import { PullRequestContext } from './../src/pull-request-handler'
 import { ConditionConfig, defaultRuleConfig } from './../src/config'
-import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit, RepositoryReference, CommitStatus, CommitStatusContext } from './../src/github-models'
+import { Review, CheckRun, PullRequestReviewState, Ref, CheckStatusState, CheckConclusionState, CheckSuite, Commit, RepositoryReference } from './../src/github-models'
 import { HandlerContext, PullRequestReference, PullRequestState, MergeableState, CommentAuthorAssociation } from './../src/models'
 import { PullRequestInfo } from '../src/models'
 import { Config, defaultConfig } from '../src/config'
@@ -9,7 +9,7 @@ import { GitHubAPI } from 'probot/lib/github'
 import { LoggerWithTarget } from 'probot/lib/wrap-logger'
 import { Response, Endpoint } from '@octokit/rest'
 import { DeepPartial, Omit } from '../src/type-utils'
-import { PullRequestQuery, MergeStateStatus, StatusState } from '../src/query.graphql'
+import { PullRequestQuery, MergeStateStatus } from '../src/query.graphql'
 
 export class GraphqlError {
   name: string
@@ -22,7 +22,7 @@ export class GraphqlError {
   }
 }
 
-export const defaultPullRequestInfo: PullRequestInfo = {
+export const defaultPullRequestInfo = {
   number: 1,
   state: PullRequestState.OPEN,
   mergeable: MergeableState.MERGEABLE,
@@ -56,6 +56,7 @@ export const defaultPullRequestInfo: PullRequestInfo = {
     }
   },
   headRefOid: 'c2a6b03f190dfb2b4aa91f8af8d477a9bc3401dc',
+  headRefName: 'pr-some-change',
   authorAssociation: CommentAuthorAssociation.OWNER,
   labels: {
     nodes: []
@@ -66,12 +67,22 @@ export const defaultPullRequestInfo: PullRequestInfo = {
   commits: {
     nodes: [{
       commit: {
-        status: {
-          contexts: []
-        },
         checkSuites: {
           nodes: []
         }
+      }
+    }]
+  },
+  allCommits: {
+    nodes: [{
+      commit: {
+        abbreviatedOid: 'fqb8pzaox4lqxkh3xxeivv73btukwgm50qvx9avd',
+        messageHeadline: 'First commit'
+      }
+    }, {
+      commit: {
+        abbreviatedOid: '0d5dg3l14ak7knizjj7kog1rh7i166ml8rl36x4h',
+        messageHeadline: 'Second commit'
       }
     }]
   },
@@ -80,7 +91,8 @@ export const defaultPullRequestInfo: PullRequestInfo = {
       nodes: []
     }
   },
-  title: 'Add some feature'
+  title: 'Add some feature',
+  body: 'This is a description of this PR.\n\nCloses #1'
 }
 
 export function createPullRequestInfo (pullRequestInfo?: Partial<PullRequestInfo>): PullRequestInfo {
@@ -291,9 +303,6 @@ export function createStatusEvent (options: RepositoryReference & { sha: string,
 export function createCommit (options?: Partial<Commit>): { commit: Commit } {
   return {
     commit: {
-      status: {
-        contexts: []
-      },
       checkSuites: {
         nodes: []
       },
@@ -317,8 +326,6 @@ export function createCheckSuite (options?: Partial<CheckSuite>): CheckSuite {
 }
 
 export function createCommitsWithCheckSuiteWithCheckRun (options?: {
-  status?: Partial<CommitStatus>,
-  statusContext?: Partial<CommitStatusContext>,
   commit?: Partial<Omit<Commit, 'checkSuites'>>,
   checkSuite?: Partial<Omit<CheckSuite, 'checkRuns'>>,
   checkRun?: Partial<CheckRun>
@@ -327,10 +334,6 @@ export function createCommitsWithCheckSuiteWithCheckRun (options?: {
   return {
     nodes: [
       createCommit({
-        status: createCommitStatus({
-          contexts: [createCommitStatusContext(options.statusContext)],
-          ...options.status
-        }),
         checkSuites: {
           nodes: [createCheckSuite({
             conclusion: options.checkSuite && options.checkSuite.conclusion || options.checkRun && options.checkRun.conclusion,
@@ -344,21 +347,6 @@ export function createCommitsWithCheckSuiteWithCheckRun (options?: {
         ...options.commit
       })
     ]
-  }
-}
-
-export function createCommitStatus (options?: Partial<CommitStatus>): CommitStatus {
-  return {
-    contexts: [],
-    ...options
-  }
-}
-
-export function createCommitStatusContext (options?: Partial<CommitStatusContext>): CommitStatusContext {
-  return {
-    context: 'checka',
-    state: StatusState.SUCCESS,
-    ...options
   }
 }
 

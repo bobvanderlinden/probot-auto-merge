@@ -30,7 +30,10 @@ export type ConditionConfig = {
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
   requiredLabels: string[],
   blockingLabels: string[],
+  blockingBodyRegex: string | undefined
+  requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
+  requiredTitleRegex: string | undefined
 }
 
 export type Config = {
@@ -38,6 +41,7 @@ export type Config = {
   updateBranch: boolean,
   deleteBranchAfterMerge: boolean,
   mergeMethod: 'merge' | 'rebase' | 'squash'
+  mergeCommitMessage?: string
   reportStatus: boolean
 } & ConditionConfig
 
@@ -49,7 +53,10 @@ export const defaultRuleConfig: ConditionConfig = {
   },
   blockingLabels: [],
   requiredLabels: [],
-  blockingTitleRegex: undefined
+  blockingTitleRegex: undefined,
+  blockingBodyRegex: undefined,
+  requiredTitleRegex: undefined,
+  requiredBodyRegex: undefined
 }
 
 export const defaultConfig: Config = {
@@ -76,7 +83,10 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(string()),
   blockingLabels: array(string()),
-  blockingTitleRegex: optional(string())
+  blockingTitleRegex: optional(string()),
+  blockingBodyRegex: optional(string()),
+  requiredTitleRegex: optional(string()),
+  requiredBodyRegex: optional(string())
 })
 
 const configDecoder: Decoder<Config> = object({
@@ -86,6 +96,9 @@ const configDecoder: Decoder<Config> = object({
   requiredLabels: array(string()),
   blockingLabels: array(string()),
   blockingTitleRegex: optional(string()),
+  blockingBodyRegex: optional(string()),
+  requiredTitleRegex: optional(string()),
+  requiredBodyRegex: optional(string()),
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
   reportStatus: boolean(),
@@ -93,7 +106,8 @@ const configDecoder: Decoder<Config> = object({
     constant<'merge'>('merge'),
     constant<'rebase'>('rebase'),
     constant<'squash'>('squash')
-  )
+  ),
+  mergeCommitMessage: optional(string())
 })
 
 export function validateConfig (config: any) {

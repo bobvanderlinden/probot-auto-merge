@@ -24,6 +24,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
         }
       }
       title
+      body
       authorAssociation
       baseRef {
         repository {
@@ -41,12 +42,6 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
       commits(last: 1) {
         nodes {
           commit {
-            status {
-              contexts {
-                context
-                state
-              }
-            }
             checkSuites(last: 10) {
               nodes {
                 app {
@@ -67,6 +62,14 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
           }
         }
       }
+      allCommits: commits(last: 100) {
+        nodes {
+          commit {
+            abbreviatedOid
+            messageHeadline
+          }
+        }
+      }
       headRef {
         repository {
           owner {
@@ -80,6 +83,7 @@ query PullRequestQuery($owner:String!, $repo:String!, $pullRequestNumber:Int!) {
         name
       }
       headRefOid
+      headRefName
       repository {
         branchProtectionRules(last: 100) {
           nodes {

@@ -6,6 +6,8 @@ import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { updateStatusReportCheck } from './status-report'
 import { MergeStateStatus } from './query.graphql'
+import { Config } from './config'
+import { getCommitMessage, splitCommitMessage } from './commit-message'
 
 export interface PullRequestContext extends HandlerContext {
   reschedulePullRequest: () => void,
@@ -55,11 +57,11 @@ export type PullRequestAction = 'reschedule' | 'update_branch' | 'merge' | 'dele
 export type PullRequestActions
   = (
     []
-  | ['reschedule']
-  | ['update_branch', 'reschedule']
-  | ['merge']
-  | ['merge', 'delete_branch']
-) & Array<PullRequestAction>
+    | ['reschedule']
+    | ['update_branch', 'reschedule']
+    | ['merge']
+    | ['merge', 'delete_branch']
+  ) & Array<PullRequestAction>
 
 export type PullRequestPlanCode
   = 'closed'
@@ -81,6 +83,11 @@ export type PullRequestPlan = {
   actions: PullRequestActions
 }
 
+type ExtraMergeParams = {
+  commit_title?: string
+  commit_message?: string
+}
+
 function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
   return Object.entries(pullRequestStatus)
     .map(([name, result]) => {
@@ -96,6 +103,27 @@ function getChecksMarkdown (pullRequestStatus: PullRequestStatus) {
       }
     })
     .join('\n')
+}
+
+function markdownParagraphs (paragraphs: string[]) {
+  return paragraphs
+    .filter(paragraph => paragraph)
+    .join('\n\n')
+}
+
+function getCommitMessageMarkdown (pullRequestInfo: PullRequestInfo, config: Config) {
+  const commitMessage = getCommitMessage(pullRequestInfo, config)
+
+  if (commitMessage === null) {
+    return ''
+  }
+
+  const quotedCommitMessage = commitMessage.split('\n').map(line => `> ${line}`).join('\n')
+
+  return markdownParagraphs([
+    'Commit message preview:',
+    quotedCommitMessage
+  ])
 }
 
 /**
@@ -123,7 +151,11 @@ export function getPullRequestPlan (
   if (pendingConditions.length > 0) {
     return {
       code: 'pending_condition',
-      message: `There are pending conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+      message: markdownParagraphs([
+        'There are pending conditions:',
+        getChecksMarkdown(pullRequestStatus),
+        getCommitMessageMarkdown(pullRequestInfo, config)
+      ]),
       actions: ['reschedule']
     }
   }
@@ -131,7 +163,11 @@ export function getPullRequestPlan (
   if (failingConditions.length > 0) {
     return {
       code: 'failing_condition',
-      message: `There are failing conditions:\n\n${getChecksMarkdown(pullRequestStatus)}`,
+      message: markdownParagraphs([
+        'There are failing conditions:',
+        getChecksMarkdown(pullRequestStatus),
+        getCommitMessageMarkdown(pullRequestInfo, config)
+      ]),
       actions: []
     }
   }
@@ -140,7 +176,7 @@ export function getPullRequestPlan (
     case MergeStateStatus.UNKNOWN:
       return {
         code: 'mergeable_unknown',
-        message: `GitHub is determining whether the pull request is mergeable`,
+        message: 'GitHub is determining whether the pull request is mergeable',
         actions: ['reschedule']
       }
     case MergeStateStatus.BEHIND:
@@ -181,13 +217,19 @@ export function getPullRequestPlan (
       if (config.deleteBranchAfterMerge && !isInFork(pullRequestInfo)) {
         return {
           code: 'merge_and_delete',
-          message: 'Will merge the pull request and delete its branch',
+          message: markdownParagraphs([
+            'Will merge the pull request and delete its branch.',
+            getCommitMessageMarkdown(pullRequestInfo, config)
+          ]),
           actions: ['merge', 'delete_branch']
         }
       } else {
         return {
           code: 'merge',
-          message: 'Will merge the pull request',
+          message: markdownParagraphs([
+            'Will merge the pull request.',
+            getCommitMessageMarkdown(pullRequestInfo, config)
+          ]),
           actions: ['merge']
         }
       }
@@ -237,7 +279,7 @@ export async function executeActions (
   pullRequestInfo: PullRequestInfo,
   actions: PullRequestAction[]
 ) {
-  for (let action of actions) {
+  for (const action of actions) {
     try {
       await executeAction(context, pullRequestInfo, action)
     } catch (err) {
@@ -249,10 +291,10 @@ export async function executeActions (
 
 export function getPullRequestActionName (action: PullRequestAction) {
   return ({
-    'delete_branch': 'delete branch',
-    'merge': 'merge',
-    'reschedule': 'reschedule',
-    'update_branch': 'update branch'
+    delete_branch: 'delete branch',
+    merge: 'merge',
+    reschedule: 'reschedule',
+    update_branch: 'update branch'
   })[action]
 }
 
@@ -313,16 +355,36 @@ async function mergePullRequest (
   pullRequestInfo: PullRequestInfo
 ) {
   const { config } = context
+  const extraParams: ExtraMergeParams = {}
   const pullRequestReference = getPullRequestReference(pullRequestInfo)
+  const commitMessage = getCommitMessage(pullRequestInfo, config)
+
+  if (commitMessage !== null) {
+    const commitMessageParams = splitCommitMessage(commitMessage)
+    extraParams.commit_title = commitMessageParams.title
+    extraParams.commit_message = commitMessageParams.body
+  }
+
   // This presses the merge button.
   result(
     await context.github.pulls.merge({
       owner: pullRequestReference.owner,
       repo: pullRequestReference.repo,
       pull_number: pullRequestReference.number,
-      merge_method: config.mergeMethod
+      merge_method: config.mergeMethod,
+      ...extraParams
     })
   )
+}
+
+function getPlanTitle (plan: PullRequestPlan) {
+  return plan.actions.some(action => action === 'merge')
+    ? 'Merging'
+    : plan.actions.some(action => action === 'update_branch')
+      ? 'Updating branch'
+      : plan.actions.some(action => action === 'reschedule')
+        ? 'Waiting'
+        : 'Not merging'
 }
 
 export async function handlePullRequestStatus (
@@ -331,17 +393,9 @@ export async function handlePullRequestStatus (
   pullRequestStatus: PullRequestStatus
 ) {
   const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
+  const title = getPlanTitle(plan)
 
-  await updateStatusReportCheck(context, pullRequestInfo,
-    plan.actions.some(action => action === 'merge')
-      ? 'Merging'
-      : plan.actions.some(action => action === 'update_branch')
-      ? 'Updating branch'
-      : plan.actions.some(action => action === 'reschedule')
-      ? 'Waiting'
-      : 'Not merging',
-    plan.message
-  )
+  await updateStatusReportCheck(context, pullRequestInfo, title, plan.message)
 
   const { actions } = plan
   context.log.debug('Actions:', actions)

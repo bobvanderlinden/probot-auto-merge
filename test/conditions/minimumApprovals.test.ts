@@ -87,5 +87,4 @@ describe('minimumApprovals', () => {
     )
     expect(result.status).toBe('fail')
   })
-
 })

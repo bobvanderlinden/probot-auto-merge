@@ -6,16 +6,14 @@ import { RepositoryWorkers } from './repository-workers'
 import sentryStream from 'bunyan-sentry-stream'
 import { RepositoryReference, PullRequestReference } from './github-models'
 import myAppId from './myappid'
-import { Router } from 'express'
 import { queryPullRequest } from './pull-request-query'
 import bunyan from 'bunyan'
-import bodyParser = require('body-parser')
 import { wrapLogger } from 'probot/lib/wrap-logger'
 import { PassThrough } from 'stream'
-import { flatten } from './utils'
 import { GitHubAPI } from 'probot/lib/github'
 import { rawGraphQLQuery } from './github-utils'
 import express from 'express'
+import bodyParser from 'body-parser'
 
 async function getWorkerContext (options: {app: Application, context: Context, installationId: number}): Promise<WorkerContext> {
   const { app, context, installationId } = options
@@ -58,8 +56,8 @@ function setupSentry (app: Application) {
     release: process.env.SOURCE_VERSION,
     environment: process.env.NODE_ENV || 'development',
     autoBreadcrumbs: {
-      'console': true,
-      'http': true
+      console: true,
+      http: true
     }
   }).install()
 
@@ -90,7 +88,7 @@ export = (app: Application) => {
 
   async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, pullRequestNumbers: number[]) {
     await useWorkerContext({ app, context, installationId }, async (workerContext) => {
-      for (let pullRequestNumber of pullRequestNumbers) {
+      for (const pullRequestNumber of pullRequestNumbers) {
         repositoryWorkers.queue(workerContext, {
           owner: repository.owner,
           repo: repository.repo,
@@ -100,14 +98,15 @@ export = (app: Application) => {
     })
   }
 
-  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, branchName }: { owner: String, repo: string, branchName: string }): Promise<{ owner: string, repo: string, number: number }[]> {
+  async function getAssociatedPullRequests (github: GitHubAPI, { owner, repo, headRefOid }: { owner: String, repo: string, headRefOid: string }): Promise<{ owner: string, repo: string, number: number }[]> {
     const result = await rawGraphQLQuery(github, `
-      query {
+      query($owner: String!, $repo: String!) {
         repository(owner: $owner, name: $repo) {
-          ref(qualifiedName: $refQualifiedName) {
-            associatedPullRequests(first: 10) {
-              nodes {
+          pullRequests(first: 10, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC}) {
+            edges {
+              node {
                 number
+                headRefOid
                 repository {
                   name
                   owner {
@@ -120,32 +119,30 @@ export = (app: Application) => {
         }
       }
     `, {
-      owner: owner,
-      repo: repo,
-      refQualifiedName: `refs/heads/${branchName}`
+      owner,
+      repo
     }, {})
     if (!result.data) { return [] }
-    return result.data.repository.ref.associatedPullRequests.nodes.map((node: any) => ({
-      number: node.number,
-      repo: node.repository.name,
-      owner: node.repository.owner.login
-    }))
+    const allPullRequests = result.data.repository.pullRequests.edges
+      .filter(({ node }: any) => node.headRefOid === headRefOid)
+      .map(({ node }: any) => ({
+        number: node.number,
+        repo: node.repository.name,
+        owner: node.repository.owner.login
+      }))
+
+    return allPullRequests
   }
 
   app.on([
     'status'
   ], async context => {
-    const branches = context.payload.branches as { name: string }[]
-    const validBranches = branches.filter(branch => branch.name !== 'master')
-    const pullRequestResponses = await Promise.all(validBranches.map(branch =>
-      getAssociatedPullRequests(context.github, {
-        owner: context.payload.repository.owner.login,
-        repo: context.payload.repository.name,
-        branchName: branch.name
-      })
-    ))
+    const pullRequests = await getAssociatedPullRequests(context.github, {
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      headRefOid: context.payload.sha
+    })
 
-    const pullRequests = flatten(pullRequestResponses)
     await Promise.all(pullRequests.map(pullRequest => {
       const repositoryReference = {
         owner: pullRequest.owner,
@@ -239,9 +236,9 @@ export = (app: Application) => {
     res.json(result)
   })
   router.get('/trigger', async (req, res) => {
-    const owner = req.query.owner
-    const repo = req.query.repo
-    const pullRequestNumber = parseInt(req.query.pullRequestNumber, 10)
+    const owner = req.query.owner as string
+    const repo = req.query.repo as string
+    const pullRequestNumber = parseInt(req.query.pullRequestNumber as string, 10)
     app.auth()
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
@@ -271,9 +268,9 @@ export = (app: Application) => {
   })
 
   router.get('/run', async (req, res) => {
-    const owner = req.query.owner
-    const repo = req.query.repo
-    const pullRequestNumber = parseInt(req.query.pullRequestNumber, 10)
+    const owner = req.query.owner as string
+    const repo = req.query.repo as string
+    const pullRequestNumber = parseInt(req.query.pullRequestNumber as string, 10)
     app.auth()
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
@@ -324,9 +321,9 @@ export = (app: Application) => {
   })
 
   router.get('/query', async (req, res) => {
-    const owner = req.query.owner
-    const repo = req.query.repo
-    const pullRequestNumber = parseInt(req.query.pullRequestNumber, 10)
+    const owner = req.query.owner as string
+    const repo = req.query.repo as string
+    const pullRequestNumber = parseInt(req.query.pullRequestNumber as string, 10)
     app.auth()
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
@@ -340,13 +337,13 @@ export = (app: Application) => {
   })
 
   router.post('/graphql', async (req, res) => {
-    const owner = req.query.owner
-    const repo = req.query.repo
+    const owner = req.query.owner as string
+    const repo = req.query.repo as string
     app.auth()
       .then(async (appOctokit: GitHubAPI) => {
         const { data: installation } = await appOctokit.apps.findRepoInstallation({ owner, repo })
         const repoOctokit = await app.auth(installation.id)
-        const response = await repoOctokit.query(req.body.query, req.body.variables, { 'Accept': req.headers.accept, ...req.body.headers })
+        const response = await repoOctokit.query(req.body.query, req.body.variables, { Accept: req.headers.accept, ...req.body.headers })
         return res.json(response)
       })
       .catch(err => {

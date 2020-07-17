@@ -1,5 +1,6 @@
 import { ConditionResult } from './../condition'
 import { keysOf } from '../utils'
+import blockingBody from './blockingBody'
 import blockingChecks from './blockingChecks'
 import blockingLabels from './blockingLabels'
 import blockingTitle from './blockingTitle'
@@ -9,8 +10,11 @@ import minimumApprovals from './minimumApprovals'
 import open from './open'
 // import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
+import requiredBody from './requiredBody'
+import requiredTitle from './requiredTitle'
 
 export const conditions = {
+  blockingBody,
   blockingChecks,
   blockingLabels,
   blockingTitle,
@@ -19,7 +23,9 @@ export const conditions = {
   minimumApprovals,
   open,
   // requiredChecks,
-  requiredLabels
+  requiredBody,
+  requiredLabels,
+  requiredTitle
 }
 
 export type Conditions = typeof conditions
