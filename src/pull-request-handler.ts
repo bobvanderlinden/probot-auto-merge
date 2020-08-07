@@ -202,7 +202,7 @@ export function getPullRequestPlan (
     case MergeStateStatus.BLOCKED:
       return {
         code: 'blocked',
-        message: 'The pull request is blocked by a failing or missing check.',
+        message: 'Merging the pull request is blocked by branch protection rules.\n\nPlease make sure probot-auto-merge is part of "Restrict who can push to matching branches" under Branch protection rules.',
         actions: []
       }
     case MergeStateStatus.DIRTY:
