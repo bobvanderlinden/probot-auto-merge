@@ -27,6 +27,9 @@ All conditions must be met before a PR will be automatically merged. You can get
 flexibility by defining multiple rules. Rules can have multiple conditions and if any
 of the conditions inside a rule are met, the PR is also merged. See [rules](#Rules).
 
+If the target branch is a protected branch, you must add `probot-auto-merge` bot to
+the list of `People, teams or apps with push access` in your branch protection rules.
+
 Note that the default configuration options are to do nothing. This is to prevent
 impicit and possibly unintended behavior.
 
