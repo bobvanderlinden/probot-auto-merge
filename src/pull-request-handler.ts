@@ -200,6 +200,9 @@ export function getPullRequestPlan (
         }
       }
     case MergeStateStatus.BLOCKED:
+      // The GitHub documentation for the status BLOCKED is rather vague.
+      // We presume that branch protection rules is likely the cause of BLOCKED status.
+      // See: https://docs.github.com/en/graphql/reference/enums#mergestatestatus
       return {
         code: 'blocked',
         message: 'Merging the pull request is blocked by branch protection rules.\n\nPlease make sure probot-auto-merge is part of "Restrict who can push to matching branches" under Branch protection rules.',
