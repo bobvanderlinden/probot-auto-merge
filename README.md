@@ -107,7 +107,19 @@ blockingLabels:
 - blocked
 ```
 
-Note: remove the whole section when you're not using blocking labels.
+### `requiredLabelsRegex` (condition, default: none)
+
+Similar to `blockingLabels`, except these will be matched as case insensitive regular expressions, instead of looking for exact matches like the `blockingLabels` option.
+
+In the example below, pull requests that have a label that matches the regex `(.*)blocked(.*)`
+will not be merged automatically. merged.
+
+```yaml
+blockingLabelsRegex:
+- (.*)blocked(.*)
+```
+
+Note: remove the whole section when you're not using blocking label regular expressions.
 
 ### `requiredLabels` (condition, default: none)
 
@@ -122,7 +134,20 @@ requiredLabels:
 - merge
 ```
 
-Note: remove the whole section when you're not using required labels.
+### `requiredLabelsRegex` (condition, default: none)
+
+Similar to `requiredLabels`, except these will be matched as case insensitive regular expressions, 
+instead of looking for exact matches like the `requiredLabels` option.
+
+In the example below, pull requests need to have a label that matches the regex `(.*)approved(.*)`
+before they will be automatically merged.
+
+```yaml
+requiredLabels:
+- (.*)approved(.*)
+```
+
+Note: remove the whole section when you're not using required label regular expressions.
 
 ### `blockingTitleRegex` (condition, default: none)
 
