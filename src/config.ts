@@ -30,10 +30,12 @@ export type ConditionConfig = {
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
   requiredLabels: string[],
   blockingLabels: string[],
-  blockingBodyRegex: string | undefined
-  requiredBodyRegex: string | undefined
-  blockingTitleRegex: string | undefined
-  requiredTitleRegex: string | undefined
+  requiredLabelsRegex: string[],
+  blockingLabelsRegex: string[],
+  requiredTitleRegex: string | undefined,
+  blockingTitleRegex: string | undefined,
+  requiredBodyRegex: string | undefined,
+  blockingBodyRegex: string | undefined,
 }
 
 export type Config = {
@@ -51,12 +53,14 @@ export const defaultRuleConfig: ConditionConfig = {
   maxRequestedChanges: {
     NONE: 0
   },
-  blockingLabels: [],
   requiredLabels: [],
-  blockingTitleRegex: undefined,
-  blockingBodyRegex: undefined,
+  blockingLabels: [],
+  requiredLabelsRegex: [],
+  blockingLabelsRegex: [],
   requiredTitleRegex: undefined,
-  requiredBodyRegex: undefined
+  blockingTitleRegex: undefined,
+  requiredBodyRegex: undefined,
+  blockingBodyRegex: undefined,
 }
 
 export const defaultConfig: Config = {
@@ -83,10 +87,12 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(string()),
   blockingLabels: array(string()),
-  blockingTitleRegex: optional(string()),
-  blockingBodyRegex: optional(string()),
+  requiredLabelsRegex: array(string()),
+  blockingLabelsRegex: array(string()),
   requiredTitleRegex: optional(string()),
-  requiredBodyRegex: optional(string())
+  blockingTitleRegex: optional(string()),
+  requiredBodyRegex: optional(string()),
+  blockingBodyRegex: optional(string()),
 })
 
 const configDecoder: Decoder<Config> = object({
@@ -95,10 +101,12 @@ const configDecoder: Decoder<Config> = object({
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(string()),
   blockingLabels: array(string()),
-  blockingTitleRegex: optional(string()),
-  blockingBodyRegex: optional(string()),
+  requiredLabelsRegex: array(string()),
+  blockingLabelsRegex: array(string()),
   requiredTitleRegex: optional(string()),
+  blockingTitleRegex: optional(string()),
   requiredBodyRegex: optional(string()),
+  blockingBodyRegex: optional(string()),
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
   reportStatus: boolean(),
