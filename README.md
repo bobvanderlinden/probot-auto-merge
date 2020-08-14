@@ -111,12 +111,12 @@ blockingLabels:
 
 Similar to `blockingLabels`, except these will be matched as case insensitive regular expressions, instead of looking for exact matches like the `blockingLabels` option.
 
-In the example below, pull requests that have a label that matches the regex `(.*)blocked(.*)`
+In the example below, pull requests that have a label that matches the regex `(.*)block(.*)`
 will not be merged automatically. merged.
 
 ```yaml
 blockingLabelsRegex:
-- (.*)blocked(.*)
+- (.*)block(.*)
 ```
 
 Note: remove the whole section when you're not using blocking label regular expressions.
@@ -136,7 +136,7 @@ requiredLabels:
 
 ### `requiredLabelsRegex` (condition, default: none)
 
-Similar to `requiredLabels`, except these will be matched as case insensitive regular expressions, 
+Similar to `requiredLabels`, except these will be matched as case insensitive regular expressions,
 instead of looking for exact matches like the `requiredLabels` option.
 
 In the example below, pull requests need to have a label that matches the regex `(.*)approved(.*)`

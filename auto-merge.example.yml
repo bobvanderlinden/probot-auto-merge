@@ -62,7 +62,7 @@ blockingLabels:
 # Similar to `blockingLabels`, except these will be matched as case insensitive regular expressions,
 # instead of looking for exact matches like the `blockingLabels` option.
 blockingLabelsRegex:
-- (.*)blocked(.*)
+- (.*)block(.*)
 
 # Whenever required labels are configured, pull requests will only be automatically merged whenever
 # all of these labels are attached to a pull request.
