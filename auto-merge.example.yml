@@ -59,10 +59,20 @@ mergeCommitMessage: |
 blockingLabels:
 - blocked
 
+# Similar to `blockingLabels`, except these will be matched as case insensitive regular expressions,
+# instead of looking for exact matches like the `blockingLabels` option.
+blockingLabelsRegex:
+- (.*)block(.*)
+
 # Whenever required labels are configured, pull requests will only be automatically merged whenever
 # all of these labels are attached to a pull request.
 requiredLabels:
 - merge
+
+# Similar to `requiredLabels`, except these will be matched as case insensitive regular expressions,
+# instead of looking for exact matches like the `requiredLabels` option.
+requiredLabelsRegex:
+- (.*)approved(.*)
 
 # Pull requests will only be automatically merged if there is a match between the regular expression
 # and its title

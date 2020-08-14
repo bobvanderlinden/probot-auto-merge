@@ -1,9 +1,9 @@
-import requiredLabels from '../../src/conditions/requiredLabels'
+import requiredLabelsRegex from '../../src/conditions/requiredLabelsRegex'
 import { createPullRequestInfo, createConditionConfig } from '../mock'
 
-describe('requiredLabels', () => {
+describe('requiredLabelsRegex', () => {
   it('returns success with no labels and no configuration', async () => {
-    const result = requiredLabels(
+    const result = requiredLabelsRegex(
       createConditionConfig(),
       createPullRequestInfo({
         labels: {
@@ -15,14 +15,14 @@ describe('requiredLabels', () => {
   })
 
   it('returns fail with label not in configuration', async () => {
-    const result = requiredLabels(
+    const result = requiredLabelsRegex(
       createConditionConfig({
-        requiredLabels: ['required label']
+        requiredLabelsRegex: ['(.*)approved(.*)']
       }),
       createPullRequestInfo({
         labels: {
           nodes: [{
-            name: 'non required label'
+            name: 'label that doesnt match the regex'
           }]
         }
       })
@@ -31,14 +31,14 @@ describe('requiredLabels', () => {
   })
 
   it('returns success with label in configuration', async () => {
-    const result = requiredLabels(
+    const result = requiredLabelsRegex(
       createConditionConfig({
-        requiredLabels: ['required label']
+        requiredLabelsRegex: ['(.*)approved(.*)']
       }),
       createPullRequestInfo({
         labels: {
           nodes: [{
-            name: 'required label'
+            name: 'approved by design'
           }]
         }
       })
@@ -46,15 +46,15 @@ describe('requiredLabels', () => {
     expect(result.status).toBe('success')
   })
 
-  it('returns success with multiple labels in pull request has required label in configuration', async () => {
-    const result = requiredLabels(
+  it('returns success when there are also other non required labels in pull request', async () => {
+    const result = requiredLabelsRegex(
       createConditionConfig({
-        requiredLabels: ['required label']
+        requiredLabelsRegex: ['(.*)approved(.*)']
       }),
       createPullRequestInfo({
         labels: {
           nodes: [{
-            name: 'required label'
+            name: 'approved by design'
           }, {
             name: 'non required label'
           }]
@@ -64,17 +64,17 @@ describe('requiredLabels', () => {
     expect(result.status).toBe('success')
   })
 
-  it('returns success with labels in pull request also in configuration', async () => {
-    const result = requiredLabels(
+  it('returns success when there is more than one required label regex in configuration and all of them match', async () => {
+    const result = requiredLabelsRegex(
       createConditionConfig({
-        requiredLabels: ['required label', 'required label 2']
+        requiredLabelsRegex: ['(.*)urgent(.*)', '(.*)approved(.*)']
       }),
       createPullRequestInfo({
         labels: {
           nodes: [{
-            name: 'required label'
+            name: 'approved by design'
           }, {
-            name: 'required label 2'
+            name: 'super urgent'
           }]
         }
       })
@@ -82,15 +82,15 @@ describe('requiredLabels', () => {
     expect(result.status).toBe('success')
   })
 
-  it('returns fail with labels in pull request also in configuration', async () => {
-    const result = requiredLabels(
+  it('returns fail when not all required label regex match', async () => {
+    const result = requiredLabelsRegex(
       createConditionConfig({
-        requiredLabels: ['required label', 'required label 2']
+        requiredLabelsRegex: ['(.*)urgent(.*)', '(.*)approved(.*)']
       }),
       createPullRequestInfo({
         labels: {
           nodes: [{
-            name: 'required label'
+            name: 'approved by design'
           }]
         }
       })
