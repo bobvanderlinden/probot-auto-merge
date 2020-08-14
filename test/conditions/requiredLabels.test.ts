@@ -1,7 +1,7 @@
 import requiredLabels from '../../src/conditions/requiredLabels'
 import { createPullRequestInfo, createConditionConfig } from '../mock'
 
-describe('open', () => {
+describe('requiredLabels', () => {
   it('returns success with no labels and no configuration', async () => {
     const result = requiredLabels(
       createConditionConfig(),
