@@ -22,7 +22,7 @@ describe('requiredReviewers', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'rogerluan' }}),
+            approvedReview({ author: { login: 'rogerluan' } })
           ]
         }
       })
@@ -38,7 +38,7 @@ describe('requiredReviewers', () => {
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'someone_else' }}),
+            approvedReview({ author: { login: 'someone_else' } })
           ]
         }
       })
@@ -51,14 +51,14 @@ describe('requiredReviewers', () => {
       createConditionConfig({
         requiredReviewers: [
           'rogerluan',
-          'bobvanderlinden',
+          'bobvanderlinden'
         ]
       }),
       createPullRequestInfo({
         reviews: {
           nodes: [
-            approvedReview({ author: { login: 'rogerluan' }}),
-            approvedReview({ author: { login: 'bobvanderlinden' }}),
+            approvedReview({ author: { login: 'rogerluan' } }),
+            approvedReview({ author: { login: 'bobvanderlinden' } })
           ]
         }
       })
@@ -70,13 +70,13 @@ describe('requiredReviewers', () => {
     const result = hasRequiredReviewers(
       createConditionConfig({
         requiredReviewers: [
-          'rogerluan',
+          'rogerluan'
         ]
       }),
       createPullRequestInfo({
         reviews: {
           nodes: [
-            changesRequestedReview({ author: { login: 'rogerluan' }}),
+            changesRequestedReview({ author: { login: 'rogerluan' } })
           ]
         }
       })
