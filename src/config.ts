@@ -3,7 +3,7 @@ import { Context } from 'probot'
 import getConfig from 'probot-config'
 import { Decoder, object, string, optional, number, boolean, array, oneOf, constant } from '@mojotech/json-type-validation'
 
-class ConfigNotFoundError extends Error {
+export class ConfigNotFoundError extends Error {
   constructor (
     public readonly filePath: string
   ) {
