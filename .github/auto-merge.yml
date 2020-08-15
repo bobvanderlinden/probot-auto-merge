@@ -18,3 +18,5 @@ rules:
     OWNER: 1
 - requiredLabels:
   - merge
+
+mergeCommitMessage: {title} (#{number})
