@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+// @generated
 // This file was automatically generated and should not be edited.
 
 // ====================================================
@@ -15,7 +16,7 @@ export interface PullRequestQuery_repository_pullRequest_potentialMergeCommit {
 }
 
 export interface PullRequestQuery_repository_pullRequest_reviews_nodes_author {
-  __typename: "Organization" | "User" | "Bot";
+  __typename: "Bot" | "EnterpriseUserAccount" | "Mannequin" | "Organization" | "User";
   /**
    * The username of the actor.
    */
@@ -87,7 +88,7 @@ export interface PullRequestQuery_repository_pullRequest_baseRef_repository {
 }
 
 export interface PullRequestQuery_repository_pullRequest_baseRef_target {
-  __typename: "Commit" | "Tree" | "Blob" | "Tag";
+  __typename: "Blob" | "Commit" | "Tag" | "Tree";
   /**
    * The Git object ID
    */
@@ -101,9 +102,9 @@ export interface PullRequestQuery_repository_pullRequest_baseRef {
    */
   repository: PullRequestQuery_repository_pullRequest_baseRef_repository;
   /**
-   * The object the ref points to.
+   * The object the ref points to. Returns null when object does not exist.
    */
-  target: PullRequestQuery_repository_pullRequest_baseRef_target;
+  target: PullRequestQuery_repository_pullRequest_baseRef_target | null;
   /**
    * The ref name.
    */
@@ -247,7 +248,7 @@ export interface PullRequestQuery_repository_pullRequest_headRef_repository {
 }
 
 export interface PullRequestQuery_repository_pullRequest_headRef_target {
-  __typename: "Commit" | "Tree" | "Blob" | "Tag";
+  __typename: "Blob" | "Commit" | "Tag" | "Tree";
   /**
    * The Git object ID
    */
@@ -261,9 +262,9 @@ export interface PullRequestQuery_repository_pullRequest_headRef {
    */
   repository: PullRequestQuery_repository_pullRequest_headRef_repository;
   /**
-   * The object the ref points to.
+   * The object the ref points to. Returns null when object does not exist.
    */
-  target: PullRequestQuery_repository_pullRequest_headRef_target;
+  target: PullRequestQuery_repository_pullRequest_headRef_target | null;
   /**
    * The ref name.
    */
@@ -325,10 +326,7 @@ export interface PullRequestQuery_repository_pullRequest {
    */
   mergeStateStatus: MergeStateStatus;
   /**
-   * The commit that GitHub automatically generated to test if this pull request
-   * could be merged. This field will not return a value if the pull request is
-   * merged, or if the test merge commit is still being generated. See the
-   * `mergeable` field for more details on the mergeability of the pull request.
+   * The commit that GitHub automatically generated to test if this pull request could be merged. This field will not return a value if the pull request is merged, or if the test merge commit is still being generated. See the `mergeable` field for more details on the mergeability of the pull request.
    */
   potentialMergeCommit: PullRequestQuery_repository_pullRequest_potentialMergeCommit | null;
   /**
@@ -408,6 +406,7 @@ export interface PullRequestQueryVariables {
 
 /* tslint:disable */
 /* eslint-disable */
+// @generated
 // This file was automatically generated and should not be edited.
 
 //==============================================================
@@ -422,6 +421,8 @@ export enum CheckConclusionState {
   CANCELLED = "CANCELLED",
   FAILURE = "FAILURE",
   NEUTRAL = "NEUTRAL",
+  SKIPPED = "SKIPPED",
+  STALE = "STALE",
   SUCCESS = "SUCCESS",
   TIMED_OUT = "TIMED_OUT",
 }
@@ -457,6 +458,7 @@ export enum MergeStateStatus {
   BLOCKED = "BLOCKED",
   CLEAN = "CLEAN",
   DIRTY = "DIRTY",
+  DRAFT = "DRAFT",
   HAS_HOOKS = "HAS_HOOKS",
   UNKNOWN = "UNKNOWN",
   UNSTABLE = "UNSTABLE",
