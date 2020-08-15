@@ -1,3 +1,5 @@
+import { string, oneOf, object } from "@mojotech/json-type-validation"
+
 export interface RegexPattern {
   regex: RegExp
 }
@@ -23,3 +25,12 @@ export function stringifyPattern (pattern: Pattern) {
     return '[invalid pattern]'
   }
 }
+
+export const regexDecoder = string().map(value => new RegExp(value))
+
+export const patternDecoder = oneOf<Pattern>(
+  string(),
+  object({
+    regex: regexDecoder
+  })
+)

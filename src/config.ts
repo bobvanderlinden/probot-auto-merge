@@ -2,7 +2,7 @@ import { CommentAuthorAssociation } from './github-models'
 import { Context } from 'probot'
 import getConfig from 'probot-config'
 import { Decoder, object, string, optional, number, boolean, array, oneOf, constant } from '@mojotech/json-type-validation'
-import { Pattern } from './pattern'
+import { Pattern, patternDecoder } from './pattern'
 
 class ConfigNotFoundError extends Error {
   constructor (
@@ -79,15 +79,6 @@ const reviewConfigDecover: Decoder<{ [key in CommentAuthorAssociation]: number |
   NONE: optional(number())
 })
 
-const regexDecoder = string().map(value => new RegExp(value))
-
-const patternDecoder = oneOf<Pattern>(
-  string(),
-  object({
-    regex: regexDecoder
-  })
-)
-
 const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   minApprovals: reviewConfigDecover,
   maxRequestedChanges: reviewConfigDecover,
@@ -103,8 +94,8 @@ const configDecoder: Decoder<Config> = object({
   rules: array(conditionConfigDecoder),
   minApprovals: reviewConfigDecover,
   maxRequestedChanges: reviewConfigDecover,
-  requiredLabels: array(string()),
-  blockingLabels: array(string()),
+  requiredLabels: array(patternDecoder),
+  blockingLabels: array(patternDecoder),
   blockingTitleRegex: optional(string()),
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
