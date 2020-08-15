@@ -97,4 +97,36 @@ describe('open', () => {
     )
     expect(result.status).toBe('fail')
   })
+
+  it('returns success with label matching regex in configuration', () => {
+    const result = requiredLabels(
+      createConditionConfig({
+        requiredLabels: [{ regex: /required/ }]
+      }),
+      createPullRequestInfo({
+        labels: {
+          nodes: [{
+            name: 'required label'
+          }]
+        }
+      })
+    )
+    expect(result.status).toBe('success')
+  })
+
+  it('returns fail with label matching regex in configuration', () => {
+    const result = requiredLabels(
+      createConditionConfig({
+        requiredLabels: [{ regex: /non matching/ }]
+      }),
+      createPullRequestInfo({
+        labels: {
+          nodes: [{
+            name: 'label'
+          }]
+        }
+      })
+    )
+    expect(result.status).toBe('fail')
+  })
 })
