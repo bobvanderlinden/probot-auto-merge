@@ -236,6 +236,12 @@ export function getPullRequestPlan (
           actions: ['merge']
         }
       }
+    case MergeStateStatus.DRAFT:
+      return {
+        code: 'draft',
+        message: 'Pull request is marked as draft',
+        actions: []
+      }
     case null:
       return {
         code: 'mergeable_not_supplied',
