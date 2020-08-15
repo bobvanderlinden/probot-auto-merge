@@ -33,7 +33,6 @@ describe('Config', () => {
     })()
     expect(validationError).not.toBeUndefined()
     expect(validationError.config.blockingLabels[1]).toEqual(userConfig.blockingLabels[1])
-    expect(validationError.decoderError.message).toEqual('expected a string, got an object')
     expect(validationError.decoderError.at).toEqual('input.blockingLabels[1]')
   })
 })
