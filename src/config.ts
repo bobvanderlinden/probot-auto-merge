@@ -28,6 +28,7 @@ export class ConfigValidationError extends Error {
 
 export type ConditionConfig = {
   minApprovals: { [key in CommentAuthorAssociation]?: number },
+  requiredReviewers: string[],
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
   requiredLabels: Pattern[],
   blockingLabels: Pattern[],
@@ -49,6 +50,7 @@ export type Config = {
 export const defaultRuleConfig: ConditionConfig = {
   minApprovals: {
   },
+  requiredReviewers: [],
   maxRequestedChanges: {
     NONE: 0
   },
@@ -81,6 +83,7 @@ const reviewConfigDecover: Decoder<{ [key in CommentAuthorAssociation]: number |
 
 const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   minApprovals: reviewConfigDecover,
+  requiredReviewers: array(string()),
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(patternDecoder),
   blockingLabels: array(patternDecoder),
@@ -93,6 +96,7 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
 const configDecoder: Decoder<Config> = object({
   rules: array(conditionConfigDecoder),
   minApprovals: reviewConfigDecover,
+  requiredReviewers: array(string()),
   maxRequestedChanges: reviewConfigDecover,
   requiredLabels: array(patternDecoder),
   blockingLabels: array(patternDecoder),

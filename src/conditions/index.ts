@@ -7,6 +7,7 @@ import blockingTitle from './blockingTitle'
 import maximumChangesRequested from './maximumChangesRequested'
 import mergeable from './mergeable'
 import minimumApprovals from './minimumApprovals'
+import requiredReviewers from './requiredReviewers'
 import open from './open'
 // import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
@@ -21,6 +22,7 @@ export const conditions = {
   maximumChangesRequested,
   mergeable,
   minimumApprovals,
+  requiredReviewers,
   open,
   // requiredChecks,
   requiredBody,
