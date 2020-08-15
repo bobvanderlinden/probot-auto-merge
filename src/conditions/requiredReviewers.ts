@@ -9,7 +9,7 @@ export default function hasRequiredReviewers (
 ): ConditionResult {
   const requiredReviewers = config.requiredReviewers
   const approvedReviewers = getLatestReviews(pullRequestInfo)
-    .filter(review => review.state == "APPROVED")
+    .filter(review => review.state === 'APPROVED')
     .map(review => review.author.login)
 
   const missingRequiredReviewers = requiredReviewers
