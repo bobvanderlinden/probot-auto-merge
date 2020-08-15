@@ -59,6 +59,19 @@ minApprovals:
   MEMBER: 2
 ```
 
+### `requiredReviewers` (condition, default: none)
+
+Whenever required reviewers are configured, pull requests will only be automatically
+merged whenever all of these reviewers have approved the pull request.
+
+In the example below, pull requests need to have been approved by the user 'rogerluan'
+before they will be automatically merged.
+
+```yaml
+requiredReviewers:
+- rogerluan
+```
+
 ### `maxRequestedChanges` (condition, default: none)
 
 Similar to `minApprovals`, maxRequestedChanges determines the maximum number of
