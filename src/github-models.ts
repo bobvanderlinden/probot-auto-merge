@@ -79,9 +79,9 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                     ...removeTypename(baseRef.repository),
                     owner: removeTypename(baseRef.repository.owner)
                   },
-                  target: {
-                    oid: baseRef.target.oid as string
-                  }
+                  target: maybeNull(baseRef.target, target => ({
+                    oid: target.oid as string
+                  }))
                 })
               ),
               baseRefOid: pullRequest.baseRefOid as string,
@@ -92,9 +92,9 @@ export function validatePullRequestQuery (pullRequestQuery: PullRequestQuery) {
                     ...removeTypename(headRef.repository),
                     owner: removeTypename(headRef.repository.owner)
                   },
-                  target: {
-                    oid: headRef.target.oid as string
-                  }
+                  target: maybeNull(headRef.target, target => ({
+                    oid: target.oid as string
+                  }))
                 })
               ),
               headRefOid: pullRequest.headRefOid as string,
