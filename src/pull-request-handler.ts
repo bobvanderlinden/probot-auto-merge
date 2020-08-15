@@ -71,6 +71,7 @@ export type PullRequestPlanCode
   | 'failing_condition'
   | 'blocked'
   | 'dirty'
+  | 'draft'
   | 'out_of_date'
   | 'out_of_date_on_fork'
   | 'update_branch'
