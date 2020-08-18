@@ -292,6 +292,29 @@ rules:
     - merge
 ```
 
+Lastly, multiple rules can be defined on the same level to create complex **or** and **and** logic. The following example will merge if there's 1 owner approval, **or** if there are 3 member approvals **and** there's no `blocking` label **and** there's a `merge` label present:
+
+```yaml
+rules:
+- minApprovals:
+    OWNER: 1
+- minApprovals:
+    MEMBER: 3
+  blockingLabels:
+    - blocking
+  requiredLabels:
+    - merge
+```
+
+In pseudocode that's equivalent to:
+
+```swift
+// The parenthesis are redundant but they were added for extra clarity
+if approvedOwnerReviews.count >= 1 || (approvedMemberReviews.count >= 3 && !labels.contains("blocking") && labels.contains("merge")) {
+  merge()
+}
+```
+
 Note: remove the whole rules section when you're not using any rules.
 
 ## Development
