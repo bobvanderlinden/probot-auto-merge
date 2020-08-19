@@ -1,5 +1,5 @@
 import { Application, Context } from 'probot'
-import { loadConfig } from './config'
+import { loadConfig, ConfigNotFoundError, ConfigValidationError } from './config'
 import { WorkerContext } from './models'
 import Raven from 'raven'
 import { RepositoryWorkers } from './repository-workers'
@@ -33,7 +33,19 @@ async function useWorkerContext (options: {app: Application, context: Context, i
       event: options.context.event
     }
   }, async () => {
-    const workerContext = await getWorkerContext(options)
+    let workerContext
+    try {
+      workerContext = await getWorkerContext(options)
+    } catch (err) {
+      if (err instanceof ConfigNotFoundError || err instanceof ConfigValidationError) {
+        // Skip worker callback as we cannot create a context. We also do not raise this error as this is part of
+        // normal behaviour.
+        return
+      } else {
+        throw err
+      }
+    }
+
     await fn(workerContext)
   })
 }
