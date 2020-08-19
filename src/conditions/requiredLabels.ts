@@ -1,4 +1,3 @@
-
 import { ConditionConfig } from './../config'
 import { PullRequestInfo } from '../models'
 import { ConditionResult } from '../condition'
