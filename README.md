@@ -107,6 +107,16 @@ blockingLabels:
 - blocked
 ```
 
+The above example denotes literal label names. Regular expressions can be used to
+partially match labels. This can be specified by the `regex:` property in the
+configuration. The following example will block merging when a label is added that
+starts with the text `blocked`:
+
+```yaml
+blockingLabels:
+- regex: ^blocked
+```
+
 Note: remove the whole section when you're not using blocking labels.
 
 ### `requiredLabels` (condition, default: none)
@@ -120,6 +130,15 @@ will be automatically merged.
 ```yaml
 requiredLabels:
 - merge
+```
+
+The above example denotes literal label names. Regular expressions can be used to
+partially match labels. This requires `regex:` property in the configuration. The
+following example will requires at least one label that starts with `merge`:
+
+```yaml
+requiredLabels:
+- regex: ^merge
 ```
 
 Note: remove the whole section when you're not using required labels.
