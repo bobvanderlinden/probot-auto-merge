@@ -71,6 +71,7 @@ export type PullRequestPlanCode
   | 'failing_condition'
   | 'blocked'
   | 'dirty'
+  | 'draft'
   | 'out_of_date'
   | 'out_of_date_on_fork'
   | 'update_branch'
@@ -235,6 +236,12 @@ export function getPullRequestPlan (
           ]),
           actions: ['merge']
         }
+      }
+    case MergeStateStatus.DRAFT:
+      return {
+        code: 'draft',
+        message: 'Pull request is marked as draft',
+        actions: []
       }
     case null:
       return {

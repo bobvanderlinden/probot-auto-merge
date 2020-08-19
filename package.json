@@ -94,6 +94,9 @@
       "node"
     ],
     "testEnvironment": "node",
-    "coverageDirectory": "./coverage/"
+    "coverageDirectory": "./coverage/",
+    "collectCoverageFrom": [
+      "src/**/*.{js,ts}"
+    ]
   }
 }
