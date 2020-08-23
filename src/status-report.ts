@@ -4,7 +4,7 @@ import { ChecksCreateParams } from '@octokit/rest'
 import { getMyCheckSuite } from './utils'
 
 type CheckOptions = {
-  conclusion: 'neutral',
+  conclusion: CheckConclusionState,
   status: 'completed',
   name: string,
   // eslint-disable-next-line camelcase
@@ -16,17 +16,27 @@ type CheckOptions = {
   repo: string
 }
 
+export enum CheckConclusionState {
+  SUCCESS = "success",
+  FAILURE = "failure",
+  NEUTRAL = "neutral",
+  CANCELLED = "cancelled",
+  TIMED_OUT = "timed_out",
+  ACTION_REQUIRED = "action_required",
+}
+
 export async function updateStatusReportCheck (
   context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   title: string,
-  summary: string
+  summary: string,
+  conclusion?: CheckConclusionState,
 ) {
   const myCheckSuite = getMyCheckSuite(pullRequestInfo)
   const myCheckRun = myCheckSuite && myCheckSuite.checkRuns.nodes[0]
 
   const checkOptions: CheckOptions = {
-    conclusion: 'neutral',
+    conclusion: conclusion ?? CheckConclusionState.NEUTRAL,
     status: 'completed',
     name: 'auto-merge',
     started_at: context.startedAt.toISOString(),
