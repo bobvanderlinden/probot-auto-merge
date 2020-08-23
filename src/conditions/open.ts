@@ -6,7 +6,7 @@ export default function isOpen (
   config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
-  return pullRequestInfo.state === PullRequestState.OPEN 
+  return pullRequestInfo.state === PullRequestState.OPEN
     ? {
       status: 'success'
     }
