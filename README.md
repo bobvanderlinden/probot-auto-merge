@@ -113,12 +113,13 @@ Whenever blocking base branches are configured, pull requests will only be autom
 merged whenever their base branch (into which the PR would be merged) is not matching
 any regular expression listed.
 
-In the example below, pull requests that have the base branch `blocked` will not be
-merged automatically.
+In the example below, pull requests that have the base branch `develop` or one that starts
+with `feature-` will not be merged automatically.
 
 ```yaml
 blockingBaseBranches:
-- ^blocked$
+- develop
+- regex: ^feature-
 ```
 
 Note: remove the whole section when you're not using blocking base branches.
@@ -134,7 +135,7 @@ will be automatically merged.
 
 ```yaml
 requiredBaseBranches:
-- ^master$
+- master
 ```
 
 ### `blockingLabels` (condition, default: none)

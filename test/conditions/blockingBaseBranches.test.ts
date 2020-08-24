@@ -29,7 +29,7 @@ describe('blockingBaseBranches', () => {
   it('returns success with branch not in configuration', async () => {
     const result = blockingBaseBranches(
       createConditionConfig({
-        blockingBaseBranches: ['^develop$']
+        blockingBaseBranches: ['develop']
       }),
       createPullRequestInfo({
         baseRef
@@ -41,7 +41,7 @@ describe('blockingBaseBranches', () => {
   it('returns fail with branch in configuration', async () => {
     const result = blockingBaseBranches(
       createConditionConfig({
-        blockingBaseBranches: ['^master$']
+        blockingBaseBranches: ['master']
       }),
       createPullRequestInfo({
         baseRef
@@ -53,7 +53,7 @@ describe('blockingBaseBranches', () => {
   it('returns fail with regular expression matching branch in configuration', async () => {
     const result = blockingBaseBranches(
       createConditionConfig({
-        blockingBaseBranches: ['^mas.*']
+        blockingBaseBranches: [{ regex: /^mas.*/ }]
       }),
       createPullRequestInfo({
         baseRef
@@ -65,7 +65,7 @@ describe('blockingBaseBranches', () => {
   it('returns fail with branch, among others, in configuration', async () => {
     const result = blockingBaseBranches(
       createConditionConfig({
-        blockingBaseBranches: ['^master$', '^develop$', '^feature/.+$']
+        blockingBaseBranches: ['master', 'develop', { regex: /^feature\/.+$/ }]
       }),
       createPullRequestInfo({
         baseRef

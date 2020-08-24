@@ -1,17 +1,17 @@
 import { ConditionConfig } from '../config'
 import { ConditionResult } from '../condition'
 import { PullRequestInfo } from '../models'
+import { matchesPattern } from '../pattern'
 
 export default function blockingBaseBranches (
   config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
   const pullRequestBaseBranch = pullRequestInfo.baseRef.name
-  const foundBlockingBranches = config.blockingBaseBranches
-    .map(blockingBaseBranch => new RegExp(blockingBaseBranch))
-    .filter(blockingBaseBranch => blockingBaseBranch.test(pullRequestBaseBranch))
+  const isBlocking = config.blockingBaseBranches
+    .some(blockingBaseBranchPattern => matchesPattern(blockingBaseBranchPattern, pullRequestBaseBranch))
 
-  if (foundBlockingBranches.length > 0) {
+  if (isBlocking) {
     return {
       status: 'fail',
       message: `Base branch ${pullRequestBaseBranch} is blocked from merging`

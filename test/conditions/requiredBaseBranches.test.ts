@@ -29,7 +29,7 @@ describe('requiredBaseBranches', () => {
   it('returns fail with branch not in configuration', async () => {
     const result = requiredBaseBranches(
       createConditionConfig({
-        requiredBaseBranches: ['^required-branch$']
+        requiredBaseBranches: ['required-branch']
       }),
       createPullRequestInfo({
         baseRef
@@ -41,7 +41,7 @@ describe('requiredBaseBranches', () => {
   it('returns success with branch in configuration', async () => {
     const result = requiredBaseBranches(
       createConditionConfig({
-        requiredBaseBranches: ['^master$']
+        requiredBaseBranches: ['master']
       }),
       createPullRequestInfo({
         baseRef
@@ -53,7 +53,7 @@ describe('requiredBaseBranches', () => {
   it('returns success with regular expression matching branch in configuration', async () => {
     const result = requiredBaseBranches(
       createConditionConfig({
-        requiredBaseBranches: ['^mas.+']
+        requiredBaseBranches: [{ regex: /^mas.+/ }]
       }),
       createPullRequestInfo({
         baseRef
@@ -65,7 +65,7 @@ describe('requiredBaseBranches', () => {
   it('returns success with branch in pull request also in configuration', async () => {
     const result = requiredBaseBranches(
       createConditionConfig({
-        requiredBaseBranches: ['^master$', '^develop$', '^feature/.+$']
+        requiredBaseBranches: ['master', 'develop', { regex: /^feature\/.+$/ }]
       }),
       createPullRequestInfo({
         baseRef
