@@ -2,41 +2,35 @@ import { PullRequestContext } from './pull-request-handler'
 import { PullRequestInfo } from './models'
 import { ChecksCreateParams } from '@octokit/rest'
 import { getMyCheckSuite } from './utils'
+import { CheckConclusionState } from './github-models'
 
-type CheckOptions = {
-  conclusion: CheckConclusionState,
-  status: 'completed',
-  name: string,
-  // eslint-disable-next-line camelcase
-  started_at: string,
-  // eslint-disable-next-line camelcase
-  completed_at: string,
-  output: ChecksCreateParams['output'],
-  owner: string,
-  repo: string
+function getOctokitConclusion (value: ReportCheckConclusion | undefined) {
+  switch (value) {
+    case CheckConclusionState.NEUTRAL:
+      return 'neutral'
+    case CheckConclusionState.SUCCESS:
+      return 'success'
+    case undefined:
+      return 'neutral'
+  }
 }
 
-export enum CheckConclusionState {
-  SUCCESS = "success",
-  FAILURE = "failure",
-  NEUTRAL = "neutral",
-  CANCELLED = "cancelled",
-  TIMED_OUT = "timed_out",
-  ACTION_REQUIRED = "action_required",
-}
+export type ReportCheckConclusion = CheckConclusionState.NEUTRAL | CheckConclusionState.SUCCESS
+
+type CheckOptions = Omit<ChecksCreateParams, 'head_sha'>
 
 export async function updateStatusReportCheck (
   context: PullRequestContext,
   pullRequestInfo: PullRequestInfo,
   title: string,
   summary: string,
-  conclusion?: CheckConclusionState,
+  conclusion?: ReportCheckConclusion
 ) {
   const myCheckSuite = getMyCheckSuite(pullRequestInfo)
   const myCheckRun = myCheckSuite && myCheckSuite.checkRuns.nodes[0]
 
   const checkOptions: CheckOptions = {
-    conclusion: conclusion ?? CheckConclusionState.NEUTRAL,
+    conclusion: getOctokitConclusion(conclusion),
     status: 'completed',
     name: 'auto-merge',
     started_at: context.startedAt.toISOString(),
