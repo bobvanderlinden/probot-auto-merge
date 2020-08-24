@@ -111,7 +111,7 @@ maxRequestedChanges:
 
 Whenever blocking base branches are configured, pull requests will only be automatically
 merged whenever their base branch (into which the PR would be merged) is not matching
-any regular expression listed.
+the patterns listed.
 
 In the example below, pull requests that have the base branch `develop` or one that starts
 with `feature-` will not be merged automatically.
@@ -128,14 +128,15 @@ Note: remove the whole section when you're not using blocking base branches.
 
 Whenever required base branches are configured, pull requests will only be automatically
 merged whenever their base branch (into which the PR would be merged) is matching
-any regular expression listed.
+any of the patterns listed.
 
-In the example below, pull requests need to have the base branch `master` before they
-will be automatically merged.
+In the example below, pull requests need to have the base branch `master` or one that
+starts with `v{number}` before they will be automatically merged.
 
 ```yaml
 requiredBaseBranches:
 - master
+- regex: ^v\d
 ```
 
 ### `blockingLabels` (condition, default: none)
