@@ -405,9 +405,9 @@ function getPlanTitle (plan: PullRequestPlan) {
         ? 'Waiting'
         : plan.code === 'merged'
           ? 'Merged'
-            : plan.code === 'closed'
-              ? 'Closed'
-              : 'Not merging'
+          : plan.code === 'closed'
+            ? 'Closed'
+            : 'Not merging'
 }
 
 function getPlanConclusion (plan: PullRequestPlan) {
