@@ -137,10 +137,6 @@ export function getPullRequestPlan (
   pullRequestStatus: PullRequestStatus
 ): PullRequestPlan {
   const { config } = context
-  const pendingConditions = Object.entries(pullRequestStatus)
-    .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
-  const failingConditions = Object.entries(pullRequestStatus)
-    .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
   if (pullRequestInfo.state === PullRequestState.MERGED) {
     return {
@@ -157,6 +153,11 @@ export function getPullRequestPlan (
       actions: []
     }
   }
+
+  const pendingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
+  const failingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
   if (pendingConditions.length > 0) {
     return {
