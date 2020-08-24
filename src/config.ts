@@ -2,8 +2,9 @@ import { CommentAuthorAssociation } from './github-models'
 import { Context } from 'probot'
 import getConfig from 'probot-config'
 import { Decoder, object, string, optional, number, boolean, array, oneOf, constant } from '@mojotech/json-type-validation'
+import { Pattern, patternDecoder } from './pattern'
 
-class ConfigNotFoundError extends Error {
+export class ConfigNotFoundError extends Error {
   constructor (
     public readonly filePath: string
   ) {
@@ -28,8 +29,8 @@ export class ConfigValidationError extends Error {
 export type ConditionConfig = {
   minApprovals: { [key in CommentAuthorAssociation]?: number },
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
-  requiredLabels: string[],
-  blockingLabels: string[],
+  requiredLabels: Pattern[],
+  blockingLabels: Pattern[],
   blockingBodyRegex: string | undefined
   requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
@@ -81,8 +82,8 @@ const reviewConfigDecover: Decoder<{ [key in CommentAuthorAssociation]: number |
 const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   minApprovals: reviewConfigDecover,
   maxRequestedChanges: reviewConfigDecover,
-  requiredLabels: array(string()),
-  blockingLabels: array(string()),
+  requiredLabels: array(patternDecoder),
+  blockingLabels: array(patternDecoder),
   blockingTitleRegex: optional(string()),
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
@@ -93,8 +94,8 @@ const configDecoder: Decoder<Config> = object({
   rules: array(conditionConfigDecoder),
   minApprovals: reviewConfigDecover,
   maxRequestedChanges: reviewConfigDecover,
-  requiredLabels: array(string()),
-  blockingLabels: array(string()),
+  requiredLabels: array(patternDecoder),
+  blockingLabels: array(patternDecoder),
   blockingTitleRegex: optional(string()),
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),

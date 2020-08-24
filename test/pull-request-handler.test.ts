@@ -4,7 +4,7 @@ import { conditions, ConditionName } from './../src/conditions/'
 import { ConditionResult } from './../src/condition'
 import { PullRequestInfo } from './../src/models'
 import { getPullRequestPlan, executeAction } from '../src/pull-request-handler'
-import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext, createOkResponse } from './mock'
+import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext, createOkResponse, createRef } from './mock'
 import { mapObject } from '../src/utils'
 import { MergeStateStatus } from '../src/query.graphql'
 
@@ -120,6 +120,27 @@ describe('getPullRequestPlan', () => {
       createPullRequestStatus()
     )
     expect(plan.actions).toEqual(['update_branch', 'reschedule'])
+  })
+
+  it('emit error when pull request merge status is BLOCKED', async () => {
+    const plan = getPullRequestPlan(
+      createHandlerContext({
+        config: createConfig()
+      }),
+      createPullRequestInfo({
+        baseRef: createRef({
+          name: 'main'
+        }),
+        headRef: headRefInSameRepository,
+        mergeStateStatus: MergeStateStatus.BLOCKED
+      }),
+      createPullRequestStatus()
+    )
+    expect(plan).toEqual({
+      code: 'blocked',
+      actions: [],
+      message: 'Merging the pull request is blocked by branch protection rules. Please make sure probot-auto-merge has permission to push to `main` under the "Restrict who can push to matching branches" section the branch protection rules.'
+    })
   })
 
   it('not update branch when pull request is up-to-date and update-branch is disabled', async () => {

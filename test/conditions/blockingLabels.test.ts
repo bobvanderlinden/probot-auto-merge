@@ -63,4 +63,36 @@ describe('blockingLabels', () => {
     )
     expect(result.status).toBe('fail')
   })
+
+  it('returns fail with label matching regex in configuration', () => {
+    const result = blockingLabels(
+      createConditionConfig({
+        blockingLabels: [{ regex: /blocking/ }]
+      }),
+      createPullRequestInfo({
+        labels: {
+          nodes: [{
+            name: 'blocking label'
+          }]
+        }
+      })
+    )
+    expect(result.status).toBe('fail')
+  })
+
+  it('returns success with label not matching regex in configuration', () => {
+    const result = blockingLabels(
+      createConditionConfig({
+        blockingLabels: [{ regex: /^blocking$/ }]
+      }),
+      createPullRequestInfo({
+        labels: {
+          nodes: [{
+            name: 'blocking label'
+          }]
+        }
+      })
+    )
+    expect(result.status).toBe('success')
+  })
 })
