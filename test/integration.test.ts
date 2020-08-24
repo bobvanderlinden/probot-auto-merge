@@ -126,9 +126,10 @@ it('not enough approval reviews', async () => {
 })
 
 it('no configuration should not schedule any pull request', async () => {
+  const schedulePullRequestTrigger = jest.fn()
   jest.mock('../src/pull-request-handler', () => {
     return {
-      schedulePullRequestTrigger: jest.fn()
+      schedulePullRequestTrigger
     }
   })
 
@@ -144,15 +145,15 @@ it('no configuration should not schedule any pull request', async () => {
     github
   })
 
-  expect(
-    app.receive(
-      createPullRequestOpenedEvent({
-        owner: 'bobvanderlinden',
-        repo: 'probot-auto-merge',
-        number: 1
-      })
-    )
-  ).rejects.toHaveProperty('message', "Configuration file '.github/auto-merge.yml' not found")
+  app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  expect(schedulePullRequestTrigger).toBeCalledTimes(0)
 })
 
 it('merges when receiving status event', async () => {

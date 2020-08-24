@@ -8,11 +8,13 @@ import blockingTitle from './blockingTitle'
 import maximumChangesRequested from './maximumChangesRequested'
 import mergeable from './mergeable'
 import minimumApprovals from './minimumApprovals'
+import requiredReviewers from './requiredReviewers'
 import open from './open'
 import requiredBaseBranches from './requiredBaseBranches'
 // import requiredChecks from './requiredChecks'
 import requiredLabels from './requiredLabels'
 import requiredBody from './requiredBody'
+import requiredTitle from './requiredTitle'
 
 export const conditions = {
   blockingBody,
@@ -23,11 +25,13 @@ export const conditions = {
   maximumChangesRequested,
   mergeable,
   minimumApprovals,
+  requiredReviewers,
   open,
   requiredBaseBranches,
   // requiredChecks,
   requiredBody,
-  requiredLabels
+  requiredLabels,
+  requiredTitle
 }
 
 export type Conditions = typeof conditions

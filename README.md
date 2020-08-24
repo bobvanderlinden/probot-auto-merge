@@ -15,7 +15,7 @@ A GitHub App built with [Probot](https://github.com/probot/probot) that automati
 
 ## Configuration
 
-Configuration of probot-auto-merge is done through `.github/auto-merge.yml` in
+Configuration of `probot-auto-merge` is done through `.github/auto-merge.yml` in
 your repository. An example of this file can be found [here](auto-merge.example.yml).
 You can also see the configuration for this repository [here](.github/auto-merge.yml).
 
@@ -25,10 +25,13 @@ that serve as conditions are annotated as such below.
 
 All conditions must be met before a PR will be automatically merged. You can get more
 flexibility by defining multiple rules. Rules can have multiple conditions and if any
-of the conditions inside a rule are met, the PR is also merged. See [rules](#Rules).
+of the conditions inside a rule are met, the PR is also merged. See [rules](#rules-default-none).
+
+If the target branch is a protected branch, you must add `probot-auto-merge` bot to
+the list of `People, teams or apps with push access` in your branch protection rules.
 
 Note that the default configuration options are to do nothing. This is to prevent
-impicit and possibly unintended behavior.
+implicit and possibly unintended behavior.
 
 The configuration fields are as follows:
 
@@ -56,6 +59,19 @@ minApprovals:
   MEMBER: 2
 ```
 
+### `requiredReviewers` (condition, default: none)
+
+Whenever required reviewers are configured, pull requests will only be automatically
+merged whenever all of these reviewers have approved the pull request.
+
+In the example below, pull requests need to have been approved by the user 'rogerluan'
+before they will be automatically merged.
+
+```yaml
+requiredReviewers:
+- rogerluan
+```
+
 ### `maxRequestedChanges` (condition, default: none)
 
 Similar to `minApprovals`, maxRequestedChanges determines the maximum number of
@@ -64,7 +80,7 @@ merged.
 
 It yet again allows you to configure this per association.
 
-Note that `maxRequestedChanges` takes presedence over `minApprovals`.
+Note that `maxRequestedChanges` takes precedence over `minApprovals`.
 
 In the example below, automatic merges will be blocked when one of the owners, members
 or collaborators has requested changes.
@@ -134,6 +150,16 @@ blockingLabels:
 - blocked
 ```
 
+The above example denotes literal label names. Regular expressions can be used to
+partially match labels. This can be specified by the `regex:` property in the
+configuration. The following example will block merging when a label is added that
+starts with the text `blocked`:
+
+```yaml
+blockingLabels:
+- regex: ^blocked
+```
+
 Note: remove the whole section when you're not using blocking labels.
 
 ### `requiredLabels` (condition, default: none)
@@ -147,6 +173,15 @@ will be automatically merged.
 ```yaml
 requiredLabels:
 - merge
+```
+
+The above example denotes literal label names. Regular expressions can be used to
+partially match labels. This requires `regex:` property in the configuration. The
+following example will requires at least one label that starts with `merge`:
+
+```yaml
+requiredLabels:
+- regex: ^merge
 ```
 
 Note: remove the whole section when you're not using required labels.
@@ -163,6 +198,20 @@ automatically merged. This also includes `[wip]`, `WIP` or `[WIP]`, but not `swi
 
 ```yaml
 blockingTitleRegex: '\bWIP\b'
+```
+
+### `requiredTitleRegex` (condition, default: none)
+
+Whenever a required title regular expression is configured, only pull requests that have a title
+matching the configured expression will automatically be merged.
+
+This is useful for forks, that can only create pull request text, no labels.
+
+In the example below, pull requests with the title containing `MERGE` will be
+automatically merged. This also includes This also includes `[merge]`, `MERGE` or `[MERGE]`, but not `submerge`:
+
+```yaml
+requiredTitleRegex: '\bMERGE\b'
 ```
 
 ### `blockingBodyRegex` (condition, default: none)
@@ -279,7 +328,7 @@ mergeCommitMessage: |
 
 ### `rules` (default: none)
 
-Rules allow more flexiblity configuring conditions for automatically merging. Each rule is defined by
+Rules allow more flexibility configuring conditions for automatically merging. Each rule is defined by
 multiple conditions. All conditions inside a rule must be met before a rule triggers a merge. Any of the
 defined rules can trigger a merge individually.
 
@@ -293,7 +342,7 @@ rules:
     - merge
 ```
 
-This can be combined with conditions on global level, as the global conditions will take presedence. The following example will not trigger a merge when a PR has the `blocking` label, regardless what the rules say:
+This can be combined with conditions on global level, as the global conditions will take precedence. The following example will not trigger a merge when a PR has the `blocking` label, regardless what the rules say:
 
 ```yaml
 blockingLabels:
@@ -359,9 +408,17 @@ To run the built image:
 npm run docker:run
 ```
 
+### Running the linter
+
+This will run the linter, pointing out the infractions, but it won't fix them automatically.
+
+```sh
+npm run lint
+```
+
 ## Deployment
 
-To deploy `probot-auto-merge` yourself, please follow [the guidelines defined by probot on deploying GitHub applications](https://probot.github.io/docs/deployment/).
+To deploy `probot-auto-merge` yourself, please follow [the guidelines defined by Probot on deploying GitHub applications](https://probot.github.io/docs/deployment/).
 
 The permissions and events needed for the app to function can be found below.
 
@@ -388,7 +445,7 @@ The permissions and events needed for the app to function can be found below.
 
 ## Contributing
 
-If you have suggestions for how probot-auto-merge could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
+If you have suggestions for how `probot-auto-merge` could be improved, or want to report a bug, open an issue! We'd love all and any contributions.
 
 For more, check out the [Contributing Guide](CONTRIBUTING.md).
 

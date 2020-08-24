@@ -20,6 +20,13 @@ describe('Config', () => {
     expect(config.rules[0].maxRequestedChanges.NONE).toBe(defaultConfig.maxRequestedChanges.NONE)
   })
 
+  it('will parse regex patterns', () => {
+    const config = getConfigFromUserConfig({
+      requiredLabels: [{ regex: 'regex' }]
+    }) as any
+    expect(config.requiredLabels[0].regex).toBeInstanceOf(RegExp)
+  })
+
   it('will throw validation error on incorrect configuration', () => {
     const userConfig = {
       blockingLabels: ['labela', { labelb: 'labelc' }]
@@ -33,7 +40,6 @@ describe('Config', () => {
     })()
     expect(validationError).not.toBeUndefined()
     expect(validationError.config.blockingLabels[1]).toEqual(userConfig.blockingLabels[1])
-    expect(validationError.decoderError.message).toEqual('expected a string, got an object')
     expect(validationError.decoderError.at).toEqual('input.blockingLabels[1]')
   })
 })

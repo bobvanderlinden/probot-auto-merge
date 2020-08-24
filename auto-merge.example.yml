@@ -7,6 +7,11 @@ minApprovals:
   MEMBER: 1
   COLLABORATOR: 2
 
+# Pull requests will only be automatically merged when all of these reviewers have approved the
+# pull request.
+requiredReviewers:
+- rogerluan
+
 # The maximum number of reviews from each association that request changes to the pull request.
 # Setting this number higher than 0 will allow automatic merging while changes are still requested.
 # Requested changes from associations not defined in this list are ignored for automatic merging.
@@ -74,6 +79,10 @@ blockingLabels:
 # all of these labels are attached to a pull request.
 requiredLabels:
 - merge
+
+# Pull requests will only be automatically merged if there is a match between the regular expression
+# and its title
+requiredTitleRegex: '\bmerge\b'
 
 # Automatic merges will be blocked if there is a match between the regular expression and title
 blockingTitleRegex: '\bwip\b'
