@@ -1,7 +1,9 @@
 import { PullRequestContext } from './pull-request-handler'
 import { PullRequestInfo } from './models'
-import { ChecksCreateParams } from '@octokit/rest'
+import { RestEndpointMethodTypes } from '@octokit/rest'
 import { getMyCheckSuite } from './utils'
+
+type ChecksCreateParams = RestEndpointMethodTypes['checks']['create']['parameters']
 
 type CheckOptions = {
   conclusion: 'neutral',
