@@ -1,12 +1,12 @@
 import { ConditionConfig } from './../config'
-import { PullRequestInfo } from '../models'
+import { PullRequestInfo, PullRequestState } from '../models'
 import { ConditionResult } from '../condition'
 
 export default function isOpen (
   config: ConditionConfig,
   pullRequestInfo: PullRequestInfo
 ): ConditionResult {
-  return pullRequestInfo.state === 'OPEN'
+  return pullRequestInfo.state === PullRequestState.OPEN
     ? {
       status: 'success'
     }

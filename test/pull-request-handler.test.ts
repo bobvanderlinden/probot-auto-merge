@@ -6,7 +6,7 @@ import { PullRequestInfo } from './../src/models'
 import { getPullRequestPlan, executeAction } from '../src/pull-request-handler'
 import { createHandlerContext, createPullRequestInfo, createConfig, defaultPullRequestInfo, createGithubApi, createPullRequestContext, createOkResponse, createRef } from './mock'
 import { mapObject } from '../src/utils'
-import { MergeStateStatus } from '../src/query.graphql'
+import { MergeStateStatus, PullRequestState } from '../src/query.graphql'
 
 const defaultBaseRef: PullRequestInfo['baseRef'] = {
   repository: {
@@ -73,6 +73,36 @@ describe('getPullRequestPlan', () => {
           status: 'fail',
           message: ''
         },
+        mergeable: {
+          status: 'pending'
+        }
+      })
+    )
+    expect(plan.actions).toEqual([])
+  })
+
+  it('does not reschedule when mergeable is pending but the pull request was merged', async () => {
+    const plan = getPullRequestPlan(
+      createHandlerContext(),
+      createPullRequestInfo({
+        state: PullRequestState.MERGED
+      }),
+      createPullRequestStatus({
+        mergeable: {
+          status: 'pending'
+        }
+      })
+    )
+    expect(plan.actions).toEqual([])
+  })
+
+  it('does not reschedule when mergeable is pending but the pull request was closed', async () => {
+    const plan = getPullRequestPlan(
+      createHandlerContext(),
+      createPullRequestInfo({
+        state: PullRequestState.CLOSED
+      }),
+      createPullRequestStatus({
         mergeable: {
           status: 'pending'
         }
