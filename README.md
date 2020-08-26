@@ -107,6 +107,38 @@ maxRequestedChanges:
   NONE: 0
 ```
 
+### `blockingBaseBranches` (condition, default: none)
+
+Whenever blocking base branches are configured, pull requests will only be automatically
+merged whenever their base branch (into which the PR would be merged) is not matching
+the patterns listed.
+
+In the example below, pull requests that have the base branch `develop` or one that starts
+with `feature-` will not be merged automatically.
+
+```yaml
+blockingBaseBranches:
+- develop
+- regex: ^feature-
+```
+
+Note: remove the whole section when you're not using blocking base branches.
+
+### `requiredBaseBranches` (condition, default: none)
+
+Whenever required base branches are configured, pull requests will only be automatically
+merged whenever their base branch (into which the PR would be merged) is matching
+any of the patterns listed.
+
+In the example below, pull requests need to have the base branch `master` or one that
+starts with `v{number}` before they will be automatically merged.
+
+```yaml
+requiredBaseBranches:
+- master
+- regex: ^v\d
+```
+
 ### `blockingLabels` (condition, default: none)
 
 Blocking labels are the labels that can be attached to a pull request to make
