@@ -358,6 +358,22 @@ rules:
 
 Note: remove the whole rules section when you're not using any rules.
 
+### `requiredAuthorRole` (default: none)
+
+Using the `requiredAuthorRole` condition you can specify conditions based on the role of the pull request author.
+For instance, using `rules`, one can be more loose when the author is an owner, and more restrictive otherwise.
+
+Here's an example of a configuration that requires acceptance of 2 owners or 1 owner if the other owner made the PR:
+
+```yaml
+rules:
+- requiredAuthorRole: OWNER
+  minApprovals:
+    OWNER: 1
+- minApprovals:
+    OWNER: 2
+```
+
 ## Development
 
 ### Setup

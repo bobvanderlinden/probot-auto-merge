@@ -352,6 +352,64 @@ it('to merge when one rule and the global configuration passes', async () => {
   expect(github.pulls.merge).toHaveBeenCalled()
 })
 
+it('to merge when the role of the pull request author is satisfied, and fail otherwise', async () => {
+  const config = `
+    rules:
+    - requiredAuthorRole: OWNER
+      minApprovals:
+        OWNER: 1
+  `
+
+  const pullRequestInfo = createPullRequestInfo({
+    authorAssociation: CommentAuthorAssociation.MEMBER,
+    reviews: {
+      nodes: [
+        approvedReview({
+          authorAssociation: CommentAuthorAssociation.OWNER
+        })
+      ]
+    },
+    commits: createCommitsWithCheckSuiteWithCheckRun({
+      checkRun: successCheckRun
+    })
+  })
+
+  const github = createGithubApiFromPullRequestInfo({
+    pullRequestInfo,
+    config
+  })
+
+  const app = createApplication({
+    appFn,
+    logger: createEmptyLogger(),
+    github
+  })
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 1
+    })
+  )
+
+  // Only 1 review and PR is not from OWNER
+  expect(github.pulls.merge).not.toHaveBeenCalled()
+
+  pullRequestInfo.authorAssociation = CommentAuthorAssociation.OWNER
+
+  await app.receive(
+    createPullRequestOpenedEvent({
+      owner: 'bobvanderlinden',
+      repo: 'probot-auto-merge',
+      number: 2
+    })
+  )
+
+  // Only 1 review but PR is from OWNER
+  expect(github.pulls.merge).toHaveBeenCalled()
+})
+
 it('to report error when processing pull request results in error', async () => {
   const Raven = require('raven')
   const captureException = jest.fn()

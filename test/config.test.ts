@@ -1,10 +1,19 @@
 import { getConfigFromUserConfig, defaultConfig, ConfigValidationError } from '../src/config'
+import { CommentAuthorAssociation } from '../src/models'
 
 describe('Config', () => {
-  it('will throw upon invalid type', () => {
+  it('will throw upon invalid type for minApprovals', () => {
     expect(() => {
       getConfigFromUserConfig({
         minApprovals: []
+      })
+    }).toThrow()
+  })
+
+  it('will throw upon invalid value for requiredAuthorRole', () => {
+    expect(() => {
+      getConfigFromUserConfig({
+        requiredAuthorRole: 'Something incorrect'
       })
     }).toThrow()
   })
@@ -25,6 +34,11 @@ describe('Config', () => {
       requiredLabels: [{ regex: 'regex' }]
     }) as any
     expect(config.requiredLabels[0].regex).toBeInstanceOf(RegExp)
+  })
+
+  it('will have default value for requiredAuthorRole', () => {
+    const config = getConfigFromUserConfig({})
+    expect(config.requiredAuthorRole).toBe(CommentAuthorAssociation.NONE)
   })
 
   it('will throw validation error on incorrect configuration', () => {

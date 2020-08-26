@@ -38,6 +38,7 @@ export type ConditionConfig = {
   requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
   requiredTitleRegex: string | undefined
+  requiredAuthorRole: CommentAuthorAssociation
 }
 
 export type Config = {
@@ -63,7 +64,8 @@ export const defaultRuleConfig: ConditionConfig = {
   blockingTitleRegex: undefined,
   blockingBodyRegex: undefined,
   requiredTitleRegex: undefined,
-  requiredBodyRegex: undefined
+  requiredBodyRegex: undefined,
+  requiredAuthorRole: CommentAuthorAssociation.NONE
 }
 
 export const defaultConfig: Config = {
@@ -74,6 +76,16 @@ export const defaultConfig: Config = {
   reportStatus: false,
   ...defaultRuleConfig
 }
+
+const commentAuthorAssociation: Decoder<CommentAuthorAssociation> = oneOf(
+  constant(CommentAuthorAssociation.MEMBER),
+  constant(CommentAuthorAssociation.OWNER),
+  constant(CommentAuthorAssociation.COLLABORATOR),
+  constant(CommentAuthorAssociation.CONTRIBUTOR),
+  constant(CommentAuthorAssociation.FIRST_TIME_CONTRIBUTOR),
+  constant(CommentAuthorAssociation.FIRST_TIMER),
+  constant(CommentAuthorAssociation.NONE)
+)
 
 const reviewConfigDecover: Decoder<{ [key in CommentAuthorAssociation]: number | undefined }> = object({
   MEMBER: optional(number()),
@@ -96,7 +108,8 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   blockingTitleRegex: optional(string()),
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
-  requiredBodyRegex: optional(string())
+  requiredBodyRegex: optional(string()),
+  requiredAuthorRole: commentAuthorAssociation
 })
 
 const configDecoder: Decoder<Config> = object({
@@ -112,6 +125,7 @@ const configDecoder: Decoder<Config> = object({
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
   requiredBodyRegex: optional(string()),
+  requiredAuthorRole: commentAuthorAssociation,
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
   reportStatus: boolean(),
