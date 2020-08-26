@@ -73,7 +73,7 @@
     "typescript": "^3.3.3"
   },
   "engines": {
-    "node": "10.16.3",
+    "node": ">=10.16.3",
     "npm": "6.4.1"
   },
   "standard": {

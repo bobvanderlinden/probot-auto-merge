@@ -7,6 +7,11 @@ minApprovals:
   MEMBER: 1
   COLLABORATOR: 2
 
+# Pull requests will only be automatically merged when all of these reviewers have approved the
+# pull request.
+requiredReviewers:
+- rogerluan
+
 # The maximum number of reviews from each association that request changes to the pull request.
 # Setting this number higher than 0 will allow automatic merging while changes are still requested.
 # Requested changes from associations not defined in this list are ignored for automatic merging.
@@ -53,6 +58,17 @@ mergeCommitMessage: |
   {title} (#{number})
 
   {body}
+
+# Whenever blocking base branches are configured, pull requests will only be automatically merged whenever
+# their base branch (into which the PR would be merged) is not matching any regular expression listed.
+blockingBaseBranches:
+- trunk
+- regex: ^dev-
+
+# Whenever required base branches are configured, pull requests will only be automatically merged whenever
+# their base branch (into which the PR would be merged) is matching any regular expression listed.
+requiredBaseBranches:
+- master
 
 # Blocking labels are the labels that can be attached to a pull request to make sure the pull request
 # is not being automatically merged.

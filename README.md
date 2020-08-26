@@ -59,6 +59,19 @@ minApprovals:
   MEMBER: 2
 ```
 
+### `requiredReviewers` (condition, default: none)
+
+Whenever required reviewers are configured, pull requests will only be automatically
+merged whenever all of these reviewers have approved the pull request.
+
+In the example below, pull requests need to have been approved by the user 'rogerluan'
+before they will be automatically merged.
+
+```yaml
+requiredReviewers:
+- rogerluan
+```
+
 ### `maxRequestedChanges` (condition, default: none)
 
 Similar to `minApprovals`, maxRequestedChanges determines the maximum number of
@@ -92,6 +105,38 @@ The default for this value is:
 ```yaml
 maxRequestedChanges:
   NONE: 0
+```
+
+### `blockingBaseBranches` (condition, default: none)
+
+Whenever blocking base branches are configured, pull requests will only be automatically
+merged whenever their base branch (into which the PR would be merged) is not matching
+the patterns listed.
+
+In the example below, pull requests that have the base branch `develop` or one that starts
+with `feature-` will not be merged automatically.
+
+```yaml
+blockingBaseBranches:
+- develop
+- regex: ^feature-
+```
+
+Note: remove the whole section when you're not using blocking base branches.
+
+### `requiredBaseBranches` (condition, default: none)
+
+Whenever required base branches are configured, pull requests will only be automatically
+merged whenever their base branch (into which the PR would be merged) is matching
+any of the patterns listed.
+
+In the example below, pull requests need to have the base branch `master` or one that
+starts with `v{number}` before they will be automatically merged.
+
+```yaml
+requiredBaseBranches:
+- master
+- regex: ^v\d
 ```
 
 ### `blockingLabels` (condition, default: none)
@@ -312,6 +357,22 @@ rules:
 ```
 
 Note: remove the whole rules section when you're not using any rules.
+
+### `requiredAuthorRole` (default: none)
+
+Using the `requiredAuthorRole` condition you can specify conditions based on the role of the pull request author.
+For instance, using `rules`, one can be more loose when the author is an owner, and more restrictive otherwise.
+
+Here's an example of a configuration that requires acceptance of 2 owners or 1 owner if the other owner made the PR:
+
+```yaml
+rules:
+- requiredAuthorRole: OWNER
+  minApprovals:
+    OWNER: 1
+- minApprovals:
+    OWNER: 2
+```
 
 ## Development
 

@@ -5,7 +5,7 @@ import { result } from './utils'
 import { getPullRequestStatus, PullRequestStatus } from './pull-request-status'
 import { queryPullRequest } from './pull-request-query'
 import { updateStatusReportCheck } from './status-report'
-import { MergeStateStatus } from './query.graphql'
+import { MergeStateStatus, PullRequestState, CheckConclusionState } from './query.graphql'
 import { Config } from './config'
 import { getCommitMessage, splitCommitMessage } from './commit-message'
 
@@ -65,6 +65,7 @@ export type PullRequestActions
 
 export type PullRequestPlanCode
   = 'closed'
+  | 'merged'
   | 'mergeable_unknown'
   | 'mergeable_not_supplied'
   | 'pending_condition'
@@ -136,18 +137,27 @@ export function getPullRequestPlan (
   pullRequestStatus: PullRequestStatus
 ): PullRequestPlan {
   const { config } = context
-  const pendingConditions = Object.entries(pullRequestStatus)
-    .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
-  const failingConditions = Object.entries(pullRequestStatus)
-    .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
-  if (pullRequestStatus.open.status === 'fail') {
+  if (pullRequestInfo.state === PullRequestState.MERGED) {
+    return {
+      code: 'merged',
+      message: 'Pull request was merged already',
+      actions: []
+    }
+  }
+
+  if (pullRequestInfo.state === PullRequestState.CLOSED || pullRequestStatus.open.status === 'fail') {
     return {
       code: 'closed',
       message: 'Pull request was closed',
       actions: []
     }
   }
+
+  const pendingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'pending')
+  const failingConditions = Object.entries(pullRequestStatus)
+    .filter(([conditionName, conditionResult]) => conditionResult.status === 'fail')
 
   if (pendingConditions.length > 0) {
     return {
@@ -394,7 +404,17 @@ function getPlanTitle (plan: PullRequestPlan) {
       ? 'Updating branch'
       : plan.actions.some(action => action === 'reschedule')
         ? 'Waiting'
-        : 'Not merging'
+        : plan.code === 'merged'
+          ? 'Merged'
+          : plan.code === 'closed'
+            ? 'Closed'
+            : 'Not merging'
+}
+
+function getPlanConclusion (plan: PullRequestPlan) {
+  return plan.code === 'merged' || plan.code === 'closed'
+    ? CheckConclusionState.SUCCESS
+    : CheckConclusionState.NEUTRAL
 }
 
 export async function handlePullRequestStatus (
@@ -404,8 +424,9 @@ export async function handlePullRequestStatus (
 ) {
   const plan = getPullRequestPlan(context, pullRequestInfo, pullRequestStatus)
   const title = getPlanTitle(plan)
+  const conclusion = getPlanConclusion(plan)
 
-  await updateStatusReportCheck(context, pullRequestInfo, title, plan.message)
+  await updateStatusReportCheck(context, pullRequestInfo, title, plan.message, conclusion)
 
   const { actions } = plan
   context.log.debug('Actions:', actions)

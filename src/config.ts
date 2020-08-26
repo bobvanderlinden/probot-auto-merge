@@ -28,13 +28,17 @@ export class ConfigValidationError extends Error {
 
 export type ConditionConfig = {
   minApprovals: { [key in CommentAuthorAssociation]?: number },
+  requiredReviewers: string[],
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
+  requiredBaseBranches: Pattern[],
+  blockingBaseBranches: Pattern[],
   requiredLabels: Pattern[],
   blockingLabels: Pattern[],
   blockingBodyRegex: string | undefined
   requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
   requiredTitleRegex: string | undefined
+  requiredAuthorRole: CommentAuthorAssociation
 }
 
 export type Config = {
@@ -49,15 +53,19 @@ export type Config = {
 export const defaultRuleConfig: ConditionConfig = {
   minApprovals: {
   },
+  requiredReviewers: [],
   maxRequestedChanges: {
     NONE: 0
   },
+  blockingBaseBranches: [],
+  requiredBaseBranches: [],
   blockingLabels: [],
   requiredLabels: [],
   blockingTitleRegex: undefined,
   blockingBodyRegex: undefined,
   requiredTitleRegex: undefined,
-  requiredBodyRegex: undefined
+  requiredBodyRegex: undefined,
+  requiredAuthorRole: CommentAuthorAssociation.NONE
 }
 
 export const defaultConfig: Config = {
@@ -68,6 +76,16 @@ export const defaultConfig: Config = {
   reportStatus: false,
   ...defaultRuleConfig
 }
+
+const commentAuthorAssociation: Decoder<CommentAuthorAssociation> = oneOf(
+  constant(CommentAuthorAssociation.MEMBER),
+  constant(CommentAuthorAssociation.OWNER),
+  constant(CommentAuthorAssociation.COLLABORATOR),
+  constant(CommentAuthorAssociation.CONTRIBUTOR),
+  constant(CommentAuthorAssociation.FIRST_TIME_CONTRIBUTOR),
+  constant(CommentAuthorAssociation.FIRST_TIMER),
+  constant(CommentAuthorAssociation.NONE)
+)
 
 const reviewConfigDecover: Decoder<{ [key in CommentAuthorAssociation]: number | undefined }> = object({
   MEMBER: optional(number()),
@@ -81,25 +99,33 @@ const reviewConfigDecover: Decoder<{ [key in CommentAuthorAssociation]: number |
 
 const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   minApprovals: reviewConfigDecover,
+  requiredReviewers: array(string()),
   maxRequestedChanges: reviewConfigDecover,
-  requiredLabels: array(patternDecoder),
-  blockingLabels: array(patternDecoder),
-  blockingTitleRegex: optional(string()),
-  blockingBodyRegex: optional(string()),
-  requiredTitleRegex: optional(string()),
-  requiredBodyRegex: optional(string())
-})
-
-const configDecoder: Decoder<Config> = object({
-  rules: array(conditionConfigDecoder),
-  minApprovals: reviewConfigDecover,
-  maxRequestedChanges: reviewConfigDecover,
+  requiredBaseBranches: array(patternDecoder),
+  blockingBaseBranches: array(patternDecoder),
   requiredLabels: array(patternDecoder),
   blockingLabels: array(patternDecoder),
   blockingTitleRegex: optional(string()),
   blockingBodyRegex: optional(string()),
   requiredTitleRegex: optional(string()),
   requiredBodyRegex: optional(string()),
+  requiredAuthorRole: commentAuthorAssociation
+})
+
+const configDecoder: Decoder<Config> = object({
+  rules: array(conditionConfigDecoder),
+  minApprovals: reviewConfigDecover,
+  requiredReviewers: array(string()),
+  maxRequestedChanges: reviewConfigDecover,
+  requiredBaseBranches: array(patternDecoder),
+  blockingBaseBranches: array(patternDecoder),
+  requiredLabels: array(patternDecoder),
+  blockingLabels: array(patternDecoder),
+  blockingTitleRegex: optional(string()),
+  blockingBodyRegex: optional(string()),
+  requiredTitleRegex: optional(string()),
+  requiredBodyRegex: optional(string()),
+  requiredAuthorRole: commentAuthorAssociation,
   updateBranch: boolean(),
   deleteBranchAfterMerge: boolean(),
   reportStatus: boolean(),
