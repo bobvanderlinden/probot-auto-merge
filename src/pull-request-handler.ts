@@ -45,7 +45,7 @@ export async function handlePullRequest (
     }
   })
 
-  log(`result:\n${JSON.stringify(pullRequestStatus, null, 2)}`)
+  context.log.info(`result of ${pullRequestInfo.repository}: ${JSON.stringify(pullRequestStatus, null, 2).replace(/\\n/g, '')}`)
   await handlePullRequestStatus(
     context,
     pullRequestInfo,
@@ -378,6 +378,7 @@ async function mergePullRequest (
   const extraParams: ExtraMergeParams = {}
   const pullRequestReference = getPullRequestReference(pullRequestInfo)
   const commitMessage = getCommitMessage(pullRequestInfo, config)
+  context.log.info(`Merging Pull Request ${pullRequestInfo.repository}:${pullRequestInfo.number}`)
 
   if (commitMessage !== null) {
     const commitMessageParams = splitCommitMessage(commitMessage)

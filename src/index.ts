@@ -95,6 +95,7 @@ export = (app: Application) => {
   async function handlePullRequests (app: Application, context: Context, installationId: number, repository: RepositoryReference, pullRequestNumbers: number[]) {
     await useWorkerContext({ app, context, installationId }, async (workerContext) => {
       for (const pullRequestNumber of pullRequestNumbers) {
+        workerContext.log.info(`Handling Pull Request ${repository.repo}:${pullRequestNumber}`)
         repositoryWorkers.queue(workerContext, {
           owner: repository.owner,
           repo: repository.repo,
