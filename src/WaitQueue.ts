@@ -120,11 +120,11 @@ export class WaitQueue<T> {
     }
   }
 
-  public currentTask (): WaitQueueTask<T> | null {
+  public currentTask (): Readonly<WaitQueueTask<T> | null> {
     return this.runningTask && this.runningTask.task
   }
 
-  public getQueuedTasks (): WaitQueueTask<T>[] {
-    return this.taskQueue.map(task => task)
+  public getQueuedTasks (): Readonly<WaitQueueTask<T>[]> {
+    return this.taskQueue
   }
 }

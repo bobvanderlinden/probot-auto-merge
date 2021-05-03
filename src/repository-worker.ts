@@ -60,4 +60,12 @@ export class RepositoryWorker {
       queued: this.waitQueue.getQueuedTasks()
     })
   }
+
+  public getCurrentTask () {
+    return this.waitQueue.currentTask()
+  }
+
+  public getQueuedTasks () {
+    return this.waitQueue.getQueuedTasks()
+  }
 }
