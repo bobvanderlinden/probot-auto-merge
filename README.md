@@ -1,5 +1,7 @@
 # probot-auto-merge
 
+> Hosting for this project is unmaintained as there are alternatives using GitHub Actions.
+
 [![Travis CI](https://travis-ci.org/bobvanderlinden/probot-auto-merge.svg?branch=master)](https://travis-ci.org/bobvanderlinden/probot-auto-merge)
 [![Coverage](https://img.shields.io/coveralls/github/bobvanderlinden/probot-auto-merge.svg)](https://coveralls.io/github/bobvanderlinden/probot-auto-merge)
 
