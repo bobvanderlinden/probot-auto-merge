@@ -34,6 +34,7 @@ export type ConditionConfig = {
   blockingBaseBranches: Pattern[],
   requiredLabels: Pattern[],
   blockingLabels: Pattern[],
+  requiredChecks: Pattern[],
   blockingBodyRegex: string | undefined
   requiredBodyRegex: string | undefined
   blockingTitleRegex: string | undefined
