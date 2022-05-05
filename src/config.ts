@@ -30,6 +30,7 @@ export type ConditionConfig = {
   minApprovals: { [key in CommentAuthorAssociation]?: number },
   requiredReviewers: string[],
   maxRequestedChanges: { [key in CommentAuthorAssociation]?: number },
+  maxPendingReviews: { [key in CommentAuthorAssociation]?: number },
   requiredBaseBranches: Pattern[],
   blockingBaseBranches: Pattern[],
   requiredLabels: Pattern[],
@@ -56,6 +57,8 @@ export const defaultRuleConfig: ConditionConfig = {
   requiredReviewers: [],
   maxRequestedChanges: {
     NONE: 0
+  },
+  maxPendingReviews: {
   },
   blockingBaseBranches: [],
   requiredBaseBranches: [],
@@ -101,6 +104,7 @@ const conditionConfigDecoder: Decoder<ConditionConfig> = object({
   minApprovals: reviewConfigDecover,
   requiredReviewers: array(string()),
   maxRequestedChanges: reviewConfigDecover,
+  maxPendingReviews: reviewConfigDecover,
   requiredBaseBranches: array(patternDecoder),
   blockingBaseBranches: array(patternDecoder),
   requiredLabels: array(patternDecoder),
@@ -117,6 +121,7 @@ const configDecoder: Decoder<Config> = object({
   minApprovals: reviewConfigDecover,
   requiredReviewers: array(string()),
   maxRequestedChanges: reviewConfigDecover,
+  maxPendingReviews: reviewConfigDecover,
   requiredBaseBranches: array(patternDecoder),
   blockingBaseBranches: array(patternDecoder),
   requiredLabels: array(patternDecoder),

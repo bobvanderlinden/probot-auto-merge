@@ -160,6 +160,16 @@ export function review (options: Partial<Review> & { state: PullRequestReviewSta
   }
 }
 
+export const pendingReview = (options?: Partial<Review>) =>
+  review({
+    state: PullRequestReviewState.PENDING,
+    ...options
+  })
+export const dismissedReview = (options?: Partial<Review>) =>
+  review({
+    state: PullRequestReviewState.DISMISSED,
+    ...options
+  })
 export const approvedReview = (options?: Partial<Review>) =>
   review({
     state: PullRequestReviewState.APPROVED,

@@ -109,6 +109,20 @@ maxRequestedChanges:
   NONE: 0
 ```
 
+### `maxPendingReviews` (condition, default: .inf)
+
+Similar to `maxRequestedChanges`, maxPendingReviews determines the maximum number of
+non-completed reviews before a pull request will be blocked from being automatically
+merged.
+
+In the example below, automatic merges will be blocked when one of the owners, members
+or collaborators has not completed the requested review.
+
+```yaml
+maxPendingReviews:
+  COLLABORATOR: 0
+```
+
 ### `blockingBaseBranches` (condition, default: none)
 
 Whenever blocking base branches are configured, pull requests will only be automatically
