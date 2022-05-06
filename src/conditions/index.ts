@@ -6,6 +6,7 @@ import blockingChecks from './blockingChecks'
 import blockingLabels from './blockingLabels'
 import blockingTitle from './blockingTitle'
 import maximumChangesRequested from './maximumChangesRequested'
+import maximumPendingReviews from './maximumPendingReviews'
 import mergeable from './mergeable'
 import minimumApprovals from './minimumApprovals'
 import requiredAuthorRole from './requiredAuthorRole'
@@ -24,6 +25,7 @@ export const conditions = {
   blockingLabels,
   blockingTitle,
   maximumChangesRequested,
+  maximumPendingReviews,
   mergeable,
   minimumApprovals,
   requiredAuthorRole,
